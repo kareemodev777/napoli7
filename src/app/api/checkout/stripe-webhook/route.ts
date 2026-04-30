@@ -7,7 +7,9 @@ export const runtime = "nodejs";
 
 export async function POST(req: Request) {
   if (!HAS_STRIPE || !HAS_SUPABASE_SERVICE) {
-    console.warn("[stripe-webhook] received event but env vars not set; ignoring.");
+    console.warn(
+      "[stripe-webhook] received event but env vars not set; ignoring.",
+    );
     return new NextResponse("not configured", { status: 503 });
   }
   const sig = req.headers.get("stripe-signature");

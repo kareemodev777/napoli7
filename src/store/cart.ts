@@ -40,7 +40,11 @@ function customizationKey(items: CartCustomization[]) {
     .join("|");
 }
 
-function makeId(productId: string, sizeId: SizeId, customizations: CartCustomization[]) {
+function makeId(
+  productId: string,
+  sizeId: SizeId,
+  customizations: CartCustomization[],
+) {
   const key = customizationKey(customizations);
   return `${productId}#${sizeId}#${key}`;
 }
@@ -56,7 +60,9 @@ export const useCart = create<CartState>()(
           if (existing) {
             return {
               items: state.items.map((it) =>
-                it.id === id ? { ...it, quantity: it.quantity + input.quantity } : it
+                it.id === id
+                  ? { ...it, quantity: it.quantity + input.quantity }
+                  : it,
               ),
             };
           }
@@ -75,12 +81,13 @@ export const useCart = create<CartState>()(
       },
       clear: () => set({ items: [] }),
       totalQuantity: () => get().items.reduce((s, it) => s + it.quantity, 0),
-      subtotal: () => get().items.reduce((s, it) => s + it.unitPrice * it.quantity, 0),
+      subtotal: () =>
+        get().items.reduce((s, it) => s + it.unitPrice * it.quantity, 0),
     }),
     {
       name: "napoli7-cart",
       storage: createJSONStorage(() => localStorage),
       version: 2,
-    }
-  )
+    },
+  ),
 );

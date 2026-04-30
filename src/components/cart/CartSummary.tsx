@@ -22,12 +22,17 @@ export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
         Order summary
       </h2>
       <dl className="space-y-3 text-sm">
-        <Row label={`Subtotal (${itemCount} item${itemCount === 1 ? "" : "s"})`}>
+        <Row
+          label={`Subtotal (${itemCount} item${itemCount === 1 ? "" : "s"})`}
+        >
           {formatAed(subtotal)}
         </Row>
         <Row label="Delivery fee">Calculated at checkout</Row>
       </dl>
-      <form onSubmit={handleApply} className="mt-6 grid grid-cols-[1fr_auto] gap-2">
+      <form
+        onSubmit={handleApply}
+        className="mt-6 grid grid-cols-[1fr_auto] gap-2"
+      >
         <input
           type="text"
           value={promo}
@@ -52,8 +57,12 @@ export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
         ) : null}
       </form>
       <div className="mt-6 border-t border-border pt-4 flex items-baseline justify-between">
-        <span className="font-display text-xs tracking-[0.25em] uppercase">Total</span>
-        <span className="font-display text-xl tabular-nums">{formatAed(subtotal)}</span>
+        <span className="font-display text-xs tracking-[0.25em] uppercase">
+          Total
+        </span>
+        <span className="font-display text-xl tabular-nums">
+          {formatAed(subtotal)}
+        </span>
       </div>
       <Link
         href={ctaHref}
@@ -65,7 +74,13 @@ export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
   );
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Row({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="flex items-baseline justify-between gap-3">
       <dt className="text-muted-foreground">{label}</dt>

@@ -35,7 +35,10 @@ const placeOrderSchema = z.object({
   lastName: z.string().min(1),
   phone: z
     .string()
-    .regex(/^\+971[0-9]{8,9}$/, "Enter a valid UAE mobile number starting with +971"),
+    .regex(
+      /^\+971[0-9]{8,9}$/,
+      "Enter a valid UAE mobile number starting with +971",
+    ),
   email: z.string().email(),
   deliveryType: z.enum(["delivery", "pickup"]),
   deliveryAddress: deliveryAddressSchema.optional(),
@@ -58,7 +61,9 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   const parsed = placeOrderSchema.safeParse(input);
   if (!parsed.success) {
     return {
-      error: parsed.error.issues[0]?.message ?? "Some fields are missing or invalid.",
+      error:
+        parsed.error.issues[0]?.message ??
+        "Some fields are missing or invalid.",
     };
   }
   const data = parsed.data;
@@ -74,14 +79,15 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     const orderId = crypto.randomUUID();
     const orderNumber = `N7-DEMO-${Date.now().toString().slice(-5)}`;
     console.info(
-      `[placeOrder] Supabase disabled. Demo order ${orderNumber} (${total.toFixed(2)} AED) for ${data.firstName} ${data.lastName}`
+      `[placeOrder] Supabase disabled. Demo order ${orderNumber} (${total.toFixed(2)} AED) for ${data.firstName} ${data.lastName}`,
     );
     await runNotifications({ data, orderId, orderNumber, total });
     if (data.paymentMethod === "card") {
       return {
         orderId,
         orderNumber,
-        error: "Card payment requires Stripe + Supabase env vars. Choose Cash on Delivery for now.",
+        error:
+          "Card payment requires Stripe + Supabase env vars. Choose Cash on Delivery for now.",
       };
     }
     return { orderId, orderNumber };
@@ -111,7 +117,8 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   if (orderError || !order) {
     console.error("[placeOrder] Order insert failed:", orderError);
     return {
-      error: "We could not place your order. Please try again or call us on +971 6 534 5772.",
+      error:
+        "We could not place your order. Please try again or call us on +971 6 534 5772.",
     };
   }
 
@@ -124,7 +131,9 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     customizations: item.customizations,
     line_total_aed: item.lineTotalAed,
   }));
-  const { error: itemsError } = await supabase.from("order_items").insert(itemRows);
+  const { error: itemsError } = await supabase
+    .from("order_items")
+    .insert(itemRows);
   if (itemsError) {
     console.error("[placeOrder] Order items insert failed:", itemsError);
   }

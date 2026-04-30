@@ -3,6 +3,7 @@ import { Hero } from "@/components/site/Hero";
 import { EditorialGrid } from "@/components/site/EditorialGrid";
 import { LocationBanner } from "@/components/site/LocationBanner";
 import { Footer } from "@/components/site/Footer";
+import { MobileBottomBar } from "@/components/site/MobileBottomBar";
 import { CookieBar } from "@/components/site/CookieBar";
 import { LocalBusinessJsonLd } from "@/components/structured-data/LocalBusiness";
 
@@ -17,6 +18,7 @@ export default function HomePage() {
         <LocationBanner />
       </main>
       <Footer />
+      <MobileBottomBar />
       <CookieBar />
     </>
   );

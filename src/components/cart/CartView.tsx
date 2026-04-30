@@ -12,7 +12,9 @@ export function CartView() {
 
   if (!hydrated) {
     return (
-      <div className="text-center py-16 text-sm text-muted-foreground">Loading cart…</div>
+      <div className="text-center py-16 text-sm text-muted-foreground">
+        Loading cart…
+      </div>
     );
   }
 

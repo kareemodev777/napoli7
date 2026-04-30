@@ -21,7 +21,9 @@ export default function CheckoutPage() {
       />
       <section className="px-6 md:px-10 py-12">
         <div className="max-w-[1140px] mx-auto">
-          <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
+          <Suspense
+            fallback={<p className="text-sm text-muted-foreground">Loading…</p>}
+          >
             <CheckoutForm />
           </Suspense>
         </div>

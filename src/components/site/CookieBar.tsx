@@ -13,7 +13,11 @@ function readConsent(): boolean {
 
 export function CookieBar() {
   // Read localStorage on the client; default to "accepted" on the server so the bar never SSRs.
-  const consented = useSyncExternalStore(noopSubscribe, readConsent, () => true);
+  const consented = useSyncExternalStore(
+    noopSubscribe,
+    readConsent,
+    () => true,
+  );
   const [dismissed, setDismissed] = useState(false);
 
   if (consented || dismissed) return null;
@@ -29,7 +33,7 @@ export function CookieBar() {
     <div
       role="dialog"
       aria-label="Cookie notice"
-      className="fixed bottom-0 left-0 right-0 z-40 bg-foreground text-background px-6 md:px-10 py-4"
+      className="fixed bottom-[88px] lg:bottom-0 left-0 right-0 z-40 bg-foreground text-background px-6 md:px-10 py-4"
     >
       <div className="max-w-[1500px] mx-auto flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-sm">
         <p className="font-display">

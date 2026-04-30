@@ -25,9 +25,20 @@ export function RegisterForm() {
         </Field>
       </div>
       <Field id="reg-email" label="Email" required>
-        <Input id="reg-email" type="email" name="email" required autoComplete="email" />
+        <Input
+          id="reg-email"
+          type="email"
+          name="email"
+          required
+          autoComplete="email"
+        />
       </Field>
-      <Field id="reg-password" label="Password" required hint="At least 8 characters.">
+      <Field
+        id="reg-password"
+        label="Password"
+        required
+        hint="At least 8 characters."
+      >
         <div className="relative">
           <Input
             id="reg-password"
@@ -83,7 +94,10 @@ export function RegisterForm() {
 
       <p className="text-sm text-center text-muted-foreground">
         Already have an account?{" "}
-        <Link href="/login" className="text-foreground hover:underline underline-offset-4">
+        <Link
+          href="/login"
+          className="text-foreground hover:underline underline-offset-4"
+        >
           Log in
         </Link>
       </p>
@@ -106,9 +120,17 @@ function Field({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id} className="font-display text-xs tracking-[0.2em] uppercase">
+      <Label
+        htmlFor={id}
+        className="font-display text-xs tracking-[0.2em] uppercase"
+      >
         {label}
-        {required ? <span aria-hidden className="text-flag-red"> *</span> : null}
+        {required ? (
+          <span aria-hidden className="text-flag-red">
+            {" "}
+            *
+          </span>
+        ) : null}
       </Label>
       {children}
       {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}

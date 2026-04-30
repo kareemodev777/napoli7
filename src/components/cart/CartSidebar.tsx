@@ -18,7 +18,9 @@ export function CartSidebar() {
   const mounted = useMounted();
 
   const hasItems = mounted && items.length > 0;
-  const progress = mounted ? Math.min(100, (subtotal / FREE_DELIVERY_TARGET) * 100) : 0;
+  const progress = mounted
+    ? Math.min(100, (subtotal / FREE_DELIVERY_TARGET) * 100)
+    : 0;
   const remaining = Math.max(0, FREE_DELIVERY_TARGET - subtotal);
 
   return (
@@ -48,7 +50,9 @@ export function CartSidebar() {
                 key={item.id}
                 item={item}
                 onIncrement={() => updateQuantity(item.id, item.quantity + 1)}
-                onDecrement={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
+                onDecrement={() =>
+                  updateQuantity(item.id, Math.max(0, item.quantity - 1))
+                }
                 onRemove={() => removeItem(item.id)}
               />
             ))}
@@ -79,7 +83,9 @@ export function CartSidebar() {
         ) : null}
 
         <dl className="text-sm space-y-2">
-          <Row label={`Subtotal · ${totalQty} item${totalQty === 1 ? "" : "s"}`}>
+          <Row
+            label={`Subtotal · ${totalQty} item${totalQty === 1 ? "" : "s"}`}
+          >
             {formatAed(subtotal)}
           </Row>
           <Row label="Delivery fee">Calculated at checkout</Row>
@@ -139,7 +145,12 @@ function CartRow({
 }) {
   const customSummary = item.customizations
     .map((c) => {
-      const action = c.choice === "extra" ? "Extra" : c.choice === "without" ? "Without" : "";
+      const action =
+        c.choice === "extra"
+          ? "Extra"
+          : c.choice === "without"
+            ? "Without"
+            : "";
       return `${action} ${c.ingredient}`.trim();
     })
     .join(" · ");
@@ -211,7 +222,13 @@ function CartRow({
   );
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Row({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="flex items-baseline justify-between gap-3">
       <dt className="text-muted-foreground">{label}</dt>

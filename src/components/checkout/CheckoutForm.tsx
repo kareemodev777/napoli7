@@ -29,15 +29,15 @@ export function CheckoutForm() {
   const [error, setError] = useState<string | null>(
     searchParams.get("canceled") === "1"
       ? "Your payment was canceled. Try again or choose Cash on Delivery."
-      : null
+      : null,
   );
-  const [deliveryType, setDeliveryType] = useState<"delivery" | "pickup">("delivery");
+  const [deliveryType, setDeliveryType] = useState<"delivery" | "pickup">(
+    "delivery",
+  );
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "card">("cod");
 
   if (!hydrated) {
-    return (
-      <p className="text-sm text-muted-foreground">Loading checkout…</p>
-    );
+    return <p className="text-sm text-muted-foreground">Loading checkout…</p>;
   }
 
   if (items.length === 0) {
@@ -70,7 +70,9 @@ export function CheckoutForm() {
     const payload: PlaceOrderInput = {
       firstName: String(formData.get("firstName") ?? "").trim(),
       lastName: String(formData.get("lastName") ?? "").trim(),
-      phone: String(formData.get("phone") ?? "").trim().replace(/\s+/g, ""),
+      phone: String(formData.get("phone") ?? "")
+        .trim()
+        .replace(/\s+/g, ""),
       email: String(formData.get("email") ?? "").trim(),
       deliveryType,
       deliveryAddress: rawAddress,
@@ -106,14 +108,17 @@ export function CheckoutForm() {
       } catch (e) {
         console.error(e);
         setError(
-          "Something went wrong placing your order. Please try again or call +971 6 534 5772."
+          "Something went wrong placing your order. Please try again or call +971 6 534 5772.",
         );
       }
     });
   }
 
   return (
-    <form onSubmit={onSubmit} className="grid lg:grid-cols-[1.4fr_1fr] gap-10 items-start">
+    <form
+      onSubmit={onSubmit}
+      className="grid lg:grid-cols-[1.4fr_1fr] gap-10 items-start"
+    >
       <div className="space-y-10">
         <Section title="Contact details">
           <div className="grid sm:grid-cols-2 gap-5">
@@ -182,7 +187,8 @@ export function CheckoutForm() {
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">
-              Pickup orders are ready in around 15 minutes at Shop 4, Al Jurf 2, Ajman.
+              Pickup orders are ready in around 15 minutes at Shop 4, Al Jurf 2,
+              Ajman.
             </p>
           )}
 
@@ -237,7 +243,8 @@ export function CheckoutForm() {
             </p>
           ) : (
             <p className="mt-4 text-xs text-muted-foreground">
-              Pay cash to the driver on arrival. Please have exact change if you can.
+              Pay cash to the driver on arrival. Please have exact change if you
+              can.
             </p>
           )}
         </Section>
@@ -269,7 +276,9 @@ export function CheckoutForm() {
               <span className="leading-tight">
                 {it.quantity} × {it.name}
               </span>
-              <span className="tabular-nums">{formatAed(it.unitPrice * it.quantity)}</span>
+              <span className="tabular-nums">
+                {formatAed(it.unitPrice * it.quantity)}
+              </span>
             </li>
           ))}
         </ul>
@@ -278,15 +287,25 @@ export function CheckoutForm() {
           <Row label="Delivery fee">TBD — confirmed by the kitchen</Row>
         </dl>
         <div className="mt-4 border-t border-border pt-3 flex items-baseline justify-between">
-          <span className="font-display text-xs tracking-[0.25em] uppercase">Total</span>
-          <span className="font-display text-xl tabular-nums">{formatAed(subtotal)}</span>
+          <span className="font-display text-xs tracking-[0.25em] uppercase">
+            Total
+          </span>
+          <span className="font-display text-xl tabular-nums">
+            {formatAed(subtotal)}
+          </span>
         </div>
       </aside>
     </form>
   );
 }
 
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
+function Section({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
   return (
     <section>
       <h2 className="font-display text-xs tracking-[0.25em] uppercase text-foreground mb-4 pb-2 border-b border-border">
@@ -324,9 +343,7 @@ function Field({
         ) : null}
       </Label>
       {children}
-      {hint ? (
-        <p className="text-xs text-muted-foreground">{hint}</p>
-      ) : null}
+      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }
@@ -347,7 +364,9 @@ function Toggle({
       aria-pressed={active}
       className={
         "min-h-[44px] px-6 font-display text-xs tracking-[0.2em] uppercase " +
-        (active ? "bg-brand text-primary-foreground" : "bg-background hover:bg-muted")
+        (active
+          ? "bg-brand text-primary-foreground"
+          : "bg-background hover:bg-muted")
       }
     >
       {children}
@@ -373,18 +392,31 @@ function PaymentOption({
       aria-pressed={active}
       className={
         "p-4 text-left " +
-        (active ? "bg-brand text-primary-foreground" : "bg-background hover:bg-muted")
+        (active
+          ? "bg-brand text-primary-foreground"
+          : "bg-background hover:bg-muted")
       }
     >
       <p className="font-display text-sm tracking-[0.1em] uppercase">{title}</p>
-      <p className={"text-xs mt-1 " + (active ? "text-primary-foreground/85" : "text-muted-foreground")}>
+      <p
+        className={
+          "text-xs mt-1 " +
+          (active ? "text-primary-foreground/85" : "text-muted-foreground")
+        }
+      >
         {note}
       </p>
     </button>
   );
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Row({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="flex items-baseline justify-between gap-3">
       <dt className="text-muted-foreground">{label}</dt>

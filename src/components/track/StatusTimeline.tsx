@@ -1,5 +1,10 @@
 interface StatusTimelineProps {
-  status: "received" | "preparing" | "out_for_delivery" | "delivered" | "cancelled";
+  status:
+    | "received"
+    | "preparing"
+    | "out_for_delivery"
+    | "delivered"
+    | "cancelled";
 }
 
 const STEPS = [
@@ -26,7 +31,10 @@ export function StatusTimeline({ status }: StatusTimelineProps) {
   const activeIndex = STEPS.findIndex((s) => s.id === status);
 
   return (
-    <ol role="list" className="grid grid-cols-1 sm:grid-cols-4 gap-px bg-border border border-border">
+    <ol
+      role="list"
+      className="grid grid-cols-1 sm:grid-cols-4 gap-px bg-border border border-border"
+    >
       {STEPS.map((step, i) => {
         const isPast = i < activeIndex;
         const isActive = i === activeIndex;
@@ -40,8 +48,8 @@ export function StatusTimeline({ status }: StatusTimelineProps) {
               (isActive
                 ? "bg-brand text-primary-foreground"
                 : isPast
-                ? "bg-muted text-muted-foreground"
-                : "bg-background text-muted-foreground")
+                  ? "bg-muted text-muted-foreground"
+                  : "bg-background text-muted-foreground")
             }
           >
             <span className="font-display tabular-nums text-xs tracking-[0.2em]">

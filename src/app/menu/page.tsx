@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Header } from "@/components/site/Header";
 import { Footer } from "@/components/site/Footer";
+import { MobileBottomBar } from "@/components/site/MobileBottomBar";
 import { PageHero } from "@/components/site/PageHero";
 import { MenuLayout } from "@/components/catalog/MenuLayout";
 import { CATEGORIES, getActiveProducts } from "@/data/mock/catalog";
@@ -14,7 +15,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/menu" },
   openGraph: {
     title: "Menu · Napoli 7",
-    description: "Seven pizzas, five focaccia, three desserts, eight drinks. Order online.",
+    description:
+      "Seven pizzas, five focaccia, three desserts, eight drinks. Order online.",
   },
 };
 
@@ -32,6 +34,7 @@ export default function MenuPage() {
         <MenuLayout products={products} categories={CATEGORIES} />
       </main>
       <Footer />
+      <MobileBottomBar />
     </>
   );
 }

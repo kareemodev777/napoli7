@@ -17,7 +17,9 @@ const interTight = Inter_Tight({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? "https://napoli7.com"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL ?? "https://napoli7.com",
+  ),
   title: {
     default: "Napoli 7 — Authentic Italian Neapolitan Pizza, Ajman",
     template: "%s · Napoli 7",

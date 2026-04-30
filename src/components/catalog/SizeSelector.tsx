@@ -9,7 +9,12 @@ interface SizeSelectorProps {
   size?: "sm" | "md";
 }
 
-export function SizeSelector({ sizes, value, onChange, size = "sm" }: SizeSelectorProps) {
+export function SizeSelector({
+  sizes,
+  value,
+  onChange,
+  size = "sm",
+}: SizeSelectorProps) {
   if (sizes.length <= 1) return null;
   const padding = size === "md" ? "px-4 py-3" : "px-3 py-2";
   return (

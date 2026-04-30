@@ -24,7 +24,7 @@ export interface RegisterResult {
 
 export async function registerCustomer(
   _prev: RegisterResult,
-  formData: FormData
+  formData: FormData,
 ): Promise<RegisterResult> {
   const parsed = registerSchema.safeParse({
     firstName: formData.get("firstName"),
@@ -34,7 +34,9 @@ export async function registerCustomer(
     confirmPassword: formData.get("confirmPassword"),
   });
   if (!parsed.success) {
-    return { error: parsed.error.issues[0]?.message ?? "Some fields are missing." };
+    return {
+      error: parsed.error.issues[0]?.message ?? "Some fields are missing.",
+    };
   }
   if (!HAS_SUPABASE) {
     return {

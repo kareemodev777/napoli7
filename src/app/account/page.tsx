@@ -49,7 +49,8 @@ export default async function AccountPage() {
   const user = await requireAuth("/account");
   const firstName =
     (user?.user_metadata?.first_name as string | undefined) ??
-    (user.email?.split("@")[0] ?? "there");
+    user.email?.split("@")[0] ??
+    "there";
   const recent = await loadRecentOrders(user.id);
 
   return (
@@ -71,7 +72,9 @@ export default async function AccountPage() {
               </h2>
               {recent.length === 0 ? (
                 <div className="border border-border bg-card p-8">
-                  <p className="text-base">No orders yet. Order your first pizza.</p>
+                  <p className="text-base">
+                    No orders yet. Order your first pizza.
+                  </p>
                   <Link
                     href="/menu"
                     className="mt-4 inline-flex items-center bg-brand text-primary-foreground px-6 py-3 font-display text-xs tracking-[0.2em] uppercase hover:bg-brand-hover"

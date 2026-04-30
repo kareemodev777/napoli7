@@ -12,15 +12,14 @@ export function PriceBadge({
   className?: string;
 }) {
   const sizeCls =
-    size === "lg"
-      ? "text-[22px]"
-      : size === "sm"
-      ? "text-sm"
-      : "text-base";
+    size === "lg" ? "text-[22px]" : size === "sm" ? "text-sm" : "text-base";
   return (
     <span
       className={
-        "tabular-nums font-display tracking-tight " + sizeCls + " " + (className ?? "")
+        "tabular-nums font-display tracking-tight " +
+        sizeCls +
+        " " +
+        (className ?? "")
       }
     >
       {formatAed(amount)}

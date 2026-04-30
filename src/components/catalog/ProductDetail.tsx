@@ -25,9 +25,13 @@ interface ProductDetailProps {
 export function ProductDetail({ product, categoryLabel }: ProductDetailProps) {
   const addItem = useCart((s) => s.addItem);
 
-  const [sizeId, setSizeId] = useState<SizeId>(product.sizes[0]?.id ?? "regular");
+  const [sizeId, setSizeId] = useState<SizeId>(
+    product.sizes[0]?.id ?? "regular",
+  );
   const [choices, setChoices] = useState<Record<string, CustomizationChoice>>(
-    Object.fromEntries(product.customizations.map((c) => [c.ingredient, "default" as const]))
+    Object.fromEntries(
+      product.customizations.map((c) => [c.ingredient, "default" as const]),
+    ),
   );
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
@@ -37,11 +41,13 @@ export function ProductDetail({ product, categoryLabel }: ProductDetailProps) {
 
   const cartCustomizations = useMemo<CartCustomization[]>(() => {
     return product.customizations
-      .filter((c) => choices[c.ingredient] && choices[c.ingredient] !== "default")
+      .filter(
+        (c) => choices[c.ingredient] && choices[c.ingredient] !== "default",
+      )
       .map((c) => ({
         ingredient: c.ingredient,
         choice: choices[c.ingredient],
-        extraPrice: choices[c.ingredient] === "extra" ? c.extraPrice ?? 0 : 0,
+        extraPrice: choices[c.ingredient] === "extra" ? (c.extraPrice ?? 0) : 0,
       }));
   }, [choices, product.customizations]);
 
@@ -100,7 +106,9 @@ export function ProductDetail({ product, categoryLabel }: ProductDetailProps) {
               {product.name}
             </h1>
             {product.nameIt ? (
-              <p className="mt-2 italic text-lg text-muted-foreground">{product.nameIt}</p>
+              <p className="mt-2 italic text-lg text-muted-foreground">
+                {product.nameIt}
+              </p>
             ) : null}
             <div className="mt-3 flex items-center gap-2">
               {product.isVeg ? <VegDot /> : null}
@@ -144,7 +152,10 @@ export function ProductDetail({ product, categoryLabel }: ProductDetailProps) {
                         customization={c}
                         value={choices[c.ingredient] ?? "default"}
                         onChange={(next) =>
-                          setChoices((prev) => ({ ...prev, [c.ingredient]: next }))
+                          setChoices((prev) => ({
+                            ...prev,
+                            [c.ingredient]: next,
+                          }))
                         }
                       />
                     ))}

@@ -15,7 +15,9 @@ export function MenuItemJsonLd({ product }: { product: Product }) {
         ? "https://schema.org/InStock"
         : "https://schema.org/OutOfStock",
     },
-    suitableForDiet: product.isVeg ? "https://schema.org/VegetarianDiet" : undefined,
+    suitableForDiet: product.isVeg
+      ? "https://schema.org/VegetarianDiet"
+      : undefined,
   };
 
   return (

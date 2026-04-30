@@ -4,7 +4,11 @@ interface MapEmbedProps {
   title?: string;
 }
 
-export function MapEmbed({ lat, lng, title = "Napoli 7 location map" }: MapEmbedProps) {
+export function MapEmbed({
+  lat,
+  lng,
+  title = "Napoli 7 location map",
+}: MapEmbedProps) {
   const src = `https://maps.google.com/maps?q=${lat},${lng}&z=16&output=embed`;
   return (
     <div className="relative w-full overflow-hidden border border-border">

@@ -44,7 +44,7 @@ async function loadOrder(id: string): Promise<OrderForConfirmation | null> {
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, order_number, total_aed, payment_method, payment_status, customer_phone, order_items(product_name, quantity, line_total_aed)"
+      "id, order_number, total_aed, payment_method, payment_status, customer_phone, order_items(product_name, quantity, line_total_aed)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -56,11 +56,17 @@ async function loadOrder(id: string): Promise<OrderForConfirmation | null> {
     paymentMethod: order.payment_method,
     paymentStatus: order.payment_status,
     customerPhone: order.customer_phone,
-    items: (order.order_items ?? []).map((it: { product_name: string; quantity: number; line_total_aed: number | string }) => ({
-      name: it.product_name,
-      quantity: it.quantity,
-      lineTotal: Number(it.line_total_aed),
-    })),
+    items: (order.order_items ?? []).map(
+      (it: {
+        product_name: string;
+        quantity: number;
+        line_total_aed: number | string;
+      }) => ({
+        name: it.product_name,
+        quantity: it.quantity,
+        lineTotal: Number(it.line_total_aed),
+      }),
+    ),
   };
 }
 
@@ -102,12 +108,16 @@ export default async function OrderConfirmationPage({
                       <span>
                         {it.quantity} × {it.name}
                       </span>
-                      <span className="tabular-nums">{it.lineTotal.toFixed(2)} AED</span>
+                      <span className="tabular-nums">
+                        {it.lineTotal.toFixed(2)} AED
+                      </span>
                     </li>
                   ))}
                   <li className="flex justify-between gap-3 py-5 font-display tracking-[0.1em] uppercase">
                     <span>Total</span>
-                    <span className="tabular-nums">{order.totalAed.toFixed(2)} AED</span>
+                    <span className="tabular-nums">
+                      {order.totalAed.toFixed(2)} AED
+                    </span>
                   </li>
                 </ul>
               ) : null}
@@ -129,8 +139,8 @@ export default async function OrderConfirmationPage({
             </>
           ) : (
             <p className="mt-6 text-base text-muted-foreground">
-              Order not found. The kitchen may not have logged this order — call us if you need
-              help on +971 6 534 5772.
+              Order not found. The kitchen may not have logged this order — call
+              us if you need help on +971 6 534 5772.
             </p>
           )}
         </div>

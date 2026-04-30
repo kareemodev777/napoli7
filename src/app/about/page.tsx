@@ -65,15 +65,16 @@ export default function AboutPage() {
             </h2>
             <div className="mt-6 space-y-5 text-base md:text-lg text-muted-foreground leading-relaxed max-w-[60ch]">
               <p>
-                The kitchen behind Napoli 7 grew up in a Neapolitan home where dough rested for two
-                days, where tomatoes were peeled by hand, and where the Sunday pizza was a
-                ritual that pulled three generations to the same table.
+                The kitchen behind Napoli 7 grew up in a Neapolitan home where
+                dough rested for two days, where tomatoes were peeled by hand,
+                and where the Sunday pizza was a ritual that pulled three
+                generations to the same table.
               </p>
               <p>
-                Bringing that ritual to Ajman meant changing nothing important. The flour is
-                still Caputo. The tomato is still San Marzano DOP. The starter — our{" "}
-                <em className="italic">lievito madre</em> — was carried over and is fed every
-                morning.
+                Bringing that ritual to Ajman meant changing nothing important.
+                The flour is still Caputo. The tomato is still San Marzano DOP.
+                The starter — our <em className="italic">lievito madre</em> —
+                was carried over and is fed every morning.
               </p>
             </div>
           </div>
@@ -87,14 +88,16 @@ export default function AboutPage() {
             <div className="mt-6 space-y-5 text-base md:text-lg text-muted-foreground leading-relaxed max-w-[60ch]">
               <p>
                 The base is hand-stretched — the{" "}
-                <em className="italic">schiaffo napoletano</em> — never rolled. The dough rests
-                for forty-eight hours, picks up its sour, opens up like a balloon. The cornicione
-                is soft to the touch and structured at the same time.
+                <em className="italic">schiaffo napoletano</em> — never rolled.
+                The dough rests for forty-eight hours, picks up its sour, opens
+                up like a balloon. The cornicione is soft to the touch and
+                structured at the same time.
               </p>
               <p>
-                The oven runs at 450°C. The pizza enters and turns three times. In ninety seconds
-                the crust is dappled, the cheese has just melted, the basil has wilted exactly
-                once. There is no shortcut and no compromise.
+                The oven runs at 450°C. The pizza enters and turns three times.
+                In ninety seconds the crust is dappled, the cheese has just
+                melted, the basil has wilted exactly once. There is no shortcut
+                and no compromise.
               </p>
             </div>
           </div>
@@ -112,10 +115,11 @@ export default function AboutPage() {
             Seven, perfectly
           </h2>
           <p className="mt-6 text-lg text-muted-foreground leading-relaxed max-w-[55ch] mx-auto">
-            The name comes from the discipline of doing seven pizzas perfectly rather than
-            seventy passably. A short menu makes a better kitchen, a better dough, and a better
-            customer experience. The seven core pizzas on our menu have been refined over years.
-            They are not going anywhere.
+            The name comes from the discipline of doing seven pizzas perfectly
+            rather than seventy passably. A short menu makes a better kitchen, a
+            better dough, and a better customer experience. The seven core
+            pizzas on our menu have been refined over years. They are not going
+            anywhere.
           </p>
         </div>
       </section>

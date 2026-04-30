@@ -12,9 +12,17 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { path: "/location", changeFrequency: "monthly" as const, priority: 0.6 },
     { path: "/contact", changeFrequency: "monthly" as const, priority: 0.5 },
     { path: "/delivery", changeFrequency: "monthly" as const, priority: 0.5 },
-    { path: "/legal/privacy", changeFrequency: "yearly" as const, priority: 0.3 },
+    {
+      path: "/legal/privacy",
+      changeFrequency: "yearly" as const,
+      priority: 0.3,
+    },
     { path: "/legal/terms", changeFrequency: "yearly" as const, priority: 0.3 },
-    { path: "/legal/refund", changeFrequency: "yearly" as const, priority: 0.3 },
+    {
+      path: "/legal/refund",
+      changeFrequency: "yearly" as const,
+      priority: 0.3,
+    },
   ];
 
   const productPaths = PRODUCTS.filter((p) => p.isActive).map((p) => ({
@@ -29,6 +37,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
       lastModified: now,
       changeFrequency,
       priority,
-    })
+    }),
   );
 }

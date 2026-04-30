@@ -30,17 +30,16 @@ export function ProductCard({ product }: { product: Product }) {
       <div className="flex flex-col flex-1 p-5 gap-3">
         <div className="flex items-baseline justify-between gap-3">
           <h3 className="font-display text-lg font-medium leading-tight">
-            <Link
-              href={`/menu/${product.slug}`}
-              className="hover:text-brand"
-            >
+            <Link href={`/menu/${product.slug}`} className="hover:text-brand">
               {product.name}
             </Link>
           </h3>
           <PriceBadge amount={product.price} size="md" />
         </div>
         {product.nameIt ? (
-          <p className="text-sm italic text-muted-foreground -mt-2">{product.nameIt}</p>
+          <p className="text-sm italic text-muted-foreground -mt-2">
+            {product.nameIt}
+          </p>
         ) : null}
         <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 flex-1">
           {product.description}

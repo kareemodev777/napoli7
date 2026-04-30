@@ -34,12 +34,14 @@ const cols = [
 export function Footer() {
   const year = new Date().getFullYear();
   return (
-    <footer className="border-t border-border bg-background">
+    <footer className="border-t border-border bg-background pb-[88px] lg:pb-0">
       <div className="max-w-[1500px] mx-auto px-6 md:px-10 py-16 grid md:grid-cols-4 gap-10">
         <div>
           <Logo />
           <p className="text-sm text-muted-foreground mt-6 max-w-xs leading-relaxed">
-            Authentic Neapolitan pizza. Caputo flour, San Marzano DOP, <em className="italic">lievito madre</em>. Delivered hot in 30 minutes.
+            Authentic Neapolitan pizza. Caputo flour, San Marzano DOP,{" "}
+            <em className="italic">lievito madre</em>. Delivered hot in 30
+            minutes.
           </p>
           <div className="mt-6 space-y-1 text-sm">
             <p>
@@ -67,7 +69,10 @@ export function Footer() {
             <ul className="space-y-3 text-sm">
               {c.links.map((l) => (
                 <li key={l.href}>
-                  <Link href={l.href} className="hover:underline underline-offset-4">
+                  <Link
+                    href={l.href}
+                    className="hover:underline underline-offset-4"
+                  >
                     {l.label}
                   </Link>
                 </li>

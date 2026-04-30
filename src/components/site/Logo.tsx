@@ -4,14 +4,17 @@ import Link from "next/link";
 export function Logo({
   className = "",
   variant = "dark",
+  tabIndex,
 }: {
   className?: string;
   variant?: "dark" | "light";
+  tabIndex?: number;
 }) {
   return (
     <Link
       href="/"
       aria-label="Napoli 7 — home"
+      tabIndex={tabIndex}
       className={`inline-flex items-center gap-3 leading-none ${className}`}
     >
       <Image

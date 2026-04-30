@@ -36,7 +36,10 @@ export default function ContactPage() {
             </h2>
             <dl className="space-y-4 text-base">
               <Row label="Phone">
-                <a className="hover:underline" href={`tel:${en.brand.phoneTel}`}>
+                <a
+                  className="hover:underline"
+                  href={`tel:${en.brand.phoneTel}`}
+                >
                   {en.brand.phone}
                 </a>
               </Row>
@@ -46,7 +49,10 @@ export default function ContactPage() {
                 </a>
               </Row>
               <Row label="Email">
-                <a className="hover:underline" href={`mailto:${en.brand.email}`}>
+                <a
+                  className="hover:underline"
+                  href={`mailto:${en.brand.email}`}
+                >
                   {en.brand.email}
                 </a>
               </Row>
@@ -87,7 +93,13 @@ export default function ContactPage() {
   );
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Row({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="grid grid-cols-[120px_1fr] gap-4 items-start">
       <dt className="font-display text-xs tracking-[0.2em] uppercase text-muted-foreground pt-1">
