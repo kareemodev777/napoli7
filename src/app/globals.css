@@ -287,6 +287,11 @@
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 
+  @keyframes mobileNavBackdropIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
   /* Mobile header height token — consumed by sticky category nav offset */
   .header-h-mobile { height: var(--header-h, 56px); }
 

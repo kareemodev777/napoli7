@@ -14,6 +14,7 @@ import {
 import { Logo } from "./Logo";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 import { useRouteChange } from "@/lib/use-route-change";
+import en from "@/i18n/en.json";
 
 const navLinks = [
   { label: "Menu", href: "/menu" },
@@ -267,17 +268,11 @@ export function MobileNav() {
 
           {/* Hours */}
           <p className="font-display text-xs text-muted-foreground uppercase tracking-[1px] pt-1">
-            Open daily 11:00 – 22:00
+            {en.brand.hours}
           </p>
         </div>
       </div>
 
-      <style>{`
-        @keyframes mobileNavBackdropIn {
-          from { opacity: 0; }
-          to   { opacity: 1; }
-        }
-      `}</style>
     </>
   );
 }
