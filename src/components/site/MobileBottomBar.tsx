@@ -13,6 +13,8 @@ const SUPPRESSED_PREFIXES = [
   "/order",
   "/login",
   "/register",
+  "/account",
+  "/admin",
 ];
 
 function isSuppressed(pathname: string): boolean {
