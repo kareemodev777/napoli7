@@ -17,13 +17,14 @@ export function MenuCategoryNav({ categories }: MenuCategoryNavProps) {
           .filter((e) => e.isIntersecting)
           .sort(
             (a, b) =>
-              (b.intersectionRect.height ?? 0) - (a.intersectionRect.height ?? 0)
+              (b.intersectionRect.height ?? 0) -
+              (a.intersectionRect.height ?? 0),
           );
         if (visible[0]?.target.id) {
           setActive(visible[0].target.id);
         }
       },
-      { rootMargin: "-30% 0px -55% 0px", threshold: [0, 0.25, 0.5, 0.75, 1] }
+      { rootMargin: "-30% 0px -55% 0px", threshold: [0, 0.25, 0.5, 0.75, 1] },
     );
     categories.forEach((c) => {
       const el = document.getElementById(c.id);
@@ -45,7 +46,7 @@ export function MenuCategoryNav({ categories }: MenuCategoryNavProps) {
   return (
     <nav
       aria-label="Menu sections"
-      className="sticky top-0 z-20 -mx-6 md:-mx-10 mb-8 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-b border-border"
+      className="sticky top-[var(--header-h)] z-20 -mx-6 md:-mx-10 mb-8 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-b border-border"
     >
       <ul className="flex items-center gap-px overflow-x-auto px-6 md:px-10 no-scrollbar">
         {categories.map((c) => {

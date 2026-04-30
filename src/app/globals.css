@@ -286,4 +286,37 @@
   .font-display { font-family: var(--font-display); }
   .no-scrollbar::-webkit-scrollbar { display: none; }
   .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+
+  /* Mobile header height token — consumed by sticky category nav offset */
+  .header-h-mobile { height: var(--header-h, 56px); }
+
+  /* Safe-area-aware bottom padding for mobile bottom bar */
+  .safe-bottom {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  /* Spacer for pages that render the mobile bottom bar */
+  .bottom-bar-spacer {
+    padding-bottom: 88px;
+  }
+  @media (min-width: 1024px) {
+    .bottom-bar-spacer {
+      padding-bottom: 0;
+    }
+  }
+}
+
+/* Scroll-lock fallback — applied by useBodyScrollLock hook */
+body[data-scroll-lock] {
+  overflow: hidden;
+}
+
+/* Mobile header height custom property */
+:root {
+  --header-h: 56px;
+}
+@media (min-width: 1024px) {
+  :root {
+    --header-h: 76px;
+  }
 }

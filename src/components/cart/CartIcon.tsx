@@ -13,7 +13,7 @@ export function CartIcon() {
   return (
     <Link
       href="/cart"
-      className="relative flex items-center gap-2 hover:opacity-60"
+      className="hidden lg:inline-flex relative items-center gap-2 hover:opacity-60"
       aria-label={`Cart, ${count} item${count === 1 ? "" : "s"}`}
     >
       <ShoppingBag className="h-5 w-5" strokeWidth={1.5} />
