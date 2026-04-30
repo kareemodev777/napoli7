@@ -1,0 +1,65 @@
+"use server";
+
+import { z } from "zod";
+import { createClient } from "@/lib/supabase/server";
+import { HAS_SUPABASE, SITE_URL } from "@/lib/env";
+
+const registerSchema = z
+  .object({
+    firstName: z.string().min(1),
+    lastName: z.string().min(1),
+    email: z.string().email(),
+    password: z.string().min(8, "Use at least 8 characters."),
+    confirmPassword: z.string(),
+  })
+  .refine((d) => d.password === d.confirmPassword, {
+    path: ["confirmPassword"],
+    message: "Passwords do not match.",
+  });
+
+export interface RegisterResult {
+  error?: string;
+  message?: string;
+}
+
+export async function registerCustomer(
+  _prev: RegisterResult,
+  formData: FormData
+): Promise<RegisterResult> {
+  const parsed = registerSchema.safeParse({
+    firstName: formData.get("firstName"),
+    lastName: formData.get("lastName"),
+    email: formData.get("email"),
+    password: formData.get("password"),
+    confirmPassword: formData.get("confirmPassword"),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Some fields are missing." };
+  }
+  if (!HAS_SUPABASE) {
+    return {
+      error: "Registration activates once Supabase is configured. See README.",
+    };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signUp({
+    email: parsed.data.email,
+    password: parsed.data.password,
+    options: {
+      emailRedirectTo: `${SITE_URL}/login?confirmed=true`,
+      data: {
+        first_name: parsed.data.firstName,
+        last_name: parsed.data.lastName,
+      },
+    },
+  });
+  if (error) {
+    if (error.message.toLowerCase().includes("already")) {
+      return {
+        error: "An account with this email already exists. Log in instead.",
+      };
+    }
+    return { error: error.message };
+  }
+  return { message: "Check your inbox to confirm your email." };
+}

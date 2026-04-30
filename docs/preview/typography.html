@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Napoli 7 — Typography Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --color-brand:    #1E3A8A;
+    --color-ink:      #0A0A0A;
+    --color-ink-strong:#1A1A1A;
+    --color-ink-body: #585858;
+    --color-ink-muted:#8A8A8A;
+    --color-border:   #E6E6E6;
+    --font-display:   "Inter", "Helvetica Neue", system-ui, sans-serif;
+    --font-body:      "Inter", "Helvetica Neue", system-ui, sans-serif;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+  body { font-family: var(--font-body); font-feature-settings: "ss01", "cv11"; background: #fff; color: var(--color-ink-body); padding: 64px 32px; }
+  .container { max-width: 1140px; margin: 0 auto; }
+  .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--color-ink-strong); margin-bottom: 12px; }
+  h1.title { font-family: var(--font-display); font-size: 56px; font-weight: 700; letter-spacing: -0.01em; color: var(--color-ink); margin-bottom: 16px; line-height: 1.05; }
+  .lede { font-size: 16px; line-height: 1.6; max-width: 65ch; margin-bottom: 64px; }
+  section { padding: 32px 0; border-top: 1px solid var(--color-border); }
+  section:first-of-type { border-top: 0; padding-top: 0; }
+  .meta { font-size: 11px; font-family: ui-monospace, "SF Mono", Menlo, monospace; color: var(--color-ink-muted); letter-spacing: 0.3px; text-transform: uppercase; margin-bottom: 16px; }
+
+  .display { font-family: var(--font-display); font-size: 56px; font-weight: 700; letter-spacing: -0.01em; line-height: 1.05; color: var(--color-ink); }
+  .h1      { font-family: var(--font-display); font-size: 34px; font-weight: 700; letter-spacing: 1.5px; line-height: 1.15; text-transform: uppercase; color: var(--color-ink); }
+  .h2      { font-family: var(--font-display); font-size: 26px; font-weight: 700; letter-spacing: 1.5px; line-height: 1.2; text-transform: uppercase; color: var(--color-ink); }
+  .h3      { font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: 1px; line-height: 1.3; color: var(--color-ink); }
+  .h4      { font-family: var(--font-display); font-size: 16px; font-weight: 700; letter-spacing: 0.5px; line-height: 1.4; color: var(--color-ink); }
+  .eyebrow-demo { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--color-ink-strong); }
+  .body-lg { font-size: 16px; font-weight: 400; line-height: 1.6; color: var(--color-ink-body); }
+  .body    { font-size: 14px; font-weight: 400; line-height: 1.5; color: var(--color-ink-body); }
+  .body-sm { font-size: 13px; font-weight: 400; line-height: 1.5; color: var(--color-ink-body); }
+  .caption { font-size: 12px; font-weight: 400; letter-spacing: 0.2px; color: var(--color-ink-muted); }
+  .button-text { font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--color-ink); }
+  .price-lg { font-size: 22px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--color-ink); }
+  .price    { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--color-ink); }
+
+  .pangram { display: block; margin-top: 8px; }
+  .pangram em { color: var(--color-brand); font-style: italic; }
+
+  .scenario { background: #F8F8F8; padding: 48px; margin-top: 48px; }
+  .scenario .eyebrow-demo { margin-bottom: 12px; }
+  .scenario .h1 { margin-bottom: 16px; }
+  .scenario .body-lg { max-width: 60ch; margin-bottom: 32px; }
+  .scenario .row { display: flex; gap: 12px; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; padding: 12px 24px; font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; border: 0; cursor: pointer; }
+  .btn--primary { background: var(--color-brand); color: #fff; }
+  .btn--secondary { background: #fff; color: var(--color-ink); border: 2px solid var(--color-ink); padding: 10px 22px; }
+
+  .product-card { background: #fff; border: 1px solid var(--color-border); padding: 24px; max-width: 360px; margin-top: 32px; }
+  .product-card .eyebrow-demo { margin-bottom: 8px; }
+  .product-card .h3 { margin-bottom: 6px; }
+  .product-card .body-sm { margin-bottom: 16px; }
+  .product-card .row { display: flex; justify-content: space-between; align-items: center; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="eyebrow">Napoli 7</div>
+  <h1 class="title">Typography</h1>
+  <p class="lede">Helvetica/Univers-family geometric sans (Inter as the free, web-safe fallback). Headings ship UPPERCASE with letter-spacing 1.5px — the Swiss-editorial signature lifted from Dieci. Italic reserved for foreign-language words. No exclamation marks.</p>
+
+  <section>
+    <div class="meta">Display · 56 · 700 · ls -0.01em · line 1.05</div>
+    <div class="display">Authentic Italian Neapolitan Pizza</div>
+  </section>
+
+  <section>
+    <div class="meta">H1 · 34 · 700 · UPPERCASE · ls 1.5px</div>
+    <div class="h1">Our Menu</div>
+    <span class="pangram body-sm">The quick brown fox jumps over the lazy dog. Margherita 1234567890.</span>
+  </section>
+
+  <section>
+    <div class="meta">H2 · 26 · 700 · UPPERCASE · ls 1.5px</div>
+    <div class="h2">What Makes Us Special</div>
+  </section>
+
+  <section>
+    <div class="meta">H3 · 18 · 700 · ls 1px</div>
+    <div class="h3">Margherita Classic</div>
+  </section>
+
+  <section>
+    <div class="meta">H4 · 16 · 700 · ls 0.5px</div>
+    <div class="h4">Customize your pizza</div>
+  </section>
+
+  <section>
+    <div class="meta">Eyebrow · 12 · 700 · UPPERCASE · ls 1.5px</div>
+    <div class="eyebrow-demo">Wood-Fired</div>
+  </section>
+
+  <section>
+    <div class="meta">Body Large · 16 · 400 · line 1.6</div>
+    <p class="body-lg">Napoli 7 is dedicated to serving authentic Neapolitan pizza in Ajman, inspired by the traditions of Naples — the birthplace of pizza. The name reflects our philosophy: a deliberately limited selection of seven pizzas to ensure perfect execution and consistently fresh ingredients.</p>
+  </section>
+
+  <section>
+    <div class="meta">Body · 14 · 400 · line 1.5</div>
+    <p class="body">A simple yet elegant masterpiece featuring our signature hand-stretched dough, San Marzano DOP tomato sauce, fresh fior di latte mozzarella, basil leaves, and a finishing drizzle of extra virgin olive oil. The "holy trinity" of Italian flavors, executed with restraint.</p>
+  </section>
+
+  <section>
+    <div class="meta">Body Small · 13 · 400 · line 1.5</div>
+    <p class="body-sm">Refunds are usually processed within 5 to 7 business days, depending on your bank or payment provider.</p>
+  </section>
+
+  <section>
+    <div class="meta">Caption · 12 · 400 · ls 0.2px · muted</div>
+    <p class="caption">*Offers only available for takeout and delivery orders.</p>
+  </section>
+
+  <section>
+    <div class="meta">Button text · 13 · 700 · UPPERCASE · ls 1.5px</div>
+    <div class="button-text">Order Your Pizza</div>
+  </section>
+
+  <section>
+    <div class="meta">Price Large · 22 · 700 · tabular</div>
+    <div class="price-lg">29.00 AED</div>
+    <div class="meta" style="margin-top:24px">Price · 16 · 700 · tabular</div>
+    <div class="price">29.00 AED</div>
+  </section>
+
+  <section>
+    <div class="meta">Italic for foreign-language words</div>
+    <p class="body-lg">Made daily with <em>lievito madre</em> — a slow-fermented sourdough — and stretched by hand using <em>schiaffo napoletano</em>, the traditional Neapolitan slap technique.</p>
+  </section>
+
+  <div class="scenario">
+    <div class="eyebrow-demo">Hero Block · in context</div>
+    <h1 class="h1" style="font-size:48px;line-height:1.05;letter-spacing:1.5px">Authentic Italian Neapolitan Pizza</h1>
+    <p class="body-lg">Caputo flour. San Marzano DOP. <em>Lievito madre</em>. Handmade Neapolitan oven. Delivered in 30 minutes.</p>
+    <div class="row">
+      <button class="btn btn--primary">Order Now</button>
+      <button class="btn btn--secondary">View Menu</button>
+    </div>
+  </div>
+
+  <div class="product-card">
+    <div class="eyebrow-demo">Pizza</div>
+    <div class="h3">Bresaola Truffle</div>
+    <p class="body-sm">Indulge in the luxurious flavors of our truffle pizza, with cured bresaola, fior di latte, and shaved black truffle.</p>
+    <div class="row">
+      <span class="price">59.00 AED</span>
+      <button class="btn btn--primary" style="padding:8px 16px">Add</button>
+    </div>
+  </div>
+</div>
+</body>
+</html>

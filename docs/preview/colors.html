@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Napoli 7 — Color Preview</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --color-brand:           #1E3A8A;
+    --color-brand-azure:     #34A5DC;
+    --color-brand-azure-deep:#1E88C7;
+    --color-brand-deep:      #142A66;
+    --color-brand-hover:     #16307A;
+    --color-brand-soft:      #E8EFFB;
+    --color-brand-azure-soft:#E1F2FB;
+    --color-flag-green:      #009038;
+    --color-flag-red:        #E00008;
+    --color-ink:             #0A0A0A;
+    --color-ink-strong:      #1A1A1A;
+    --color-ink-body:        #585858;
+    --color-ink-muted:       #8A8A8A;
+    --color-bg:              #FFFFFF;
+    --color-bg-subtle:       #F8F8F8;
+    --color-bg-azure-tile:   #E1F2FB;
+    --color-border:          #E6E6E6;
+    --color-border-strong:   #D9D9D9;
+    --color-success:         #398F14;
+    --color-success-soft:    #D3E991;
+    --color-error:           #D11C1C;
+    --color-error-soft:      #FCE2E2;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { font-family: "Inter", "Helvetica Neue", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  body { background: var(--color-bg); color: var(--color-ink-body); padding: 64px 32px; }
+  .container { max-width: 1140px; margin: 0 auto; }
+  .eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--color-ink-strong); margin-bottom: 12px; }
+  h1.title { font-size: 56px; font-weight: 700; letter-spacing: -0.01em; color: var(--color-ink); margin-bottom: 16px; line-height: 1.05; }
+  h1.title em { font-style: normal; color: var(--color-brand); }
+  h2 { font-size: 26px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--color-ink); margin: 64px 0 8px; }
+  h2 + .h2-meta { font-size: 13px; color: var(--color-ink-muted); margin-bottom: 24px; }
+  p.lede { font-size: 16px; line-height: 1.6; max-width: 65ch; color: var(--color-ink-body); margin-bottom: 32px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 1px; background: var(--color-border); border: 1px solid var(--color-border); }
+  .swatch { background: var(--color-bg); }
+  .swatch__color { height: 140px; border-bottom: 1px solid var(--color-border); position: relative; }
+  .swatch__color--white { box-shadow: inset 0 0 0 1px var(--color-border); }
+  .swatch__contrast { position: absolute; bottom: 8px; left: 10px; font-size: 10px; font-family: ui-monospace, "SF Mono", Menlo, monospace; padding: 2px 6px; background: rgba(255,255,255,0.92); color: #000; letter-spacing: 0.3px; }
+  .swatch__contrast--dark { background: rgba(0,0,0,0.7); color: #fff; }
+  .swatch__meta { padding: 16px 18px; }
+  .swatch__name { font-size: 13px; font-weight: 700; letter-spacing: 0.5px; color: var(--color-ink-strong); margin-bottom: 4px; }
+  .swatch__hex { font-size: 12px; color: var(--color-ink-muted); font-family: ui-monospace, "SF Mono", Menlo, monospace; letter-spacing: 0.3px; }
+  .swatch__token { font-size: 11px; color: var(--color-ink-muted); margin-top: 6px; font-family: ui-monospace, "SF Mono", Menlo, monospace; }
+
+  .examples { display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-top: 48px; }
+  @media (max-width: 768px) { .examples { grid-template-columns: 1fr; } }
+  .example { border: 1px solid var(--color-border); padding: 32px; background: var(--color-bg); }
+  .example h3 { font-size: 14px; font-weight: 700; color: var(--color-ink); margin-bottom: 20px; letter-spacing: 1.5px; text-transform: uppercase; }
+
+  .btn { display: inline-flex; align-items: center; justify-content: center; padding: 12px 24px; min-height: 44px; font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; border: 0; cursor: pointer; transition: all 200ms cubic-bezier(0.2, 0, 0, 1); }
+  .btn--primary { background: var(--color-brand); color: #fff; }
+  .btn--primary:hover { background: var(--color-brand-hover); }
+  .btn--secondary { background: #fff; color: var(--color-ink); border: 2px solid var(--color-ink); padding: 10px 22px; }
+  .btn--secondary:hover { background: var(--color-ink); color: #fff; }
+  .btn--accent { background: var(--color-brand-azure); color: #fff; }
+  .btn--accent:hover { background: var(--color-brand-azure-deep); }
+  .btn--destructive { background: var(--color-error); color: #fff; }
+  .row { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; margin-bottom: 16px; }
+  .row:last-child { margin-bottom: 0; }
+
+  .badge { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; }
+  .badge--brand { background: var(--color-brand); color: #fff; }
+  .badge--azure { background: var(--color-brand-azure); color: #fff; }
+  .badge--ink { background: var(--color-ink); color: #fff; }
+  .badge--soft { background: var(--color-brand-soft); color: var(--color-brand); }
+
+  .dot { display: inline-block; width: 8px; height: 8px; border-radius: 999px; }
+  .dot--veg { background: var(--color-flag-green); }
+  .dot--spicy { background: var(--color-flag-red); }
+
+  .flag-strip { display: inline-flex; height: 24px; }
+  .flag-strip span { display: block; width: 8px; }
+  .flag-strip .g { background: var(--color-flag-green); }
+  .flag-strip .w { background: #fff; box-shadow: inset 0 0 0 1px var(--color-border); }
+  .flag-strip .r { background: var(--color-flag-red); }
+
+  .alert { padding: 12px 16px; font-size: 13px; margin-bottom: 8px; }
+  .alert--info { background: var(--color-brand); color: #fff; }
+  .alert--info a { color: #fff; text-decoration: underline; }
+  .alert--soft { background: var(--color-brand-soft); color: var(--color-brand); }
+  .alert--success { background: var(--color-success-soft); color: var(--color-success); }
+  .alert--error { background: var(--color-error-soft); color: var(--color-error); }
+  .price { font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--color-ink); }
+
+  .feature-tile { background: var(--color-bg-azure-tile); padding: 32px 24px; text-align: center; }
+  .feature-tile__icon { width: 40px; height: 40px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center; color: var(--color-brand); }
+  .feature-tile__icon svg { width: 100%; height: 100%; stroke: currentColor; fill: none; stroke-width: 1.5; }
+  .feature-tile__title { font-size: 14px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--color-ink); margin-bottom: 8px; }
+  .feature-tile__caption { font-size: 13px; line-height: 1.5; color: var(--color-ink-body); }
+  .feature-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 24px; }
+  @media (max-width: 768px) { .feature-row { grid-template-columns: repeat(2, 1fr); } }
+
+  .footer-preview { background: var(--color-brand-deep); color: #fff; padding: 48px 32px 24px; margin-top: 64px; }
+  .footer-preview__heading { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #fff; margin-bottom: 12px; }
+  .footer-preview__link { display: block; font-size: 13px; color: rgba(255,255,255,0.75); text-decoration: none; margin-bottom: 6px; }
+  .footer-preview__cols { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 32px; margin-bottom: 32px; }
+  @media (max-width: 768px) { .footer-preview__cols { grid-template-columns: 1fr 1fr; } }
+  .footer-preview__bottom { border-top: 1px solid rgba(255,255,255,0.15); padding-top: 16px; display: flex; justify-content: space-between; align-items: center; gap: 16px; flex-wrap: wrap; font-size: 12px; color: rgba(255,255,255,0.6); }
+
+  .product-card { background: #fff; border: 1px solid var(--color-border); padding: 0; }
+  .product-card__img { aspect-ratio: 4/3; background: linear-gradient(135deg, #1E3A8A 0%, #34A5DC 100%); position: relative; }
+  .product-card__dots { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; }
+  .product-card__body { padding: 20px 24px 24px; }
+  .product-card__cat { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--color-ink-muted); margin-bottom: 6px; }
+  .product-card__title { font-size: 18px; font-weight: 700; color: var(--color-ink); margin-bottom: 6px; }
+  .product-card__desc { font-size: 13px; line-height: 1.5; color: var(--color-ink-body); margin-bottom: 16px; }
+  .product-card__row { display: flex; justify-content: space-between; align-items: center; }
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="eyebrow">Napoli 7</div>
+  <h1 class="title">Color System — <em>Azzurro</em> Edition</h1>
+  <p class="lede">Brand colors sampled from the Napoli 7 logo: deep navy (the outer ring) + sky azure (the inner disc), with Italian flag green and red as restricted accent details. White canvas, ink type, grayscale ramp inherited from the Dieci-Swiss architecture. No gradients (the imagery placeholder above is a one-time concession until real photography is shot).</p>
+
+  <h2>Brand</h2>
+  <div class="h2-meta">Navy is the primary CTA / link / accent color. Azure supports as fills and hover states. Deep navy anchors the footer.</div>
+  <div class="grid">
+    <div class="swatch"><div class="swatch__color" style="background:#1E3A8A"><span class="swatch__contrast swatch__contrast--dark">9.1 : 1 AAA on #fff</span></div><div class="swatch__meta"><div class="swatch__name">Brand (Navy)</div><div class="swatch__hex">#1E3A8A</div><div class="swatch__token">--color-brand</div></div></div>
+    <div class="swatch"><div class="swatch__color" style="background:#34A5DC"><span class="swatch__contrast">3.0 : 1 — fills only</span></div><div class="swatch__meta"><div class="swatch__name">Azure</div><div class="swatch__hex">#34A5DC</div><div class="swatch__token">--color-brand-azure</div></div></div>
+    <div class="swatch"><div class="swatch__color" style="background:#1E88C7"></div><div class="swatch__meta"><div class="swatch__name">Azure Deep</div><div class="swatch__hex">#1E88C7</div><div class="swatch__token">--color-brand-azure-deep</div></div></div>
+    <div class="swatch"><div class="swatch__color" style="background:#142A66"></div><div class="swatch__meta"><div class="swatch__name">Brand Deep</div><div class="swatch__hex">#142A66</div><div class="swatch__token">--color-brand-deep</div></div></div>
+    <div class="swatch"><div class="swatch__color" style="background:#16307A"></div><div class="swatch__meta"><div class="swatch__name">Brand Hover</div><div class="swatch__hex">#16307A</div><div class="swatch__token">--color-brand-hover</div></div></div>
+    <div class="swatch"><div class="swatch__color" style="background:#E8EFFB"></div><div class="swatch__meta"><div class="swatch__name">Brand Soft</div><div class="swatch__hex">#E8EFFB</div><div class="swatch__token">--color-brand-soft</div></div></div>
+    <div class="swatch"><div class="swatch__color" style="background:#E1F2FB"></div><div class="swatch__meta"><div class="swatch__name">Azure Soft</div><div class="swatch__hex">#E1F2FB</div><div class="swatch__token">--color-brand-azure-soft</div></div></div>
+  </div>
+
+  <h2>Italian Flag — Restricted Accent</h2>
+  <div class="h2-meta">Permitted in three places only: footer micro-strip, "veg" dot, "spicy" dot. Never as a CTA, link, or text color.</div>
+  <div class="grid">
+    <div class="swatch"><div class="swatch__color" style="background:#009038"></div><div class="swatch__meta"><div class="swatch__name">Flag Green</div><div class="swatch__hex">#009038</div><div class="swatch__token">--color-flag-green</div></div></div>
+    <div class="swatch"><div class="swatch__color swatch__color--white" style="background:#FFFFFF"></div><div class="swatch__meta"><div class="swatch__name">Flag White</div><div class="swatch__hex">#FFFFFF</div><div class="swatch__token">--color-flag-white</div></div></div>
+    <div class="swatch"><div class="swatch__color" style="background:#E00008"></div><div class="swatch__meta"><div class="swatch__name">Flag Red</div><div class="swatch__hex">#E00008</div><div class="swatch__token">--color-flag-red</div></div></div>
+  </div>
+
+  <h2>Ink &amp; Body</h2>
+  <div class="h2-meta">Type and content surfaces. Unchanged from the architectural inheritance.</div>
+  <div class="grid">
+    <div class="swatch"><div class="swatch__color" style="background:#0A0A0A"></div><div class="swatch__meta"><div class="swatch__name">Ink</div><div class="swatch__hex">#0A0A0A</div><div class="swatch__token">--color-ink</div></div></div>
+    <div class="swatch"><div class="swatch__color" style="background:#1A1A1A"></div><div class="swatch__meta"><div class="swatch__name">Ink Strong</div><div class="swatch__hex">#1A1A1A</div><div class="swatch__token">--color-ink-strong</div></div></div>
+    <div class="swatch"><div class="swatch__color" style="background:#585858"></div><div class="swatch__meta"><div class="swatch__name">Ink Body</div><div class="swatch__hex">#585858</div><div class="swatch__token">--color-ink-body</div></div></div>
+    <div class="swatch"><div class="swatch__color" style="background:#8A8A8A"></div><div class="swatch__meta"><div class="swatch__name">Ink Muted</div><div class="swatch__hex">#8A8A8A</div><div class="swatch__token">--color-ink-muted</div></div></div>
+  </div>
+
+  <h2>Surface &amp; Borders</h2>
+  <div class="grid">
+    <div class="swatch"><div class="swatch__color swatch__color--white" style="background:#FFFFFF"></div><div class="swatch__meta"><div class="swatch__name">Bg</div><div class="swatch__hex">#FFFFFF</div><div class="swatch__token">--color-bg</div></div></div>
+    <div class="swatch"><div class="swatch__color" style="background:#F8F8F8"></div><div class="swatch__meta"><div class="swatch__name">Bg Subtle</div><div class="swatch__hex">#F8F8F8</div><div class="swatch__token">--color-bg-subtle</div></div></div>
+    <div class="swatch"><div class="swatch__color" style="background:#E1F2FB"></div><div class="swatch__meta"><div class="swatch__name">Azure Tile</div><div class="swatch__hex">#E1F2FB</div><div class="swatch__token">--color-bg-azure-tile</div></div></div>
+    <div class="swatch"><div class="swatch__color" style="background:#E6E6E6"></div><div class="swatch__meta"><div class="swatch__name">Border</div><div class="swatch__hex">#E6E6E6</div><div class="swatch__token">--color-border</div></div></div>
+    <div class="swatch"><div class="swatch__color" style="background:#D9D9D9"></div><div class="swatch__meta"><div class="swatch__name">Border Strong</div><div class="swatch__hex">#D9D9D9</div><div class="swatch__token">--color-border-strong</div></div></div>
+  </div>
+
+  <h2>State</h2>
+  <div class="grid">
+    <div class="swatch"><div class="swatch__color" style="background:#398F14"></div><div class="swatch__meta"><div class="swatch__name">Success</div><div class="swatch__hex">#398F14</div><div class="swatch__token">--color-success</div></div></div>
+    <div class="swatch"><div class="swatch__color" style="background:#D3E991"></div><div class="swatch__meta"><div class="swatch__name">Success Soft</div><div class="swatch__hex">#D3E991</div><div class="swatch__token">--color-success-soft</div></div></div>
+    <div class="swatch"><div class="swatch__color" style="background:#D11C1C"></div><div class="swatch__meta"><div class="swatch__name">Error</div><div class="swatch__hex">#D11C1C</div><div class="swatch__token">--color-error</div></div></div>
+    <div class="swatch"><div class="swatch__color" style="background:#FCE2E2"></div><div class="swatch__meta"><div class="swatch__name">Error Soft</div><div class="swatch__hex">#FCE2E2</div><div class="swatch__token">--color-error-soft</div></div></div>
+  </div>
+
+  <h2>In Context</h2>
+  <div class="examples">
+    <div class="example">
+      <h3>Buttons</h3>
+      <div class="row">
+        <button class="btn btn--primary">Order Now</button>
+        <button class="btn btn--secondary">View Menu</button>
+      </div>
+      <div class="row">
+        <button class="btn btn--accent">Apply Voucher</button>
+        <button class="btn btn--destructive">Cancel Order</button>
+      </div>
+    </div>
+
+    <div class="example">
+      <h3>Badges &amp; Dots</h3>
+      <div class="row">
+        <span class="badge badge--brand">New</span>
+        <span class="badge badge--azure">Bestseller</span>
+        <span class="badge badge--ink">-20%</span>
+        <span class="badge badge--soft">First order</span>
+      </div>
+      <div class="row" style="font-size:13px;color:#585858">
+        <span class="dot dot--veg"></span> Vegetarian
+        <span style="width:24px"></span>
+        <span class="dot dot--spicy"></span> Spicy
+      </div>
+    </div>
+
+    <div class="example">
+      <h3>Alerts</h3>
+      <div class="alert alert--info">We use cookies to improve your experience. <a>Accept</a></div>
+      <div class="alert alert--soft">Your first Margherita is on us — sign up to claim.</div>
+      <div class="alert alert--success">Order confirmed. Estimated arrival 11:35.</div>
+      <div class="alert alert--error">Payment failed. Please try a different card.</div>
+    </div>
+
+    <div class="example">
+      <h3>Italian Flag Strip</h3>
+      <p style="font-size:13px;color:#585858;margin-bottom:16px;line-height:1.5">Footer micro-strip — green / white / red, 8px wide bars, 24px tall. The single permitted block use of green and red.</p>
+      <div class="flag-strip"><span class="g"></span><span class="w"></span><span class="r"></span></div>
+    </div>
+  </div>
+
+  <h2>Feature Tile Row — Azure Background Variant</h2>
+  <div class="h2-meta">Echoes the inner azure disc of the logo. Use once per page maximum.</div>
+  <div class="feature-row">
+    <div class="feature-tile">
+      <div class="feature-tile__icon"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0z"/><path d="M8 12s1.5-3 4-3 4 3 4 3-1.5 3-4 3-4-3-4-3z"/></svg></div>
+      <div class="feature-tile__title">Wood-Fired</div>
+      <div class="feature-tile__caption">Hybrid wood &amp; gas oven, ~450°C.</div>
+    </div>
+    <div class="feature-tile">
+      <div class="feature-tile__icon"><svg viewBox="0 0 24 24"><path d="M12 2v20M5 9c0-3 3-5 7-5s7 2 7 5"/></svg></div>
+      <div class="feature-tile__title">Fresh Daily</div>
+      <div class="feature-tile__caption">Locally sourced, mozzarella from Italy.</div>
+    </div>
+    <div class="feature-tile">
+      <div class="feature-tile__icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+      <div class="feature-tile__title">30 Minutes</div>
+      <div class="feature-tile__caption">Hot pizza, delivered fast in Ajman.</div>
+    </div>
+    <div class="feature-tile">
+      <div class="feature-tile__icon"><svg viewBox="0 0 24 24"><path d="M12 3l9 4v5c0 5-4 8-9 9-5-1-9-4-9-9V7l9-4z"/></svg></div>
+      <div class="feature-tile__title">Hygiene First</div>
+      <div class="feature-tile__caption">Modern, audited kitchen.</div>
+    </div>
+  </div>
+
+  <h2>Product Card</h2>
+  <div class="h2-meta">Navy / azure imagery placeholder until real photography is shot. Spicy + veg dots placed top-right.</div>
+  <div style="max-width:360px;margin-top:24px">
+    <div class="product-card">
+      <div class="product-card__img">
+        <div class="product-card__dots">
+          <span class="dot dot--spicy" title="Spicy"></span>
+        </div>
+      </div>
+      <div class="product-card__body">
+        <div class="product-card__cat">Pizza</div>
+        <div class="product-card__title">Spicy Peperoni · <em style="font-style:italic;color:#585858">Diavola Piccante</em></div>
+        <p class="product-card__desc">San Marzano, fior di latte, spicy pepperoni. Thin crust, bold finish.</p>
+        <div class="product-card__row">
+          <span class="price">48.00 AED</span>
+          <button class="btn btn--primary" style="padding:8px 16px">Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer-preview">
+    <div class="footer-preview__cols">
+      <div>
+        <div class="footer-preview__heading">Napoli 7</div>
+        <p style="font-size:13px;line-height:1.6;color:rgba(255,255,255,0.75);max-width:30ch">Authentic Neapolitan pizza. Caputo flour, San Marzano DOP, lievito madre. Delivered in 30 minutes.</p>
+      </div>
+      <div>
+        <div class="footer-preview__heading">Quick Links</div>
+        <a class="footer-preview__link" href="#">Home</a>
+        <a class="footer-preview__link" href="#">Menu</a>
+        <a class="footer-preview__link" href="#">Deals</a>
+        <a class="footer-preview__link" href="#">About Us</a>
+      </div>
+      <div>
+        <div class="footer-preview__heading">Support</div>
+        <a class="footer-preview__link" href="#">Track Order</a>
+        <a class="footer-preview__link" href="#">Delivery Info</a>
+        <a class="footer-preview__link" href="#">Refund Policy</a>
+        <a class="footer-preview__link" href="#">Terms</a>
+      </div>
+      <div>
+        <div class="footer-preview__heading">Contact</div>
+        <a class="footer-preview__link" href="tel:+97165345772">+971 6 534 5772</a>
+        <a class="footer-preview__link" href="https://wa.me/971501628577">WhatsApp +971 50 162 8577</a>
+        <a class="footer-preview__link" href="mailto:info@napoli7.com">info@napoli7.com</a>
+      </div>
+    </div>
+    <div style="margin-bottom:16px"><div class="flag-strip"><span class="g"></span><span class="w"></span><span class="r"></span></div></div>
+    <div class="footer-preview__bottom">
+      <span>© 2026 Napoli 7. All Rights Reserved.</span>
+      <span>*Offers only available for takeout and delivery orders.</span>
+    </div>
+  </div>
+</div>
+</body>
+</html>

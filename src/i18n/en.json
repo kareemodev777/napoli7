@@ -1,0 +1,67 @@
+{
+  "brand": {
+    "name": "Napoli 7",
+    "tagline": "Authentic Italian Neapolitan Pizza, Ajman",
+    "phone": "+971 6 534 5772",
+    "phoneTel": "+97165345772",
+    "whatsapp": "+971 50 162 8577",
+    "whatsappLink": "https://wa.me/971501628577",
+    "email": "info@napoli7.com",
+    "addressLine1": "Shop 4, opposite Delta Supermarket",
+    "addressLine2": "213 Sheikh Rashid bin Abdul Aziz St, Al Jurf 2, Ajman",
+    "hours": "Open daily, 11:00 – 22:00",
+    "lat": 25.4002327,
+    "lng": 55.5033167
+  },
+  "deals": {
+    "heading": "Deals",
+    "intro": "Welcome offers, seasonal specials, and loyalty rewards from the Napoli 7 kitchen.",
+    "footnote": "Offers available for takeout and delivery orders only."
+  },
+  "about": {
+    "heading": "Our Story",
+    "intro": "From a Neapolitan family table to an Ajman wood-fired oven.",
+    "philosophy": "The philosophy of seven."
+  },
+  "location": {
+    "heading": "Location",
+    "intro": "Find us, call us, or send a WhatsApp message — we are here every day.",
+    "deliveryNote": "We currently deliver to selected areas of Al Jurf and surrounding neighbourhoods. Outside our zone? Order for pickup."
+  },
+  "contact": {
+    "heading": "Contact",
+    "intro": "Reach the kitchen directly. We answer messages between 10:00 and 22:30."
+  },
+  "delivery": {
+    "heading": "Delivery",
+    "intro": "Hot from our oven to your door, in around thirty minutes."
+  },
+  "legal": {
+    "lastUpdated": "Last updated 1 May 2026"
+  },
+  "menu": {
+    "heading": "Menu",
+    "intro": "Twenty-three items, prepared with the same care every day.",
+    "addToCart": "Add to cart",
+    "added": "Added",
+    "outOfStock": "Currently unavailable"
+  },
+  "cart": {
+    "heading": "Your cart",
+    "empty": "No items yet. Order your first pizza.",
+    "subtotal": "Subtotal",
+    "deliveryFee": "Delivery fee",
+    "deliveryFeeTbd": "Calculated at checkout",
+    "total": "Total",
+    "checkout": "Proceed to checkout",
+    "viewMenu": "View menu",
+    "promoSoon": "Promo codes available soon"
+  },
+  "checkout": {
+    "heading": "Checkout",
+    "placeOrder": "Place order",
+    "placing": "Placing order…",
+    "codNote": "Pay cash to the delivery driver on arrival.",
+    "feeTbd": "TBD — will be confirmed by the kitchen"
+  }
+}

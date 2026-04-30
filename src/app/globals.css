@@ -1,0 +1,289 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ---------------------------------------------------------------
+   Napoli 7 design tokens
+   Navy + azure brand sourced from logo-final.png, tuned for AAA
+   contrast on white. Italian flag colors restricted to badges.
+   See docs/DESIGN.md for the full system.
+--------------------------------------------------------------- */
+
+@theme inline {
+  /* Fonts — literal names so @theme can resolve at parse time.
+     next/font wires the variable on <html> for runtime usage. */
+  --font-sans: "Inter", "Helvetica Neue", system-ui, sans-serif;
+  --font-display: "Inter Tight", "Inter", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+  --font-heading: "Inter Tight", "Inter", system-ui, sans-serif;
+
+  /* Color tokens (shadcn convention — bind to :root vars below) */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Napoli 7 brand extensions */
+  --color-brand: var(--brand);
+  --color-brand-deep: var(--brand-deep);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-soft: var(--brand-soft);
+  --color-azure: var(--azure);
+  --color-azure-deep: var(--azure-deep);
+  --color-azure-soft: var(--azure-soft);
+  --color-flag-green: var(--flag-green);
+  --color-flag-red: var(--flag-red);
+  --color-tan: var(--tan);
+
+  /* Sidebar (kept for shadcn compat) */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Chart (shadcn compat — re-mapped to brand spectrum) */
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  /* Radii — Dieci-style sharp by default, slight curve for cards */
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: calc(var(--radius) * 0.75);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.5);
+  --radius-2xl: calc(var(--radius) * 2);
+  --radius-3xl: calc(var(--radius) * 2.5);
+  --radius-4xl: calc(var(--radius) * 3);
+}
+
+:root {
+  --radius: 0.125rem;             /* 2px — sharp Swiss-Italian */
+
+  /* Surfaces */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+
+  /* Brand — navy primary (logo-derived #1E3A8A, AAA on white) */
+  --brand: oklch(0.36 0.15 264);
+  --brand-deep: oklch(0.27 0.13 270);
+  --brand-hover: oklch(0.31 0.14 266);
+  --brand-soft: oklch(0.96 0.022 256);
+
+  /* Azure — secondary brand (logo inner disc #34A5DC) */
+  --azure: oklch(0.7 0.115 235);
+  --azure-deep: oklch(0.62 0.13 240);
+  --azure-soft: oklch(0.96 0.025 230);
+
+  /* Italian flag — restricted to dots + footer micro-strip */
+  --flag-green: oklch(0.55 0.16 145);
+  --flag-red: oklch(0.58 0.24 28);
+
+  /* Optional Dieci-style tan accent (kept available, not used by default) */
+  --tan: oklch(0.7 0.05 75);
+
+  /* Primary mapped to brand navy */
+  --primary: var(--brand);
+  --primary-foreground: oklch(0.99 0 0);
+
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.145 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.45 0 0);
+
+  /* Accent mapped to azure */
+  --accent: var(--azure);
+  --accent-foreground: oklch(0.99 0 0);
+
+  --destructive: oklch(0.55 0.21 27);
+
+  /* Borders & rings */
+  --border: oklch(0.91 0 0);
+  --input: oklch(0.91 0 0);
+  --ring: var(--brand);
+
+  /* Charts — brand-spectrum (used if charts are added later) */
+  --chart-1: var(--brand);
+  --chart-2: var(--azure);
+  --chart-3: oklch(0.5 0.13 248);
+  --chart-4: oklch(0.65 0.10 224);
+  --chart-5: oklch(0.45 0.08 260);
+
+  /* Sidebar (shadcn defaults — unused by marketing pages) */
+  --sidebar: oklch(0.985 0 0);
+  --sidebar-foreground: oklch(0.145 0 0);
+  --sidebar-primary: var(--brand);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.145 0 0);
+  --sidebar-border: oklch(0.91 0 0);
+  --sidebar-ring: var(--brand);
+}
+
+/* Dark mode kept available but DESIGN.md says we don't ship it in v1 */
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: var(--azure);
+  --primary-foreground: oklch(0.145 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: var(--brand);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.62 0.21 25);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: var(--azure);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: var(--azure);
+  --sidebar-primary-foreground: oklch(0.145 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: var(--azure);
+}
+
+/* ---------------------------------------------------------------
+   Base & site-wide utilities
+--------------------------------------------------------------- */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "ss01", "cv11";
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display);
+    letter-spacing: -0.01em;
+    line-height: 1.1;
+  }
+}
+
+@layer components {
+  /* Arrow-shaped CTA — Dieci signature, Napoli-7 navy */
+  .arrow-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 60px;
+    background: var(--color-foreground);
+    color: var(--color-background);
+    font-family: var(--font-display);
+    font-size: 1.25rem;
+    font-weight: 400;
+    letter-spacing: 0.02em;
+    line-height: 1;
+    text-transform: lowercase;
+    cursor: pointer;
+    border: 0;
+    transition: background 200ms cubic-bezier(0.2, 0, 0, 1);
+    clip-path: polygon(0 0, calc(100% - 28px) 0, 100% 50%, calc(100% - 28px) 100%, 0 100%);
+    padding-right: 28px;
+  }
+  .arrow-btn:hover {
+    background: var(--color-brand);
+  }
+
+  /* Outlined arrow link — used inline for "Read more" arrow circles, etc.
+     This is a separate primitive: a small chevron-arrow text button. */
+  .arrow-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-family: var(--font-display);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-foreground);
+    transition: color 200ms cubic-bezier(0.2, 0, 0, 1);
+  }
+  .arrow-link__icon {
+    display: inline-flex;
+    width: 2rem;
+    height: 2rem;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid currentColor;
+    border-radius: 9999px;
+    transition: all 200ms cubic-bezier(0.2, 0, 0, 1);
+  }
+  .arrow-link:hover { color: var(--color-brand); }
+
+  /* Order toggle — radio-button style for deliver/pickup */
+  .order-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    padding: 0.625rem;
+    background: var(--color-background);
+    border: 1px solid var(--color-border);
+    font-family: var(--font-display);
+    font-size: 0.875rem;
+    cursor: pointer;
+    transition: all 150ms cubic-bezier(0.2, 0, 0, 1);
+  }
+  .order-toggle[data-active="true"] {
+    border-color: var(--color-foreground);
+    box-shadow: inset 0 0 0 1px var(--color-foreground);
+  }
+
+  /* Italian flag micro-strip — footer accent */
+  .flag-strip {
+    display: inline-flex;
+    height: 24px;
+  }
+  .flag-strip > span {
+    display: block;
+    width: 8px;
+  }
+  .flag-strip > .g { background: var(--color-flag-green); }
+  .flag-strip > .w { background: #ffffff; }
+  .flag-strip > .r { background: var(--color-flag-red); }
+}
+
+@layer utilities {
+  .text-balance { text-wrap: balance; }
+  .font-display { font-family: var(--font-display); }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
+  .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+}

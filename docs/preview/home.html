@@ -1,0 +1,614 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Napoli 7 — Authentic Italian Neapolitan Pizza, Ajman</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Brand */
+  --color-brand:           #1E3A8A;
+  --color-brand-azure:     #34A5DC;
+  --color-brand-azure-deep:#1E88C7;
+  --color-brand-deep:      #142A66;
+  --color-brand-hover:     #16307A;
+  --color-brand-soft:      #E8EFFB;
+  --color-brand-azure-soft:#E1F2FB;
+
+  /* Italian flag — restricted accents */
+  --color-flag-green:      #009038;
+  --color-flag-red:        #E00008;
+
+  /* Ink */
+  --color-ink:             #0A0A0A;
+  --color-ink-strong:      #1A1A1A;
+  --color-ink-body:        #585858;
+  --color-ink-muted:       #8A8A8A;
+
+  /* Surface */
+  --color-bg:              #FFFFFF;
+  --color-bg-subtle:       #F8F8F8;
+  --color-bg-azure-tile:   #E1F2FB;
+
+  /* Borders */
+  --color-border:          #E6E6E6;
+  --color-border-strong:   #D9D9D9;
+
+  /* Type */
+  --font-display: "Inter", "Helvetica Neue", system-ui, sans-serif;
+  --font-body:    "Inter", "Helvetica Neue", system-ui, sans-serif;
+
+  /* Spacing */
+  --container-max: 1140px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body { font-family: var(--font-body); font-feature-settings: "ss01", "cv11"; background: #fff; color: var(--color-ink-body); font-size: 14px; line-height: 1.5; }
+img { display: block; max-width: 100%; }
+a { color: inherit; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; border: 0; }
+
+.container { max-width: var(--container-max); margin: 0 auto; padding: 0 24px; }
+
+/* Type system */
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--color-ink-strong); }
+.h1 { font-family: var(--font-display); font-size: 34px; font-weight: 700; letter-spacing: 1.5px; line-height: 1.15; text-transform: uppercase; color: var(--color-ink); }
+.h2 { font-family: var(--font-display); font-size: 26px; font-weight: 700; letter-spacing: 1.5px; line-height: 1.2; text-transform: uppercase; color: var(--color-ink); }
+.h3 { font-family: var(--font-display); font-size: 18px; font-weight: 700; letter-spacing: 1px; line-height: 1.3; color: var(--color-ink); }
+.body-lg { font-size: 16px; line-height: 1.6; color: var(--color-ink-body); }
+.body-sm { font-size: 13px; line-height: 1.5; color: var(--color-ink-body); }
+.caption { font-size: 12px; letter-spacing: 0.2px; color: var(--color-ink-muted); }
+
+/* Buttons */
+.btn { display: inline-flex; align-items: center; justify-content: center; padding: 12px 28px; min-height: 44px; font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; transition: all 200ms cubic-bezier(0.2, 0, 0, 1); white-space: nowrap; }
+.btn--primary { background: var(--color-brand); color: #fff; }
+.btn--primary:hover { background: var(--color-brand-hover); }
+.btn--secondary { background: transparent; color: var(--color-ink); border: 2px solid var(--color-ink); padding: 10px 26px; }
+.btn--secondary:hover { background: var(--color-ink); color: #fff; }
+.btn--secondary-light { background: transparent; color: #fff; border: 2px solid #fff; padding: 10px 26px; }
+.btn--secondary-light:hover { background: #fff; color: var(--color-ink); }
+.btn--small { padding: 8px 18px; min-height: 36px; font-size: 12px; }
+
+/* ============ HEADER ============ */
+.header { position: sticky; top: 0; left: 0; right: 0; height: 80px; background: #fff; box-shadow: 0 0 5px 5px rgba(0,0,0,0.10); z-index: 100; display: flex; align-items: center; }
+.header__inner { display: flex; align-items: center; justify-content: space-between; gap: 24px; width: 100%; }
+.header__logo { display: flex; align-items: center; gap: 12px; }
+.header__logo-img { width: 56px; height: 56px; flex-shrink: 0; display: block; }
+.header__logo-text { font-size: 16px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--color-ink); line-height: 1; }
+.header__logo-text small { display: block; font-size: 10px; color: var(--color-ink-muted); margin-top: 2px; letter-spacing: 1px; }
+.header__nav { display: flex; gap: 28px; }
+.header__nav a { font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--color-ink-strong); position: relative; padding: 4px 0; }
+.header__nav a.is-active { color: var(--color-brand); }
+.header__nav a.is-active::after { content: ""; position: absolute; bottom: -6px; left: 0; right: 0; height: 2px; background: var(--color-brand); }
+.header__nav a:hover { color: var(--color-brand); }
+.header__right { display: flex; align-items: center; gap: 16px; }
+.header__cart { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: var(--color-ink); position: relative; }
+.header__cart-icon { width: 22px; height: 22px; stroke: currentColor; fill: none; stroke-width: 1.5; }
+.header__cart-count { background: var(--color-brand); color: #fff; font-size: 10px; font-weight: 700; padding: 1px 6px; min-width: 18px; height: 18px; display: inline-flex; align-items: center; justify-content: center; }
+.header__login { background: var(--color-brand-deep); color: #fff; padding: 6px 16px; font-size: 12px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; line-height: 1; }
+@media (max-width: 900px) {
+  .header__nav { display: none; }
+}
+
+/* ============ HERO — Dieci-pattern ============ */
+.hero { position: relative; height: calc(100vh - 100px); min-height: 540px; max-height: 720px; background: #1a1a1a url("https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=1920&q=80&auto=format&fit=crop") center/cover no-repeat; display: flex; align-items: center; justify-content: center; overflow: hidden; margin: 0 16px; }
+@media (max-width: 600px) { .hero { margin: 0 8px; } }
+.hero__placeholder-note { position: absolute; top: 16px; left: 16px; background: rgba(0,0,0,0.55); color: #fff; padding: 6px 12px; font-size: 11px; letter-spacing: 0.5px; z-index: 3; }
+
+/* Centered widget card */
+.order-widget { background: #fff; padding: 36px 40px 32px; width: min(540px, calc(100% - 48px)); position: relative; z-index: 2; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
+.order-widget__hello { font-size: 16px; font-weight: 400; color: var(--color-ink); padding-bottom: 12px; border-bottom: 1px solid var(--color-ink); margin-bottom: 24px; }
+.order-widget__rows { display: grid; grid-template-columns: 1fr 1fr; gap: 20px 32px; margin-bottom: 24px; }
+.order-widget__label { display: block; font-size: 13px; color: var(--color-ink-body); margin-bottom: 4px; line-height: 1.4; }
+.order-widget__value { display: block; font-size: 18px; font-weight: 700; color: var(--color-ink); line-height: 1.2; }
+.order-widget__change { display: inline-flex; align-items: center; gap: 10px; margin-bottom: 28px; color: var(--color-ink); text-decoration: none; font-size: 14px; font-weight: 400; }
+.order-widget__change-icon { width: 28px; height: 28px; border: 1px solid var(--color-ink); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.order-widget__change-icon svg { width: 12px; height: 12px; fill: none; stroke: var(--color-ink); stroke-width: 2; }
+.order-widget__change:hover { color: var(--color-brand); }
+.order-widget__change:hover .order-widget__change-icon { border-color: var(--color-brand); }
+.order-widget__change:hover .order-widget__change-icon svg { stroke: var(--color-brand); }
+
+/* Arrow-shaped order button — Dieci signature */
+.order-btn { display: block; width: 100%; height: 84px; background: var(--color-ink); color: #fff; border: 0; cursor: pointer; font-family: var(--font-display); font-size: 28px; font-weight: 400; letter-spacing: 1px; line-height: 1; text-transform: lowercase; text-align: left; padding-left: 36%; clip-path: polygon(0 0, calc(100% - 36px) 0, 100% 50%, calc(100% - 36px) 100%, 0 100%); transition: background 200ms cubic-bezier(0.2,0,0,1); }
+.order-btn:hover { background: var(--color-brand); }
+.order-btn span { position: relative; }
+
+/* Welcome sunburst sticker — bottom-right of hero */
+.hero__sticker { position: absolute; right: 48px; bottom: 48px; width: 160px; height: 160px; background: var(--color-brand-azure); color: #fff; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 14px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; line-height: 1.2; padding: 16px; clip-path: polygon(50% 0%, 56% 9%, 65% 4%, 67% 14%, 76% 12%, 75% 22%, 84% 24%, 80% 33%, 89% 38%, 83% 46%, 90% 53%, 82% 58%, 87% 67%, 78% 70%, 81% 79%, 71% 78%, 71% 88%, 62% 85%, 59% 95%, 50% 90%, 41% 95%, 38% 85%, 29% 88%, 29% 78%, 19% 79%, 22% 70%, 13% 67%, 18% 58%, 10% 53%, 17% 46%, 11% 38%, 20% 33%, 16% 24%, 25% 22%, 24% 12%, 33% 14%, 35% 4%, 44% 9%); transform: rotate(-8deg); transition: transform 320ms cubic-bezier(0.2,0,0,1); pointer-events: auto; cursor: pointer; }
+.hero__sticker:hover { transform: rotate(0); }
+.hero__sticker span { display: block; }
+.hero__sticker strong { display: block; font-size: 18px; letter-spacing: 0; text-transform: none; font-style: italic; font-weight: 400; margin-top: 4px; }
+@media (max-width: 700px) {
+  .hero { height: auto; min-height: 0; }
+  .hero { padding: 32px 16px; }
+  .order-widget { padding: 28px 24px 24px; }
+  .order-widget__rows { grid-template-columns: 1fr; gap: 16px; }
+  .hero__sticker { right: 16px; bottom: 16px; width: 112px; height: 112px; font-size: 11px; }
+  .hero__sticker strong { font-size: 14px; }
+  .order-btn { font-size: 22px; height: 72px; padding-left: 32%; }
+}
+
+/* ============ EDITORIAL 3-UP — Dieci-pattern ============ */
+.editorial { padding: 64px 0 72px; background: #fff; }
+.editorial__grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 48px; }
+@media (max-width: 900px) { .editorial__grid { grid-template-columns: 1fr; gap: 40px; } }
+.article__title { font-family: var(--font-display); font-size: clamp(26px, 2.4vw, 34px); font-weight: 700; line-height: 1.15; letter-spacing: -0.005em; color: var(--color-ink); margin-bottom: 20px; }
+.article__title em { font-style: italic; font-weight: 700; }
+.article__body { font-size: 14px; line-height: 1.6; color: var(--color-ink-body); margin-bottom: 24px; max-width: 38ch; }
+.article__more { display: inline-flex; align-items: center; gap: 12px; font-size: 14px; font-weight: 700; color: var(--color-ink); text-decoration: none; }
+.article__more-icon { width: 32px; height: 32px; border: 1px solid var(--color-ink); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; transition: all 200ms cubic-bezier(0.2,0,0,1); }
+.article__more-icon svg { width: 14px; height: 14px; fill: none; stroke: var(--color-ink); stroke-width: 2; transition: stroke 200ms cubic-bezier(0.2,0,0,1); }
+.article__more:hover { color: var(--color-brand); }
+.article__more:hover .article__more-icon { border-color: var(--color-brand); }
+.article__more:hover .article__more-icon svg { stroke: var(--color-brand); }
+
+/* ============ FEATURE ROW ============ */
+.features { padding: 80px 0; }
+.features__head { text-align: center; margin-bottom: 48px; }
+.features__head .eyebrow { color: var(--color-brand); display: block; margin-bottom: 12px; }
+.features__head h2 { color: var(--color-ink); }
+.features__row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+@media (max-width: 768px) { .features__row { grid-template-columns: repeat(2, 1fr); } }
+.feature { background: var(--color-bg-azure-tile); padding: 40px 28px; text-align: center; }
+.feature__icon { width: 48px; height: 48px; margin: 0 auto 20px; color: var(--color-brand); }
+.feature__icon svg { width: 100%; height: 100%; stroke: currentColor; fill: none; stroke-width: 1.5; stroke-linejoin: round; stroke-linecap: round; }
+.feature__title { font-size: 13px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--color-ink); margin-bottom: 10px; }
+.feature__caption { font-size: 13px; line-height: 1.5; color: var(--color-ink-body); }
+
+/* ============ MENU STRIP ============ */
+.menu-strip { padding: 80px 0; background: var(--color-bg-subtle); }
+.menu-strip__head { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+.menu-strip__head .eyebrow { color: var(--color-brand); display: block; margin-bottom: 8px; }
+.menu-strip__head h2 { color: var(--color-ink); }
+.menu-strip__row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+@media (max-width: 768px) { .menu-strip__row { grid-template-columns: repeat(2, 1fr); } }
+.cat-card { background: #fff; border: 1px solid var(--color-border); display: block; transition: box-shadow 200ms cubic-bezier(0.2,0,0,1); }
+.cat-card:hover { box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+.cat-card__img { aspect-ratio: 4/3; background-size: cover; background-position: center; background-color: var(--color-brand); }
+.cat-card--pizza .cat-card__img { background-image: url("https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?w=800&q=80&auto=format&fit=crop"); }
+.cat-card--focaccia .cat-card__img { background-image: url("https://images.unsplash.com/photo-1573821663912-6df460f9c684?w=800&q=80&auto=format&fit=crop"); }
+.cat-card--dessert .cat-card__img { background-image: url("https://images.unsplash.com/photo-1613479205646-c0dc1ee8511f?w=800&q=80&auto=format&fit=crop"); }
+.cat-card--drinks .cat-card__img { background-image: url("https://images.unsplash.com/photo-1622483767028-3f66f32aef97?w=800&q=80&auto=format&fit=crop"); }
+.cat-card__body { padding: 20px 24px; display: flex; justify-content: space-between; align-items: center; }
+.cat-card__title { font-size: 16px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--color-ink); }
+.cat-card__count { font-size: 12px; color: var(--color-ink-muted); letter-spacing: 0.5px; }
+.cat-card__arrow { color: var(--color-brand); font-size: 18px; }
+
+/* ============ FEATURED PIZZAS ============ */
+.featured { padding: 80px 0; background: #fff; }
+.featured__head { display: flex; justify-content: space-between; align-items: end; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+.featured__head .eyebrow { color: var(--color-brand); display: block; margin-bottom: 8px; }
+.featured__head h2 { color: var(--color-ink); }
+.featured__grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+@media (max-width: 1024px) { .featured__grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 480px) { .featured__grid { grid-template-columns: 1fr; } }
+.product { background: #fff; border: 1px solid var(--color-border); display: flex; flex-direction: column; transition: box-shadow 200ms cubic-bezier(0.2,0,0,1); }
+.product:hover { box-shadow: 0 1px 2px rgba(0,0,0,0.08); }
+.product__img { aspect-ratio: 4/3; background-size: cover; background-position: center; background-color: var(--color-brand-azure-soft); position: relative; }
+.product__dots { position: absolute; top: 12px; right: 12px; display: flex; gap: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 999px; box-shadow: 0 0 0 2px rgba(255,255,255,0.9); }
+.dot--veg { background: var(--color-flag-green); }
+.dot--spicy { background: var(--color-flag-red); }
+.product__body { padding: 20px 22px 22px; display: flex; flex-direction: column; flex: 1; }
+.product__cat { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--color-ink-muted); margin-bottom: 8px; }
+.product__title { font-size: 16px; font-weight: 700; color: var(--color-ink); margin-bottom: 4px; line-height: 1.3; }
+.product__title em { color: var(--color-ink-body); font-weight: 400; font-style: italic; font-size: 13px; }
+.product__desc { font-size: 13px; line-height: 1.5; color: var(--color-ink-body); margin-bottom: 16px; flex: 1; }
+.product__row { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+.product__price { font-size: 16px; font-weight: 700; color: var(--color-ink); font-variant-numeric: tabular-nums; }
+
+/* ============ ABOUT ============ */
+.about { background: var(--color-ink); color: #fff; padding: 96px 0; }
+.about__inner { display: grid; grid-template-columns: 1fr 1fr; gap: 64px; align-items: center; }
+@media (max-width: 900px) { .about__inner { grid-template-columns: 1fr; gap: 32px; } }
+.about__img { aspect-ratio: 4/5; background: url("https://images.unsplash.com/photo-1534308983496-4fabb1a015ee?w=1200&q=80&auto=format&fit=crop") center/cover no-repeat; }
+.about__content .eyebrow { color: var(--color-brand-azure); display: block; margin-bottom: 16px; }
+.about__content h2 { color: #fff; margin-bottom: 24px; font-size: 32px; line-height: 1.2; letter-spacing: 1.5px; text-transform: uppercase; }
+.about__content p { font-size: 16px; line-height: 1.6; color: rgba(255,255,255,0.85); margin-bottom: 18px; max-width: 56ch; }
+.about__content em { color: var(--color-brand-azure); font-style: italic; }
+.about__quote { border-left: 2px solid var(--color-brand-azure); padding-left: 20px; margin: 28px 0 28px; font-size: 18px; line-height: 1.5; color: #fff; font-weight: 400; }
+.about__signature { font-size: 13px; letter-spacing: 1.5px; text-transform: uppercase; color: rgba(255,255,255,0.6); margin-bottom: 32px; }
+
+/* ============ LOCATION ============ */
+.location { padding: 80px 0; background: #fff; }
+.location__inner { display: grid; grid-template-columns: 1fr 1.2fr; gap: 48px; align-items: stretch; }
+@media (max-width: 900px) { .location__inner { grid-template-columns: 1fr; } }
+.location__info .eyebrow { color: var(--color-brand); display: block; margin-bottom: 12px; }
+.location__info h2 { color: var(--color-ink); margin-bottom: 24px; }
+.location__row { display: flex; gap: 16px; padding: 16px 0; border-bottom: 1px solid var(--color-border); }
+.location__row:last-child { border-bottom: 0; }
+.location__row-label { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: var(--color-ink-muted); width: 80px; flex-shrink: 0; padding-top: 2px; }
+.location__row-value { font-size: 14px; line-height: 1.55; color: var(--color-ink); flex: 1; }
+.location__row-value a { color: var(--color-brand); }
+.location__map { background: var(--color-bg-azure-tile) url("https://maps.googleapis.com/maps/api/staticmap?center=25.4002327,55.5033167&zoom=15&size=800x600&style=feature:all|saturation:-50") center/cover no-repeat; min-height: 380px; position: relative; display: flex; align-items: center; justify-content: center; color: var(--color-brand); font-weight: 700; letter-spacing: 1px; }
+.location__map::after { content: "Map preview · Al Jurf 2, Ajman"; }
+
+/* ============ FOOTER ============ */
+.footer { background: var(--color-brand-deep); color: #fff; padding: 64px 0 0; margin-top: 0; }
+.footer__cols { display: grid; grid-template-columns: 1.4fr 1fr 1fr 1fr; gap: 48px; padding-bottom: 48px; }
+@media (max-width: 768px) { .footer__cols { grid-template-columns: 1fr 1fr; gap: 32px; } }
+.footer__heading { font-size: 12px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #fff; margin-bottom: 16px; }
+.footer__brand-tagline { font-size: 14px; line-height: 1.6; color: rgba(255,255,255,0.75); max-width: 32ch; margin-bottom: 20px; }
+.footer__socials { display: flex; gap: 12px; }
+.footer__social { width: 36px; height: 36px; border: 1px solid rgba(255,255,255,0.25); display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.85); transition: all 200ms cubic-bezier(0.2,0,0,1); }
+.footer__social:hover { border-color: #fff; color: #fff; background: rgba(255,255,255,0.05); }
+.footer__social svg { width: 16px; height: 16px; stroke: currentColor; fill: currentColor; stroke-width: 0; }
+.footer__link { display: block; font-size: 13px; color: rgba(255,255,255,0.75); margin-bottom: 8px; }
+.footer__link:hover { color: #fff; }
+.footer__flag { display: flex; padding-bottom: 24px; }
+.footer__flag span { display: block; width: 8px; height: 24px; }
+.footer__flag .g { background: var(--color-flag-green); }
+.footer__flag .w { background: #fff; }
+.footer__flag .r { background: var(--color-flag-red); }
+.footer__bottom { border-top: 1px solid rgba(255,255,255,0.15); padding: 20px 0 24px; display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; font-size: 12px; color: rgba(255,255,255,0.6); }
+.footer__bottom a { color: rgba(255,255,255,0.6); margin-left: 16px; }
+.footer__bottom a:hover { color: #fff; }
+</style>
+</head>
+<body>
+
+<!-- ============ HEADER ============ -->
+<header class="header">
+  <div class="container header__inner">
+    <a href="/" class="header__logo">
+      <img src="logo.png" alt="Napoli 7" class="header__logo-img">
+      <span class="header__logo-text">Napoli 7<small>Pizza · Ajman</small></span>
+    </a>
+    <nav class="header__nav">
+      <a href="/" class="is-active">Home</a>
+      <a href="/menu">Menu</a>
+      <a href="/deals">Deals</a>
+      <a href="/about">About</a>
+      <a href="/track">Track Order</a>
+      <a href="/location">Location</a>
+      <a href="/contact">Contact</a>
+    </nav>
+    <div class="header__right">
+      <a href="/cart" class="header__cart">
+        <svg class="header__cart-icon" viewBox="0 0 24 24"><path d="M5 7h14l-1.5 11a2 2 0 01-2 1.7H8.5a2 2 0 01-2-1.7L5 7z"/><path d="M9 7V5a3 3 0 016 0v2"/></svg>
+        <span class="header__cart-count">0</span>
+      </a>
+      <a href="/login" class="header__login">Login</a>
+    </div>
+  </div>
+</header>
+
+<!-- ============ HERO — Dieci-pattern ============ -->
+<section class="hero">
+  <span class="hero__placeholder-note">Photography placeholder · brand-shoot pending</span>
+
+  <!-- Centered ordering widget -->
+  <div class="order-widget">
+    <div class="order-widget__hello">Hello</div>
+    <div class="order-widget__rows">
+      <div>
+        <span class="order-widget__label">Your pizza shop:</span>
+        <span class="order-widget__value">Al Jurf 2, Ajman</span>
+      </div>
+      <div>
+        <span class="order-widget__label">Type:</span>
+        <span class="order-widget__value">Deliver</span>
+      </div>
+    </div>
+    <a href="#" class="order-widget__change">
+      <span class="order-widget__change-icon"><svg viewBox="0 0 12 12"><path d="M7.5 2L3 6l4.5 4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      Change
+    </a>
+    <button type="button" class="order-btn" onclick="window.location='/menu'"><span>order</span></button>
+  </div>
+
+  <!-- Welcome offer sticker -->
+  <a href="/deals" class="hero__sticker">
+    <span>First Pizza<strong>on us</strong></span>
+  </a>
+</section>
+
+<!-- ============ EDITORIAL 3-UP — right after hero, Dieci pattern ============ -->
+<section class="editorial">
+  <div class="container">
+    <div class="editorial__grid">
+
+      <article>
+        <h3 class="article__title">Your first Neapolitan pizza is on us.</h3>
+        <p class="article__body">Sign up at Napoli7 and your first <em>Margherita</em> is free for pickup. One per person, available exclusively through the website. Upgrade to any other pizza by paying the difference.</p>
+        <a href="/deals" class="article__more">
+          Read more
+          <span class="article__more-icon"><svg viewBox="0 0 14 14"><path d="M3 7h8M7 3l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </a>
+      </article>
+
+      <article>
+        <h3 class="article__title"><em>Lievito madre.</em> The slow art of dough.</h3>
+        <p class="article__body">Our dough is built on Caputo flour and a slow-fermented sourdough starter. Hand-stretched using <em>schiaffo napoletano</em> and finished in a 450°C oven. The result is a crust that's airy, charred, and unmistakably Neapolitan.</p>
+        <a href="/about" class="article__more">
+          Read more
+          <span class="article__more-icon"><svg viewBox="0 0 14 14"><path d="M3 7h8M7 3l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </a>
+      </article>
+
+      <article>
+        <h3 class="article__title">Why seven pizzas? A philosophy of restraint.</h3>
+        <p class="article__body">A short menu is a disciplined kitchen. We make seven pizzas, every day, the same way. No shortcuts, no rotating specials. Just the seven, made well — that's the whole point of Napoli 7.</p>
+        <a href="/about" class="article__more">
+          Read more
+          <span class="article__more-icon"><svg viewBox="0 0 14 14"><path d="M3 7h8M7 3l4 4-4 4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+        </a>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ FEATURES ============ -->
+<section class="features">
+  <div class="container">
+    <div class="features__head">
+      <span class="eyebrow">Why Napoli 7</span>
+      <h2 class="h2">What Makes Us Special</h2>
+    </div>
+    <div class="features__row">
+      <div class="feature">
+        <div class="feature__icon"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 1018 0 9 9 0 00-18 0z"/><path d="M8 12s1.5-3 4-3 4 3 4 3-1.5 3-4 3-4-3-4-3z"/><path d="M5 8c1-2 3-3 7-3M19 8c-1-2-3-3-7-3"/></svg></div>
+        <div class="feature__title">Wood-Fired</div>
+        <div class="feature__caption">Hybrid wood &amp; gas oven, hand-built. ~450°C.</div>
+      </div>
+      <div class="feature">
+        <div class="feature__icon"><svg viewBox="0 0 24 24"><path d="M12 2c2 4 6 5 6 10s-4 8-6 10c-2-2-6-5-6-10s4-6 6-10z"/><path d="M12 8v8"/></svg></div>
+        <div class="feature__title">Fresh Daily</div>
+        <div class="feature__caption">Locally sourced vegetables, premium fior di latte.</div>
+      </div>
+      <div class="feature">
+        <div class="feature__icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+        <div class="feature__title">30 Minutes</div>
+        <div class="feature__caption">Hot pizza, delivered fast across Ajman.</div>
+      </div>
+      <div class="feature">
+        <div class="feature__icon"><svg viewBox="0 0 24 24"><path d="M12 3l9 4v5c0 5-4 8-9 9-5-1-9-4-9-9V7l9-4z"/><path d="M9 12l2 2 4-4"/></svg></div>
+        <div class="feature__title">Hygiene First</div>
+        <div class="feature__caption">Modern, audited kitchen. Every shift.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ MENU CATEGORIES ============ -->
+<section class="menu-strip">
+  <div class="container">
+    <div class="menu-strip__head">
+      <div>
+        <span class="eyebrow">Our Menu</span>
+        <h2 class="h2">Four Categories, Twenty-Three Choices</h2>
+      </div>
+      <a href="/menu" class="btn btn--secondary btn--small">View Full Menu</a>
+    </div>
+    <div class="menu-strip__row">
+      <a href="/menu/pizza" class="cat-card cat-card--pizza">
+        <div class="cat-card__img"></div>
+        <div class="cat-card__body">
+          <div>
+            <div class="cat-card__title">Pizza</div>
+            <div class="cat-card__count">7 pizzas · 29 — 69 AED</div>
+          </div>
+          <span class="cat-card__arrow">→</span>
+        </div>
+      </a>
+      <a href="/menu/focaccia" class="cat-card cat-card--focaccia">
+        <div class="cat-card__img"></div>
+        <div class="cat-card__body">
+          <div>
+            <div class="cat-card__title">Focaccia</div>
+            <div class="cat-card__count">5 sandwiches · 23 — 48 AED</div>
+          </div>
+          <span class="cat-card__arrow">→</span>
+        </div>
+      </a>
+      <a href="/menu/dessert" class="cat-card cat-card--dessert">
+        <div class="cat-card__img"></div>
+        <div class="cat-card__body">
+          <div>
+            <div class="cat-card__title">Dessert</div>
+            <div class="cat-card__count">3 sweet pizzas · 15 — 39 AED</div>
+          </div>
+          <span class="cat-card__arrow">→</span>
+        </div>
+      </a>
+      <a href="/menu/drinks" class="cat-card cat-card--drinks">
+        <div class="cat-card__img"></div>
+        <div class="cat-card__body">
+          <div>
+            <div class="cat-card__title">Drinks</div>
+            <div class="cat-card__count">8 beverages · 3 — 5 AED</div>
+          </div>
+          <span class="cat-card__arrow">→</span>
+        </div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FEATURED PIZZAS ============ -->
+<section class="featured">
+  <div class="container">
+    <div class="featured__head">
+      <div>
+        <span class="eyebrow">Best Sellers</span>
+        <h2 class="h2">Featured Pizzas</h2>
+      </div>
+      <a href="/menu/pizza" class="btn btn--secondary btn--small">All Pizzas</a>
+    </div>
+    <div class="featured__grid">
+
+      <article class="product">
+        <div class="product__img" style="background-image:url('https://images.unsplash.com/photo-1604068549290-dea0e4a305ca?w=800&q=80&auto=format&fit=crop')">
+          <div class="product__dots"><span class="dot dot--veg" title="Vegetarian"></span></div>
+        </div>
+        <div class="product__body">
+          <div class="product__cat">Pizza · Classic</div>
+          <div class="product__title">Margherita Classic</div>
+          <p class="product__desc">Hand-stretched dough, San Marzano DOP, fior di latte, fresh basil, EVOO. The holy trinity.</p>
+          <div class="product__row">
+            <span class="product__price">29.00 AED</span>
+            <button class="btn btn--primary btn--small">Add</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="product">
+        <div class="product__img" style="background-image:url('https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800&q=80&auto=format&fit=crop')">
+          <div class="product__dots"><span class="dot dot--spicy" title="Spicy"></span></div>
+        </div>
+        <div class="product__body">
+          <div class="product__cat">Pizza · Spicy</div>
+          <div class="product__title">Spicy Peperoni · <em>Diavola Piccante</em></div>
+          <p class="product__desc">San Marzano, fior di latte, zesty pepperoni. Thin crust, bold finish.</p>
+          <div class="product__row">
+            <span class="product__price">48.00 AED</span>
+            <button class="btn btn--primary btn--small">Add</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="product">
+        <div class="product__img" style="background-image:url('https://images.unsplash.com/photo-1571407970349-bc81e7e96d47?w=800&q=80&auto=format&fit=crop')">
+          <div class="product__dots"></div>
+        </div>
+        <div class="product__body">
+          <div class="product__cat">Pizza · Premium</div>
+          <div class="product__title">Bresaola Truffle</div>
+          <p class="product__desc">Cured bresaola, fior di latte, shaved black truffle. Indulgent and savoury.</p>
+          <div class="product__row">
+            <span class="product__price">59.00 AED</span>
+            <button class="btn btn--primary btn--small">Add</button>
+          </div>
+        </div>
+      </article>
+
+      <article class="product">
+        <div class="product__img" style="background-image:url('https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?w=800&q=80&auto=format&fit=crop')">
+          <div class="product__dots"></div>
+        </div>
+        <div class="product__body">
+          <div class="product__cat">Pizza · Premium</div>
+          <div class="product__title">Prosciutto &amp; Rucola</div>
+          <p class="product__desc">Aged prosciutto, fresh rucola, fior di latte. Authentic Italian.</p>
+          <div class="product__row">
+            <span class="product__price">69.00 AED</span>
+            <button class="btn btn--primary btn--small">Add</button>
+          </div>
+        </div>
+      </article>
+
+    </div>
+  </div>
+</section>
+
+<!-- ============ ABOUT ============ -->
+<section class="about">
+  <div class="container">
+    <div class="about__inner">
+      <div class="about__img"></div>
+      <div class="about__content">
+        <span class="eyebrow">Our Story</span>
+        <h2>Seven Pizzas. <em>Done Right.</em></h2>
+        <p>Napoli 7 is dedicated to authentic Neapolitan pizza in Ajman, inspired by the traditions of Naples — the birthplace of pizza. The name reflects our philosophy: a deliberately limited selection of seven pizzas to ensure perfect execution and consistently fresh ingredients.</p>
+        <blockquote class="about__quote">"Tradition is not the worship of ashes — it is the keeping of fire."</blockquote>
+        <div class="about__signature">— Founder, Napoli 7</div>
+        <a href="/about" class="btn btn--secondary-light">Read Our Story</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LOCATION ============ -->
+<section class="location">
+  <div class="container">
+    <div class="location__inner">
+      <div class="location__info">
+        <span class="eyebrow">Visit Us</span>
+        <h2 class="h2">Al Jurf 2, Ajman</h2>
+        <div class="location__row">
+          <span class="location__row-label">Address</span>
+          <span class="location__row-value">Shop 4, opposite Delta Supermarket<br>213 Sheikh Rashid bin Abdul Aziz Aaemi St<br>Al Jurf 2, Ajman, UAE</span>
+        </div>
+        <div class="location__row">
+          <span class="location__row-label">Hours</span>
+          <span class="location__row-value">11:00 AM – 10:00 PM, daily</span>
+        </div>
+        <div class="location__row">
+          <span class="location__row-label">Phone</span>
+          <span class="location__row-value"><a href="tel:+97165345772">+971 6 534 5772</a></span>
+        </div>
+        <div class="location__row">
+          <span class="location__row-label">WhatsApp</span>
+          <span class="location__row-value"><a href="https://wa.me/971501628577">+971 50 162 8577</a></span>
+        </div>
+        <div class="location__row">
+          <span class="location__row-label">Email</span>
+          <span class="location__row-value"><a href="mailto:info@napoli7.com">info@napoli7.com</a></span>
+        </div>
+        <div style="margin-top:24px"><a href="https://maps.google.com/?q=25.4002327,55.5033167" class="btn btn--primary btn--small">Get Directions</a></div>
+      </div>
+      <div class="location__map"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer__cols">
+      <div>
+        <a href="/" class="header__logo" style="color:#fff">
+          <img src="logo.png" alt="Napoli 7" class="header__logo-img" style="background:#fff;border-radius:50%;padding:2px">
+          <span class="header__logo-text" style="color:#fff">Napoli 7<small style="color:rgba(255,255,255,0.6)">Pizza · Ajman</small></span>
+        </a>
+        <p class="footer__brand-tagline" style="margin-top:16px">Authentic Neapolitan pizza. Caputo flour, San Marzano DOP, <em style="font-style:italic">lievito madre</em>. Delivered in 30 minutes.</p>
+        <div class="footer__socials">
+          <a class="footer__social" href="#" aria-label="Facebook"><svg viewBox="0 0 24 24"><path d="M22 12a10 10 0 10-11.5 9.9V15h-2.5v-3h2.5v-2.3c0-2.5 1.5-3.9 3.8-3.9 1.1 0 2.2.2 2.2.2V8h-1.3c-1.2 0-1.6.8-1.6 1.6V12h2.7l-.4 3h-2.3v6.9A10 10 0 0022 12z"/></svg></a>
+          <a class="footer__social" href="#" aria-label="Instagram"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.8" fill="currentColor"/></svg></a>
+          <a class="footer__social" href="#" aria-label="TikTok"><svg viewBox="0 0 24 24"><path d="M16 4c.5 1.6 2 2.8 3.7 3v3.1a7 7 0 01-3.7-1.1V15a5 5 0 11-5-5v3.1a2 2 0 102 2V4h3z"/></svg></a>
+        </div>
+      </div>
+      <div>
+        <div class="footer__heading">Quick Links</div>
+        <a class="footer__link" href="/">Home</a>
+        <a class="footer__link" href="/menu">Menu</a>
+        <a class="footer__link" href="/deals">Deals &amp; Combos</a>
+        <a class="footer__link" href="/about">About Us</a>
+        <a class="footer__link" href="/track">Track Order</a>
+        <a class="footer__link" href="/location">Location</a>
+        <a class="footer__link" href="/contact">Contact Us</a>
+      </div>
+      <div>
+        <div class="footer__heading">Support</div>
+        <a class="footer__link" href="/account">My Account</a>
+        <a class="footer__link" href="/account/orders">Order History</a>
+        <a class="footer__link" href="/contact#faq">FAQs</a>
+        <a class="footer__link" href="/delivery">Delivery Information</a>
+        <a class="footer__link" href="/legal/refund">Refund &amp; Cancellation</a>
+        <a class="footer__link" href="/legal/privacy">Privacy Policy</a>
+        <a class="footer__link" href="/legal/terms">Terms &amp; Conditions</a>
+      </div>
+      <div>
+        <div class="footer__heading">Contact</div>
+        <a class="footer__link" href="tel:+97165345772">+971 6 534 5772</a>
+        <a class="footer__link" href="https://wa.me/971501628577">WhatsApp 050 162 8577</a>
+        <a class="footer__link" href="mailto:info@napoli7.com">info@napoli7.com</a>
+        <p class="footer__link" style="margin-top:12px">Al Jurf 2, Shop 4<br>213 Sheikh Rashid St<br>Ajman, UAE</p>
+        <p class="footer__link">Open daily 11:00 – 22:00</p>
+      </div>
+    </div>
+    <div class="footer__flag" aria-hidden="true"><span class="g"></span><span class="w"></span><span class="r"></span></div>
+    <div class="footer__bottom">
+      <span>© 2026 Napoli 7. All Rights Reserved. *Offers available for takeout and delivery orders only.</span>
+      <span><a href="/legal/privacy">Privacy</a><a href="/legal/terms">Terms</a><a href="/legal/refund">Refunds</a></span>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>
