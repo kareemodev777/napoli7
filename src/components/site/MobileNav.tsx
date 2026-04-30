@@ -272,7 +272,6 @@ export function MobileNav() {
           </p>
         </div>
       </div>
-
     </>
   );
 }
