@@ -47,7 +47,7 @@ export function MenuCategoryNav({ categories }: MenuCategoryNavProps) {
   return (
     <nav
       aria-label="Menu sections"
-      className="sticky top-[var(--header-h)] z-20 -mx-6 md:-mx-10 mb-8 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-b border-border"
+      className="sticky top-[var(--header-h,56px)] z-20 -mx-6 md:-mx-10 mb-8 bg-background/90 backdrop-blur supports-[backdrop-filter]:bg-background/75 border-b border-border"
     >
       <ul className="flex items-center gap-px overflow-x-auto px-6 md:px-10 no-scrollbar">
         {categories.map((c) => {
