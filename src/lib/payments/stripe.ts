@@ -6,7 +6,7 @@ let cached: Stripe | null = null;
 export function getStripe(): Stripe {
   if (!HAS_STRIPE) {
     throw new Error(
-      "Stripe env vars not set. STRIPE_SECRET_KEY and NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY required."
+      "Stripe env vars not set. STRIPE_SECRET_KEY and NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY required.",
     );
   }
   if (!cached) {

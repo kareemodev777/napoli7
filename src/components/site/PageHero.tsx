@@ -8,7 +8,13 @@ interface PageHeroProps {
   children?: ReactNode;
 }
 
-export function PageHero({ eyebrow, heading, intro, align = "left", children }: PageHeroProps) {
+export function PageHero({
+  eyebrow,
+  heading,
+  intro,
+  align = "left",
+  children,
+}: PageHeroProps) {
   return (
     <section
       className={
@@ -16,7 +22,9 @@ export function PageHero({ eyebrow, heading, intro, align = "left", children }: 
         (align === "center" ? "text-center" : "")
       }
     >
-      <div className={"max-w-[1140px] mx-auto " + (align === "center" ? "" : "")}>
+      <div
+        className={"max-w-[1140px] mx-auto " + (align === "center" ? "" : "")}
+      >
         {eyebrow ? (
           <p className="font-display text-xs tracking-[0.25em] uppercase text-muted-foreground mb-4">
             {eyebrow}

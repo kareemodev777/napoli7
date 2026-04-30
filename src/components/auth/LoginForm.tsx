@@ -24,15 +24,26 @@ export function LoginForm() {
   const [mode, setMode] = useState<"password" | "magic" | "reset">("password");
   const [showPassword, setShowPassword] = useState(false);
 
-  const [pwState, pwAction, pwPending] = useActionState(loginWithPassword, initial);
-  const [magicState, magicAction, magicPending] = useActionState(sendMagicLink, initial);
-  const [resetState, resetAction, resetPending] = useActionState(sendPasswordReset, initial);
+  const [pwState, pwAction, pwPending] = useActionState(
+    loginWithPassword,
+    initial,
+  );
+  const [magicState, magicAction, magicPending] = useActionState(
+    sendMagicLink,
+    initial,
+  );
+  const [resetState, resetAction, resetPending] = useActionState(
+    sendPasswordReset,
+    initial,
+  );
 
   return (
     <div className="space-y-6">
       {confirmed ? (
         <Alert>
-          <AlertDescription>Email confirmed. You can now log in.</AlertDescription>
+          <AlertDescription>
+            Email confirmed. You can now log in.
+          </AlertDescription>
         </Alert>
       ) : null}
 
@@ -106,7 +117,13 @@ export function LoginForm() {
       {mode === "magic" ? (
         <form action={magicAction} className="space-y-5">
           <Field id="magic-email" label="Email" required>
-            <Input id="magic-email" type="email" name="email" required autoComplete="email" />
+            <Input
+              id="magic-email"
+              type="email"
+              name="email"
+              required
+              autoComplete="email"
+            />
           </Field>
           {magicState.error ? (
             <Alert variant="destructive">
@@ -138,7 +155,13 @@ export function LoginForm() {
       {mode === "reset" ? (
         <form action={resetAction} className="space-y-5">
           <Field id="reset-email" label="Email" required>
-            <Input id="reset-email" type="email" name="email" required autoComplete="email" />
+            <Input
+              id="reset-email"
+              type="email"
+              name="email"
+              required
+              autoComplete="email"
+            />
           </Field>
           {resetState.error ? (
             <Alert variant="destructive">
@@ -169,7 +192,10 @@ export function LoginForm() {
 
       <p className="text-sm text-center text-muted-foreground">
         Don&apos;t have an account?{" "}
-        <Link href="/register" className="text-foreground hover:underline underline-offset-4">
+        <Link
+          href="/register"
+          className="text-foreground hover:underline underline-offset-4"
+        >
           Register
         </Link>
       </p>
@@ -190,9 +216,17 @@ function Field({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id} className="font-display text-xs tracking-[0.2em] uppercase">
+      <Label
+        htmlFor={id}
+        className="font-display text-xs tracking-[0.2em] uppercase"
+      >
         {label}
-        {required ? <span aria-hidden className="text-flag-red"> *</span> : null}
+        {required ? (
+          <span aria-hidden className="text-flag-red">
+            {" "}
+            *
+          </span>
+        ) : null}
       </Label>
       {children}
     </div>

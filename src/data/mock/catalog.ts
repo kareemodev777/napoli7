@@ -1,4 +1,9 @@
-import type { Category, Product, CategoryId, ProductSize } from "@/data/types/catalog";
+import type {
+  Category,
+  Product,
+  CategoryId,
+  ProductSize,
+} from "@/data/types/catalog";
 
 export const CATEGORIES: Category[] = [
   {
@@ -36,7 +41,11 @@ function pizzaSizes(small: number): ProductSize[] {
   ];
 }
 
-function singleSize(price: number, label = "Regular", detail = ""): ProductSize[] {
+function singleSize(
+  price: number,
+  label = "Regular",
+  detail = "",
+): ProductSize[] {
   return [{ id: "regular", label, detail, price }];
 }
 
@@ -57,10 +66,30 @@ export const PRODUCTS: Product[] = [
     position: 0,
     imageUrl: "/images/products/margherita-classic.jpg",
     customizations: [
-      { ingredient: "San Marzano tomato sauce", extraPrice: 5.0, removable: true, position: 0 },
-      { ingredient: "Fior di latte mozzarella", extraPrice: 7.0, removable: true, position: 1 },
-      { ingredient: "Extra virgin olive oil", extraPrice: 2.0, removable: true, position: 2 },
-      { ingredient: "Fresh basil", extraPrice: 2.0, removable: true, position: 3 },
+      {
+        ingredient: "San Marzano tomato sauce",
+        extraPrice: 5.0,
+        removable: true,
+        position: 0,
+      },
+      {
+        ingredient: "Fior di latte mozzarella",
+        extraPrice: 7.0,
+        removable: true,
+        position: 1,
+      },
+      {
+        ingredient: "Extra virgin olive oil",
+        extraPrice: 2.0,
+        removable: true,
+        position: 2,
+      },
+      {
+        ingredient: "Fresh basil",
+        extraPrice: 2.0,
+        removable: true,
+        position: 3,
+      },
     ],
   },
   {
@@ -79,10 +108,30 @@ export const PRODUCTS: Product[] = [
     position: 1,
     imageUrl: "/images/products/vegetable-ortolana.jpg",
     customizations: [
-      { ingredient: "San Marzano tomato sauce", extraPrice: 5.0, removable: true, position: 0 },
-      { ingredient: "Fior di latte mozzarella", extraPrice: 7.0, removable: true, position: 1 },
-      { ingredient: "Grilled vegetables", extraPrice: 6.0, removable: false, position: 2 },
-      { ingredient: "Extra virgin olive oil", extraPrice: 2.0, removable: true, position: 3 },
+      {
+        ingredient: "San Marzano tomato sauce",
+        extraPrice: 5.0,
+        removable: true,
+        position: 0,
+      },
+      {
+        ingredient: "Fior di latte mozzarella",
+        extraPrice: 7.0,
+        removable: true,
+        position: 1,
+      },
+      {
+        ingredient: "Grilled vegetables",
+        extraPrice: 6.0,
+        removable: false,
+        position: 2,
+      },
+      {
+        ingredient: "Extra virgin olive oil",
+        extraPrice: 2.0,
+        removable: true,
+        position: 3,
+      },
     ],
   },
   {
@@ -101,9 +150,24 @@ export const PRODUCTS: Product[] = [
     position: 2,
     imageUrl: "/images/products/merguez.jpg",
     customizations: [
-      { ingredient: "San Marzano tomato sauce", extraPrice: 5.0, removable: true, position: 0 },
-      { ingredient: "Fior di latte mozzarella", extraPrice: 7.0, removable: true, position: 1 },
-      { ingredient: "Merguez sausage", extraPrice: 8.0, removable: false, position: 2 },
+      {
+        ingredient: "San Marzano tomato sauce",
+        extraPrice: 5.0,
+        removable: true,
+        position: 0,
+      },
+      {
+        ingredient: "Fior di latte mozzarella",
+        extraPrice: 7.0,
+        removable: true,
+        position: 1,
+      },
+      {
+        ingredient: "Merguez sausage",
+        extraPrice: 8.0,
+        removable: false,
+        position: 2,
+      },
     ],
   },
   {
@@ -122,9 +186,24 @@ export const PRODUCTS: Product[] = [
     position: 3,
     imageUrl: "/images/products/diavola-piccante.jpg",
     customizations: [
-      { ingredient: "San Marzano tomato sauce", extraPrice: 5.0, removable: true, position: 0 },
-      { ingredient: "Fior di latte mozzarella", extraPrice: 7.0, removable: true, position: 1 },
-      { ingredient: "Italian pepperoni", extraPrice: 9.0, removable: false, position: 2 },
+      {
+        ingredient: "San Marzano tomato sauce",
+        extraPrice: 5.0,
+        removable: true,
+        position: 0,
+      },
+      {
+        ingredient: "Fior di latte mozzarella",
+        extraPrice: 7.0,
+        removable: true,
+        position: 1,
+      },
+      {
+        ingredient: "Italian pepperoni",
+        extraPrice: 9.0,
+        removable: false,
+        position: 2,
+      },
     ],
   },
   {
@@ -143,12 +222,37 @@ export const PRODUCTS: Product[] = [
     position: 4,
     imageUrl: "/images/products/quattro-stagioni.jpg",
     customizations: [
-      { ingredient: "San Marzano tomato sauce", extraPrice: 5.0, removable: true, position: 0 },
-      { ingredient: "Fior di latte mozzarella", extraPrice: 7.0, removable: true, position: 1 },
-      { ingredient: "Cooked ham", extraPrice: 6.0, removable: true, position: 2 },
-      { ingredient: "Artichoke", extraPrice: 5.0, removable: true, position: 3 },
+      {
+        ingredient: "San Marzano tomato sauce",
+        extraPrice: 5.0,
+        removable: true,
+        position: 0,
+      },
+      {
+        ingredient: "Fior di latte mozzarella",
+        extraPrice: 7.0,
+        removable: true,
+        position: 1,
+      },
+      {
+        ingredient: "Cooked ham",
+        extraPrice: 6.0,
+        removable: true,
+        position: 2,
+      },
+      {
+        ingredient: "Artichoke",
+        extraPrice: 5.0,
+        removable: true,
+        position: 3,
+      },
       { ingredient: "Mushroom", extraPrice: 4.0, removable: true, position: 4 },
-      { ingredient: "Black olives", extraPrice: 3.0, removable: true, position: 5 },
+      {
+        ingredient: "Black olives",
+        extraPrice: 3.0,
+        removable: true,
+        position: 5,
+      },
     ],
   },
   {
@@ -167,10 +271,30 @@ export const PRODUCTS: Product[] = [
     position: 5,
     imageUrl: "/images/products/bresaola-truffle.jpg",
     customizations: [
-      { ingredient: "Fior di latte mozzarella", extraPrice: 7.0, removable: true, position: 0 },
-      { ingredient: "Bresaola", extraPrice: 12.0, removable: false, position: 1 },
-      { ingredient: "Truffle oil", extraPrice: 6.0, removable: true, position: 2 },
-      { ingredient: "Wild rucola", extraPrice: 3.0, removable: true, position: 3 },
+      {
+        ingredient: "Fior di latte mozzarella",
+        extraPrice: 7.0,
+        removable: true,
+        position: 0,
+      },
+      {
+        ingredient: "Bresaola",
+        extraPrice: 12.0,
+        removable: false,
+        position: 1,
+      },
+      {
+        ingredient: "Truffle oil",
+        extraPrice: 6.0,
+        removable: true,
+        position: 2,
+      },
+      {
+        ingredient: "Wild rucola",
+        extraPrice: 3.0,
+        removable: true,
+        position: 3,
+      },
     ],
   },
   {
@@ -189,11 +313,36 @@ export const PRODUCTS: Product[] = [
     position: 6,
     imageUrl: "/images/products/prosciutto-rucola.jpg",
     customizations: [
-      { ingredient: "Fior di latte mozzarella", extraPrice: 7.0, removable: true, position: 0 },
-      { ingredient: "Prosciutto crudo", extraPrice: 14.0, removable: false, position: 1 },
-      { ingredient: "Wild rucola", extraPrice: 3.0, removable: true, position: 2 },
-      { ingredient: "Cherry tomatoes", extraPrice: 3.0, removable: true, position: 3 },
-      { ingredient: "Shaved Parmigiano", extraPrice: 5.0, removable: true, position: 4 },
+      {
+        ingredient: "Fior di latte mozzarella",
+        extraPrice: 7.0,
+        removable: true,
+        position: 0,
+      },
+      {
+        ingredient: "Prosciutto crudo",
+        extraPrice: 14.0,
+        removable: false,
+        position: 1,
+      },
+      {
+        ingredient: "Wild rucola",
+        extraPrice: 3.0,
+        removable: true,
+        position: 2,
+      },
+      {
+        ingredient: "Cherry tomatoes",
+        extraPrice: 3.0,
+        removable: true,
+        position: 3,
+      },
+      {
+        ingredient: "Shaved Parmigiano",
+        extraPrice: 5.0,
+        removable: true,
+        position: 4,
+      },
     ],
   },
   {
@@ -467,7 +616,7 @@ export function getProductBySlug(slug: string): Product | undefined {
 
 export function getProductsByCategory(categoryId: CategoryId): Product[] {
   return PRODUCTS.filter((p) => p.categoryId === categoryId && p.isActive).sort(
-    (a, b) => a.position - b.position
+    (a, b) => a.position - b.position,
   );
 }
 
@@ -483,8 +632,11 @@ export function getActiveProducts(): Product[] {
 
 export function getRelatedProducts(product: Product, count = 3): Product[] {
   const same = PRODUCTS.filter(
-    (p) => p.categoryId === product.categoryId && p.id !== product.id && p.isActive
+    (p) =>
+      p.categoryId === product.categoryId && p.id !== product.id && p.isActive,
   );
-  const others = PRODUCTS.filter((p) => p.categoryId !== product.categoryId && p.isActive);
+  const others = PRODUCTS.filter(
+    (p) => p.categoryId !== product.categoryId && p.isActive,
+  );
   return [...same, ...others].slice(0, count);
 }

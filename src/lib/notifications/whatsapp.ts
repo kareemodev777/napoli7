@@ -3,7 +3,9 @@ import type { KitchenNotificationInput } from "./email";
 
 export async function notifyKitchenWhatsApp(input: KitchenNotificationInput) {
   if (!HAS_WHATSAPP) {
-    console.info(`[notifyKitchenWhatsApp] WhatsApp disabled. Order: ${input.orderNumber}`);
+    console.info(
+      `[notifyKitchenWhatsApp] WhatsApp disabled. Order: ${input.orderNumber}`,
+    );
     return;
   }
 
@@ -18,9 +20,7 @@ export async function notifyKitchenWhatsApp(input: KitchenNotificationInput) {
     `${input.customerName} · ${input.customerPhone}`,
     `${input.deliveryType.toUpperCase()} · ${input.deliverySlot}`,
     "",
-    ...input.items.map(
-      (it) => `${it.quantity}× ${it.name}`
-    ),
+    ...input.items.map((it) => `${it.quantity}× ${it.name}`),
   ].join("\n");
 
   const res = await fetch(
@@ -37,13 +37,13 @@ export async function notifyKitchenWhatsApp(input: KitchenNotificationInput) {
         type: "text",
         text: { body: messageBody },
       }),
-    }
+    },
   );
   if (!res.ok) {
     console.error(
       "[notifyKitchenWhatsApp] WhatsApp API failed:",
       res.status,
-      await res.text()
+      await res.text(),
     );
   }
 }

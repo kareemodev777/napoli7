@@ -19,7 +19,10 @@ export function TrackForm() {
 
   return (
     <div className="space-y-10">
-      <form action={formAction} className="grid sm:grid-cols-[1fr_1fr_auto] gap-4 items-end">
+      <form
+        action={formAction}
+        className="grid sm:grid-cols-[1fr_1fr_auto] gap-4 items-end"
+      >
         <Field id="track-orderId" label="Order ID">
           <Input
             id="track-orderId"

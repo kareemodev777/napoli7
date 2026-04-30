@@ -13,7 +13,11 @@ function readConsent(): boolean {
 
 export function CookieBar() {
   // Read localStorage on the client; default to "accepted" on the server so the bar never SSRs.
-  const consented = useSyncExternalStore(noopSubscribe, readConsent, () => true);
+  const consented = useSyncExternalStore(
+    noopSubscribe,
+    readConsent,
+    () => true,
+  );
   const [dismissed, setDismissed] = useState(false);
 
   if (consented || dismissed) return null;

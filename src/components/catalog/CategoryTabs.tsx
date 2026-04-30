@@ -10,14 +10,22 @@ interface CategoryTabsProps {
   onChange: (next: Filter) => void;
 }
 
-export function CategoryTabs({ categories, active, onChange }: CategoryTabsProps) {
+export function CategoryTabs({
+  categories,
+  active,
+  onChange,
+}: CategoryTabsProps) {
   const items: { id: Filter; label: string }[] = [
     { id: "all", label: "All" },
     ...categories.map((c) => ({ id: c.id as Filter, label: c.label })),
   ];
 
   return (
-    <div role="tablist" aria-label="Menu categories" className="flex flex-wrap gap-px border border-border bg-border">
+    <div
+      role="tablist"
+      aria-label="Menu categories"
+      className="flex flex-wrap gap-px border border-border bg-border"
+    >
       {items.map((it) => {
         const isActive = it.id === active;
         return (

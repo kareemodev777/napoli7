@@ -34,7 +34,7 @@ async function loadOrders(userId: string): Promise<OrderRow[]> {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, order_number, total_aed, status, created_at, order_items(product_name, quantity)"
+      "id, order_number, total_aed, status, created_at, order_items(product_name, quantity)",
     )
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
@@ -64,7 +64,9 @@ export default async function AccountOrdersPage() {
             </h1>
             {orders.length === 0 ? (
               <div className="mt-10 border border-border bg-card p-8">
-                <p className="text-base">No orders yet. Order your first pizza.</p>
+                <p className="text-base">
+                  No orders yet. Order your first pizza.
+                </p>
                 <Link
                   href="/menu"
                   className="mt-4 inline-flex items-center bg-brand text-primary-foreground px-6 py-3 font-display text-xs tracking-[0.2em] uppercase hover:bg-brand-hover"
@@ -79,7 +81,9 @@ export default async function AccountOrdersPage() {
                     o.items.length === 0
                       ? "No items"
                       : `${o.items[0].quantity} × ${o.items[0].product_name}` +
-                        (o.items.length > 1 ? ` + ${o.items.length - 1} more` : "");
+                        (o.items.length > 1
+                          ? ` + ${o.items.length - 1} more`
+                          : "");
                   return (
                     <li
                       key={o.id}
@@ -88,7 +92,9 @@ export default async function AccountOrdersPage() {
                       <span className="font-display tabular-nums tracking-[0.1em] text-sm">
                         {o.orderNumber}
                       </span>
-                      <span className="text-sm text-muted-foreground">{summary}</span>
+                      <span className="text-sm text-muted-foreground">
+                        {summary}
+                      </span>
                       <span className="font-display tabular-nums text-sm">
                         {o.totalAed.toFixed(2)} AED
                       </span>

@@ -26,7 +26,7 @@ export interface AuthResult {
 
 export async function loginWithPassword(
   _prev: AuthResult,
-  formData: FormData
+  formData: FormData,
 ): Promise<AuthResult> {
   const parsed = loginSchema.safeParse({
     email: formData.get("email"),
@@ -54,7 +54,7 @@ export async function loginWithPassword(
 
 export async function sendMagicLink(
   _prev: AuthResult,
-  formData: FormData
+  formData: FormData,
 ): Promise<AuthResult> {
   const parsed = magicSchema.safeParse({ email: formData.get("email") });
   if (!parsed.success) return { error: "Enter a valid email." };
@@ -74,7 +74,7 @@ export async function sendMagicLink(
 
 export async function sendPasswordReset(
   _prev: AuthResult,
-  formData: FormData
+  formData: FormData,
 ): Promise<AuthResult> {
   const parsed = resetSchema.safeParse({ email: formData.get("email") });
   if (!parsed.success) return { error: "Enter a valid email." };
@@ -82,9 +82,12 @@ export async function sendPasswordReset(
     return { error: "Password reset activates once Supabase is configured." };
   }
   const supabase = await createClient();
-  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
-    redirectTo: `${SITE_URL}/login`,
-  });
+  const { error } = await supabase.auth.resetPasswordForEmail(
+    parsed.data.email,
+    {
+      redirectTo: `${SITE_URL}/login`,
+    },
+  );
   if (error) {
     return { error: error.message };
   }

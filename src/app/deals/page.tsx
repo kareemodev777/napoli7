@@ -14,7 +14,8 @@ export const metadata: Metadata = {
   alternates: { canonical: "/deals" },
   openGraph: {
     title: "Deals · Napoli 7",
-    description: "Your first Margherita on us. Weekday lunch sets. Family bundles.",
+    description:
+      "Your first Margherita on us. Weekday lunch sets. Family bundles.",
   },
 };
 
@@ -62,9 +63,10 @@ export default function DealsPage() {
               Fine print
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Offers available for takeout and delivery orders only. The kitchen reserves the
-              right to substitute items in case of supply shortage. One promotional code per
-              order. Cannot be combined with other offers unless stated.
+              Offers available for takeout and delivery orders only. The kitchen
+              reserves the right to substitute items in case of supply shortage.
+              One promotional code per order. Cannot be combined with other
+              offers unless stated.
             </p>
           </aside>
         </div>
@@ -78,7 +80,9 @@ export default function DealsPage() {
           <div className="grid md:grid-cols-2 gap-px bg-border border border-border">
             {SECONDARY_DEALS.map((d) => (
               <article key={d.slug} className="bg-background p-8 md:p-10">
-                <h3 className="font-display text-xl font-medium leading-tight">{d.title}</h3>
+                <h3 className="font-display text-xl font-medium leading-tight">
+                  {d.title}
+                </h3>
                 <p className="mt-4 text-base text-muted-foreground leading-relaxed">
                   {d.description}
                 </p>

@@ -14,7 +14,12 @@ export function CartLineItem({ item }: { item: CartItem }) {
 
   const customSummary = item.customizations
     .map((c) => {
-      const action = c.choice === "extra" ? "Extra" : c.choice === "without" ? "Without" : "";
+      const action =
+        c.choice === "extra"
+          ? "Extra"
+          : c.choice === "without"
+            ? "Without"
+            : "";
       return `${action} ${c.ingredient}${c.extraPrice ? ` (+${c.extraPrice.toFixed(2)} AED)` : ""}`.trim();
     })
     .join(" · ");
@@ -45,7 +50,9 @@ export function CartLineItem({ item }: { item: CartItem }) {
           <p className="text-xs italic text-muted-foreground">{item.nameIt}</p>
         ) : null}
         {customSummary ? (
-          <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{customSummary}</p>
+          <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+            {customSummary}
+          </p>
         ) : null}
         <div className="mt-3 flex items-center gap-4">
           <QuantityStepper

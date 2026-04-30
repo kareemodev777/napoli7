@@ -28,7 +28,10 @@ export default function GlobalError({
         </h1>
         <p className="mt-6 text-lg text-muted-foreground leading-relaxed max-w-[55ch] mx-auto">
           Try the action again. If it keeps happening, the kitchen line is on{" "}
-          <a className="underline hover:text-foreground" href="tel:+97165345772">
+          <a
+            className="underline hover:text-foreground"
+            href="tel:+97165345772"
+          >
             +971 6 534 5772
           </a>{" "}
           and answers between 11:00 and 22:00.

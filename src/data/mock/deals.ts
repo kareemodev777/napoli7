@@ -26,7 +26,10 @@ export const SECONDARY_DEALS: Deal[] = [
     title: "Weekday lunch",
     description:
       "Any pizza plus a soft drink for a fixed price, Monday to Thursday between 12:00 and 15:00.",
-    conditions: ["Pickup or delivery within Al Jurf 2.", "Cannot be combined with other offers."],
+    conditions: [
+      "Pickup or delivery within Al Jurf 2.",
+      "Cannot be combined with other offers.",
+    ],
     cta: { label: "View Menu", href: "/menu" },
   },
   {

@@ -33,7 +33,7 @@ async function loadOrders(): Promise<AdminOrderRow[]> {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, order_number, customer_name, customer_phone, total_aed, delivery_type, delivery_slot, status, created_at, order_items(product_name, quantity)"
+      "id, order_number, customer_name, customer_phone, total_aed, delivery_type, delivery_slot, status, created_at, order_items(product_name, quantity)",
     )
     .order("created_at", { ascending: false })
     .limit(100);

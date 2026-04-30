@@ -13,17 +13,28 @@ interface ProductGridProps {
   initialFilter?: Filter;
 }
 
-export function ProductGrid({ products, categories, initialFilter = "all" }: ProductGridProps) {
+export function ProductGrid({
+  products,
+  categories,
+  initialFilter = "all",
+}: ProductGridProps) {
   const [filter, setFilter] = useState<Filter>(initialFilter);
 
   const filtered =
-    filter === "all" ? products : products.filter((p) => p.categoryId === filter);
+    filter === "all"
+      ? products
+      : products.filter((p) => p.categoryId === filter);
 
-  const activeCategory = filter === "all" ? null : categories.find((c) => c.id === filter);
+  const activeCategory =
+    filter === "all" ? null : categories.find((c) => c.id === filter);
 
   return (
     <div>
-      <CategoryTabs categories={categories} active={filter} onChange={setFilter} />
+      <CategoryTabs
+        categories={categories}
+        active={filter}
+        onChange={setFilter}
+      />
       {activeCategory ? (
         <p className="mt-6 text-sm md:text-base text-muted-foreground max-w-[60ch] leading-relaxed">
           {activeCategory.description}

@@ -26,7 +26,9 @@ export function ContactForm() {
         aria-live="polite"
         className="border border-brand bg-brand-soft px-6 py-8 text-center"
       >
-        <p className="font-display text-lg text-brand-deep">Message received.</p>
+        <p className="font-display text-lg text-brand-deep">
+          Message received.
+        </p>
         <p className="mt-2 text-sm text-muted-foreground">
           The kitchen replies within one business day.
         </p>
@@ -37,7 +39,13 @@ export function ContactForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6 max-w-xl">
       <Field id="contact-name" label="Name" required>
-        <Input id="contact-name" name="name" required minLength={2} maxLength={80} />
+        <Input
+          id="contact-name"
+          name="name"
+          required
+          minLength={2}
+          maxLength={80}
+        />
       </Field>
       <div className="grid sm:grid-cols-2 gap-6">
         <Field id="contact-phone" label="Phone" required>

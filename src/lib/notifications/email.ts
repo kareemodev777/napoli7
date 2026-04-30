@@ -15,7 +15,12 @@ export interface KitchenNotificationInput {
   customerPhone: string;
   customerEmail: string;
   deliveryType: "delivery" | "pickup";
-  deliveryAddress?: { street: string; area: string; flat?: string; notes?: string };
+  deliveryAddress?: {
+    street: string;
+    area: string;
+    flat?: string;
+    notes?: string;
+  };
   deliverySlot: string;
   paymentMethod: "cod" | "card";
   totalAed: number;
@@ -32,7 +37,13 @@ function formatItems(items: OrderItemSummary[]) {
   return items
     .map((it) => {
       const customs = it.customizations.length
-        ? "\n    " + it.customizations.map((c) => `${c.choice} ${c.ingredient}${c.extraPrice ? ` (+${c.extraPrice.toFixed(2)} AED)` : ""}`).join(", ")
+        ? "\n    " +
+          it.customizations
+            .map(
+              (c) =>
+                `${c.choice} ${c.ingredient}${c.extraPrice ? ` (+${c.extraPrice.toFixed(2)} AED)` : ""}`,
+            )
+            .join(", ")
         : "";
       return `  • ${it.quantity} × ${it.name} — ${it.lineTotalAed.toFixed(2)} AED${customs}`;
     })
@@ -64,7 +75,9 @@ Address:
 ${address}`;
 
   if (!HAS_RESEND) {
-    console.info("[notifyKitchenEmail] Resend disabled. Email payload:\n" + body);
+    console.info(
+      "[notifyKitchenEmail] Resend disabled. Email payload:\n" + body,
+    );
     return;
   }
   const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -76,22 +89,26 @@ ${address}`;
   });
 }
 
-export async function notifyCustomerStatusEmail(input: CustomerNotificationInput) {
+export async function notifyCustomerStatusEmail(
+  input: CustomerNotificationInput,
+) {
   const subject =
     input.status === "out_for_delivery"
       ? `Your Napoli 7 order ${input.orderNumber} is on its way`
       : input.status === "delivered"
-      ? `Your Napoli 7 order ${input.orderNumber} was delivered`
-      : `Your Napoli 7 order ${input.orderNumber} was cancelled`;
+        ? `Your Napoli 7 order ${input.orderNumber} was delivered`
+        : `Your Napoli 7 order ${input.orderNumber} was cancelled`;
   const body =
     input.status === "out_for_delivery"
       ? `Your order ${input.orderNumber} just left the kitchen. Estimated arrival: 30 minutes.`
       : input.status === "delivered"
-      ? `Your order ${input.orderNumber} was marked delivered. Thank you for ordering from Napoli 7.`
-      : `Your order ${input.orderNumber} was cancelled. If this is unexpected, please call +971 6 534 5772.`;
+        ? `Your order ${input.orderNumber} was marked delivered. Thank you for ordering from Napoli 7.`
+        : `Your order ${input.orderNumber} was cancelled. If this is unexpected, please call +971 6 534 5772.`;
 
   if (!HAS_RESEND) {
-    console.info(`[notifyCustomerStatusEmail] Resend disabled. To: ${input.to} :: ${subject}`);
+    console.info(
+      `[notifyCustomerStatusEmail] Resend disabled. To: ${input.to} :: ${subject}`,
+    );
     return;
   }
   const resend = new Resend(process.env.RESEND_API_KEY!);
@@ -112,7 +129,9 @@ export async function notifyContactMessageEmail(input: {
   const subject = `New contact form message from ${input.name}`;
   const body = `Name:    ${input.name}\nPhone:   ${input.phone}\nEmail:   ${input.email}\n\nMessage:\n${input.message}`;
   if (!HAS_RESEND) {
-    console.info("[notifyContactMessageEmail] Resend disabled. Payload:\n" + body);
+    console.info(
+      "[notifyContactMessageEmail] Resend disabled. Payload:\n" + body,
+    );
     return;
   }
   const resend = new Resend(process.env.RESEND_API_KEY!);

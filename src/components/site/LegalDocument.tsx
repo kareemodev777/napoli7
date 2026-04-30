@@ -13,7 +13,12 @@ interface LegalDocumentProps {
   current: "privacy" | "terms" | "refund";
 }
 
-export function LegalDocument({ title, lastUpdated, sections, current }: LegalDocumentProps) {
+export function LegalDocument({
+  title,
+  lastUpdated,
+  sections,
+  current,
+}: LegalDocumentProps) {
   return (
     <>
       <PageHero eyebrow="Legal" heading={title}>

@@ -1,6 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { MapPin, Phone, MessageCircle, Mail, Clock, Navigation } from "lucide-react";
+import {
+  MapPin,
+  Phone,
+  MessageCircle,
+  Mail,
+  Clock,
+  Navigation,
+} from "lucide-react";
 import { SiteShell } from "@/components/site/SiteShell";
 import { PageHero } from "@/components/site/PageHero";
 import { MapEmbed } from "@/components/site/MapEmbed";
@@ -26,11 +33,7 @@ export default function LocationPage() {
 
   return (
     <SiteShell>
-      <PageHero
-        eyebrow="Visit"
-        heading="Location"
-        intro={en.location.intro}
-      />
+      <PageHero eyebrow="Visit" heading="Location" intro={en.location.intro} />
 
       <section className="px-6 md:px-10 py-16 md:py-24">
         <div className="max-w-[1140px] mx-auto grid lg:grid-cols-[1fr_1.4fr] gap-12 items-start">
@@ -111,7 +114,9 @@ function Block({
     <div>
       <div className="flex items-center gap-3">
         <Icon className="h-5 w-5 text-brand" strokeWidth={1.5} aria-hidden />
-        <h2 className="font-display text-xs tracking-[0.25em] uppercase">{title}</h2>
+        <h2 className="font-display text-xs tracking-[0.25em] uppercase">
+          {title}
+        </h2>
       </div>
       <div className="mt-3 text-base leading-relaxed">{children}</div>
     </div>

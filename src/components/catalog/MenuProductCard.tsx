@@ -17,7 +17,9 @@ interface MenuProductCardProps {
 
 export function MenuProductCard({ product }: MenuProductCardProps) {
   const addItem = useCart((s) => s.addItem);
-  const [sizeId, setSizeId] = useState<SizeId>(product.sizes[0]?.id ?? "regular");
+  const [sizeId, setSizeId] = useState<SizeId>(
+    product.sizes[0]?.id ?? "regular",
+  );
   const [modalOpen, setModalOpen] = useState(false);
   const [justAdded, setJustAdded] = useState(false);
 
@@ -80,7 +82,11 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
 
         {product.sizes.length > 1 ? (
           <div>
-            <SizeSelector sizes={product.sizes} value={sizeId} onChange={setSizeId} />
+            <SizeSelector
+              sizes={product.sizes}
+              value={sizeId}
+              onChange={setSizeId}
+            />
           </div>
         ) : null}
 
@@ -96,7 +102,11 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
                 className="inline-flex items-center gap-1.5 border border-border h-10 px-3 font-display text-[11px] tracking-[0.2em] uppercase hover:border-foreground hover:bg-muted"
                 aria-label={`Customize ${product.name}`}
               >
-                <Sliders className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden />
+                <Sliders
+                  className="h-3.5 w-3.5"
+                  strokeWidth={1.5}
+                  aria-hidden
+                />
                 Customize
               </button>
             ) : null}

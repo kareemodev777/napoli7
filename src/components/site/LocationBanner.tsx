@@ -22,7 +22,9 @@ export function LocationBanner() {
           <h2 className="font-display text-3xl md:text-5xl leading-[1.05] mb-6 text-balance">
             Al Jurf 2.
             <br />
-            <span className="italic font-medium">A short walk from anywhere in Ajman.</span>
+            <span className="italic font-medium">
+              A short walk from anywhere in Ajman.
+            </span>
           </h2>
           <div className="space-y-2 text-base leading-relaxed mb-8">
             <p>Shop 4, opposite Delta Supermarket</p>

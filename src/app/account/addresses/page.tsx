@@ -22,8 +22,12 @@ export default async function AccountAddressesPage() {
               Saved addresses
             </h1>
             <p className="mt-6 text-base text-muted-foreground max-w-[55ch] leading-relaxed">
-              Address management activates once Supabase Auth is wired. The schema is in{" "}
-              <code className="font-mono text-sm">supabase/migrations/002_auth_and_accounts.sql</code>.
+              Address management activates once Supabase Auth is wired. The
+              schema is in{" "}
+              <code className="font-mono text-sm">
+                supabase/migrations/002_auth_and_accounts.sql
+              </code>
+              .
             </p>
           </div>
         </div>

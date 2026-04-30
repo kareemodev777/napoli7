@@ -14,14 +14,12 @@ export const metadata: Metadata = {
 export default function LoginPage() {
   return (
     <SiteShell>
-      <PageHero
-        eyebrow="Account"
-        heading="Log in"
-        intro="Welcome back."
-      />
+      <PageHero eyebrow="Account" heading="Log in" intro="Welcome back." />
       <section className="px-6 md:px-10 py-12">
         <div className="max-w-md mx-auto">
-          <Suspense fallback={<p className="text-sm text-muted-foreground">Loading…</p>}>
+          <Suspense
+            fallback={<p className="text-sm text-muted-foreground">Loading…</p>}
+          >
             <LoginForm />
           </Suspense>
         </div>

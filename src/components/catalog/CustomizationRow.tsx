@@ -3,7 +3,10 @@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { formatAed } from "./PriceBadge";
-import type { CustomizationChoice, ProductCustomization } from "@/data/types/catalog";
+import type {
+  CustomizationChoice,
+  ProductCustomization,
+} from "@/data/types/catalog";
 
 interface CustomizationRowProps {
   customization: ProductCustomization;
@@ -11,12 +14,19 @@ interface CustomizationRowProps {
   onChange: (next: CustomizationChoice) => void;
 }
 
-export function CustomizationRow({ customization, value, onChange }: CustomizationRowProps) {
+export function CustomizationRow({
+  customization,
+  value,
+  onChange,
+}: CustomizationRowProps) {
   const baseId = `cust-${customization.position}-${customization.ingredient.replace(/\s+/g, "-")}`;
   const labelId = `${baseId}-label`;
   return (
     <div className="border-t border-border py-5 grid md:grid-cols-[1fr_auto] gap-3 items-start">
-      <p id={labelId} className="font-display text-sm uppercase tracking-[0.1em]">
+      <p
+        id={labelId}
+        className="font-display text-sm uppercase tracking-[0.1em]"
+      >
         {customization.ingredient}
       </p>
       <RadioGroup

@@ -19,12 +19,19 @@ export function Breadcrumb({ items }: { items: Crumb[] }) {
                   {item.label}
                 </Link>
               ) : (
-                <span aria-current={last ? "page" : undefined} className={last ? "text-foreground" : ""}>
+                <span
+                  aria-current={last ? "page" : undefined}
+                  className={last ? "text-foreground" : ""}
+                >
                   {item.label}
                 </span>
               )}
               {!last ? (
-                <ChevronRight className="h-3 w-3" strokeWidth={1.5} aria-hidden />
+                <ChevronRight
+                  className="h-3 w-3"
+                  strokeWidth={1.5}
+                  aria-hidden
+                />
               ) : null}
             </li>
           );

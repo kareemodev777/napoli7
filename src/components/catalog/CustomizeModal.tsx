@@ -31,9 +31,18 @@ interface CustomizeModalProps {
 // The modal is rendered only when the parent decides it should be open.
 // That means each "open" mounts a fresh component with fresh state — no
 // useEffect-driven resets needed.
-export function CustomizeModal({ product, initialSize, onClose }: CustomizeModalProps) {
+export function CustomizeModal({
+  product,
+  initialSize,
+  onClose,
+}: CustomizeModalProps) {
   return (
-    <Dialog open onOpenChange={(o) => { if (!o) onClose(); }}>
+    <Dialog
+      open
+      onOpenChange={(o) => {
+        if (!o) onClose();
+      }}
+    >
       <DialogContent
         showCloseButton={false}
         className="!max-w-3xl p-0 gap-0 border border-border bg-background sm:rounded-none rounded-none overflow-hidden"
@@ -58,10 +67,11 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
   const addItem = useCart((s) => s.addItem);
 
   const [selectedSizeId, setSelectedSizeId] = useState<SizeId>(initialSize);
-  const [choices, setChoices] = useState<Record<string, CustomizationChoice>>(() =>
-    Object.fromEntries(
-      product.customizations.map((c) => [c.ingredient, "default" as const])
-    )
+  const [choices, setChoices] = useState<Record<string, CustomizationChoice>>(
+    () =>
+      Object.fromEntries(
+        product.customizations.map((c) => [c.ingredient, "default" as const]),
+      ),
   );
   const [qty, setQty] = useState(1);
 
@@ -70,11 +80,13 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
 
   const cartCustomizations = useMemo<CartCustomization[]>(() => {
     return product.customizations
-      .filter((c) => choices[c.ingredient] && choices[c.ingredient] !== "default")
+      .filter(
+        (c) => choices[c.ingredient] && choices[c.ingredient] !== "default",
+      )
       .map((c) => ({
         ingredient: c.ingredient,
         choice: choices[c.ingredient],
-        extraPrice: choices[c.ingredient] === "extra" ? c.extraPrice ?? 0 : 0,
+        extraPrice: choices[c.ingredient] === "extra" ? (c.extraPrice ?? 0) : 0,
       }));
   }, [choices, product.customizations]);
 
@@ -189,8 +201,8 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
                             {value === "default"
                               ? "Included"
                               : value === "extra"
-                              ? `Extra +${formatAed(c.extraPrice ?? 0)}`
-                              : "Removed"}
+                                ? `Extra +${formatAed(c.extraPrice ?? 0)}`
+                                : "Removed"}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -200,7 +212,11 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
                               onClick={() => setChoice(c.ingredient, "without")}
                               ariaLabel={`Remove ${c.ingredient}`}
                             >
-                              <Minus className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden />
+                              <Minus
+                                className="h-3.5 w-3.5"
+                                strokeWidth={1.5}
+                                aria-hidden
+                              />
                             </ToggleButton>
                           ) : null}
                           {c.extraPrice !== null ? (
@@ -209,7 +225,11 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
                               onClick={() => setChoice(c.ingredient, "extra")}
                               ariaLabel={`Add extra ${c.ingredient}`}
                             >
-                              <Plus className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden />
+                              <Plus
+                                className="h-3.5 w-3.5"
+                                strokeWidth={1.5}
+                                aria-hidden
+                              />
                             </ToggleButton>
                           ) : null}
                         </div>
@@ -246,7 +266,10 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
             <Row label="Size">
               {selectedSize.label}
               {selectedSize.detail ? (
-                <span className="text-muted-foreground"> · {selectedSize.detail}</span>
+                <span className="text-muted-foreground">
+                  {" "}
+                  · {selectedSize.detail}
+                </span>
               ) : null}
             </Row>
             <Row label="Base">{formatAed(selectedSize.price)}</Row>
@@ -257,9 +280,13 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
                 </p>
                 <ul className="space-y-1 text-xs">
                   {cartCustomizations.map((c) => (
-                    <li key={c.ingredient} className="flex justify-between gap-3">
+                    <li
+                      key={c.ingredient}
+                      className="flex justify-between gap-3"
+                    >
                       <span>
-                        {c.choice === "extra" ? "Extra" : "Without"} {c.ingredient}
+                        {c.choice === "extra" ? "Extra" : "Without"}{" "}
+                        {c.ingredient}
                       </span>
                       <span className="tabular-nums text-muted-foreground">
                         {c.extraPrice ? `+${formatAed(c.extraPrice)}` : "—"}
@@ -310,7 +337,9 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
           <p className="font-display text-[10px] tracking-[0.25em] uppercase text-muted-foreground">
             Total
           </p>
-          <p className="font-display text-xl tabular-nums">{formatAed(lineTotal)}</p>
+          <p className="font-display text-xl tabular-nums">
+            {formatAed(lineTotal)}
+          </p>
         </div>
         <button
           type="button"
@@ -354,7 +383,13 @@ function ToggleButton({
   );
 }
 
-function Row({ label, children }: { label: string; children: React.ReactNode }) {
+function Row({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
   return (
     <div className="flex items-baseline justify-between gap-3">
       <span className="font-display text-[10px] tracking-[0.25em] uppercase text-muted-foreground">
