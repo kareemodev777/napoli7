@@ -193,6 +193,7 @@ export function MobileNav() {
               <li key={link.href} className="border-b border-border">
                 <Link
                   href={link.href}
+                  onClick={close}
                   className="flex items-center justify-between px-5 h-16 font-display text-3xl uppercase tracking-[1.5px] hover:bg-muted transition-colors"
                 >
                   {link.label}
@@ -212,6 +213,7 @@ export function MobileNav() {
           {/* Login / Account */}
           <Link
             href="/login"
+            onClick={close}
             className="flex items-center gap-3 h-11 font-display text-sm uppercase tracking-[1.5px] hover:opacity-60 transition-opacity"
           >
             <User className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden />
