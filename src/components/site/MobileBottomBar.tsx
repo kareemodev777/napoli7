@@ -50,17 +50,17 @@ export function MobileBottomBar() {
         order
       </Link>
 
-      {/* Cart pill */}
+      {/* Cart pill — min-w so it grows to fit large subtotals up to max-w */}
       <Link
         href="/cart"
-        className="inline-flex items-center justify-center gap-2 w-[88px] h-[52px] border-l border-border hover:bg-muted transition-colors"
+        className="inline-flex items-center justify-center gap-2 min-w-[88px] max-w-[140px] px-2 h-[52px] border-l border-border hover:bg-muted transition-colors"
         aria-label={
           qty > 0
             ? `Cart — ${qty} item${qty === 1 ? "" : "s"}, ${formatAed(amount)}`
             : "Cart — empty"
         }
       >
-        <div className="relative">
+        <div className="relative shrink-0">
           <ShoppingBag className="h-5 w-5" strokeWidth={1.5} aria-hidden />
           {qty > 0 ? (
             <span className="absolute -top-2 -right-2 min-w-[16px] h-[16px] inline-flex items-center justify-center bg-brand text-primary-foreground text-[9px] font-display tabular-nums px-0.5">
@@ -69,7 +69,7 @@ export function MobileBottomBar() {
           ) : null}
         </div>
         {qty > 0 ? (
-          <span className="font-display text-[11px] tabular-nums leading-none">
+          <span className="font-display text-[11px] tabular-nums truncate leading-none">
             {formatAed(amount)}
           </span>
         ) : null}
