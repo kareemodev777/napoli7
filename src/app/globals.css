@@ -325,3 +325,11 @@ body[data-scroll-lock] {
     --header-h: 76px;
   }
 }
+
+/* Respect users who prefer reduced motion — zeros all transitions/animations */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}
