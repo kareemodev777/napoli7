@@ -47,6 +47,17 @@ export function MobileNav() {
   useBodyScrollLock(open);
   useRouteChange(close);
 
+  // Close drawer if the viewport crosses into desktop (≥ 1024px) while open.
+  // Prevents body scroll lock persisting when lg:hidden hides the drawer.
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    function handleChange(e: MediaQueryListEvent) {
+      if (e.matches) setOpen(false);
+    }
+    mq.addEventListener("change", handleChange);
+    return () => mq.removeEventListener("change", handleChange);
+  }, []);
+
   // Return focus to trigger only when drawer closes after having been open.
   // This preserves natural page focus (skip-link, etc.) on initial load.
   useEffect(() => {
