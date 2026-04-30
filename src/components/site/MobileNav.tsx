@@ -37,26 +37,51 @@ export function MobileNav() {
   const [open, setOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  // Track whether the drawer has ever been opened so we only return focus
+  // to the trigger after an intentional open→close, not on initial mount.
+  const hasOpenedRef = useRef(false);
 
   const close = useCallback(() => setOpen(false), []);
 
   useBodyScrollLock(open);
   useRouteChange(close);
 
-  // Return focus to trigger on close.
+  // Return focus to trigger only when drawer closes after having been open.
+  // This preserves natural page focus (skip-link, etc.) on initial load.
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      hasOpenedRef.current = true;
+    } else if (hasOpenedRef.current) {
       triggerRef.current?.focus();
     }
   }, [open]);
 
-  // Focus the first focusable element (close button) when drawer opens.
+  // Focus the close button (not the Logo link) when drawer opens.
   useEffect(() => {
     if (!open) return;
-    const el = drawerRef.current;
-    if (!el) return;
-    const focusable = getFocusableElements(el);
-    focusable[0]?.focus();
+    closeButtonRef.current?.focus();
+  }, [open]);
+
+  // Mark all page content except the drawer as inert while open so screen
+  // readers cannot reach background content.
+  useEffect(() => {
+    const drawer = drawerRef.current;
+    if (!drawer) return;
+
+    const children = Array.from(document.body.children) as HTMLElement[];
+
+    if (open) {
+      children.forEach((el) => {
+        if (!el.contains(drawer)) {
+          el.setAttribute("inert", "");
+        }
+      });
+    }
+
+    return () => {
+      children.forEach((el) => el.removeAttribute("inert"));
+    };
   }, [open]);
 
   // ESC to close + focus trap inside the drawer.
@@ -64,6 +89,7 @@ export function MobileNav() {
     if (!open) return;
 
     function handleKeyDown(e: KeyboardEvent) {
+      if (e.defaultPrevented) return;
       if (e.key === "Escape") {
         close();
         return;
@@ -127,9 +153,11 @@ export function MobileNav() {
       <div
         id="mobile-nav-drawer"
         ref={drawerRef}
+        data-mobile-nav
         role="dialog"
         aria-modal="true"
         aria-label="Site navigation"
+        aria-hidden={!open}
         className={[
           "lg:hidden fixed inset-y-0 right-0 z-50 flex flex-col",
           "w-full max-w-[360px] bg-background border-l border-border",
@@ -145,8 +173,10 @@ export function MobileNav() {
       >
         {/* Drawer header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
-          <Logo />
+          {/* tabIndex={-1}: Logo is branding, not a nav target inside the drawer */}
+          <Logo tabIndex={-1} />
           <button
+            ref={closeButtonRef}
             type="button"
             aria-label="Close navigation menu"
             onClick={close}
