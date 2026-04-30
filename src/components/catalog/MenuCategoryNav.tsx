@@ -38,8 +38,9 @@ export function MenuCategoryNav({ categories }: MenuCategoryNavProps) {
     if (!target) return;
     e.preventDefault();
     setActive(id);
-    const top = target.getBoundingClientRect().top + window.scrollY - 80;
-    window.scrollTo({ top, behavior: "smooth" });
+    // scrollIntoView respects scroll-margin-top (set via scroll-mt-* on the
+    // section), which accounts for both the sticky header and category nav.
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
     history.replaceState(null, "", `#${id}`);
   }
 

@@ -39,7 +39,7 @@ export function MenuLayout({ products, categories }: MenuLayoutProps) {
                 key={c.id}
                 id={c.id}
                 aria-labelledby={`${c.id}-heading`}
-                className="scroll-mt-24"
+                className="scroll-mt-[calc(var(--header-h)+50px)]"
               >
                 <header className="flex items-baseline justify-between flex-wrap gap-3 mb-6 md:mb-8 pb-4 border-b border-border">
                   <div>
