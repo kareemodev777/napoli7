@@ -1,6 +1,6 @@
 # Spec: Mobile-First Responsive Navigation & Site Polish
 
-## Status: Draft
+## Status: Implemented
 
 ## Objective
 Make Napoli 7 fully mobile-friendly across every page. Replace the missing
