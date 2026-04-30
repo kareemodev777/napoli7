@@ -25,7 +25,7 @@ export function MenuLayout({ products, categories }: MenuLayoutProps) {
 
   return (
     <div className="grid lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_400px] gap-10 px-6 md:px-10 pt-6 pb-24 lg:pb-16 max-w-[1500px] mx-auto">
-      <div>
+      <div className="min-w-0 overflow-x-clip">
         <MenuCategoryNav
           categories={categories.filter((c) => grouped.has(c.id))}
         />
