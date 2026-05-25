@@ -1,6 +1,19 @@
 -- Phase 3 migration: catalog (read-only) + orders (write).
 -- Apply via: supabase db push  (or paste into SQL editor)
 
+-- Shared auth role table. Later migrations may add policies/features that
+-- depend on this table, but order policies also reference it.
+CREATE TABLE IF NOT EXISTS user_roles (
+  user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  role    text NOT NULL CHECK (role IN ('admin', 'kitchen', 'customer'))
+);
+
+ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "user_roles_self_read" ON user_roles;
+CREATE POLICY "user_roles_self_read" ON user_roles
+  FOR SELECT USING (auth.uid() = user_id);
+
 -- ---------- Catalog ----------
 
 CREATE TABLE IF NOT EXISTS categories (

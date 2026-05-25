@@ -4,7 +4,9 @@ CREATE TABLE IF NOT EXISTS user_roles (
   user_id uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   role    text NOT NULL CHECK (role IN ('admin', 'kitchen', 'customer'))
 );
+
 ALTER TABLE user_roles ENABLE ROW LEVEL SECURITY;
+
 DROP POLICY IF EXISTS "user_roles_self_read" ON user_roles;
 CREATE POLICY "user_roles_self_read" ON user_roles
   FOR SELECT USING (auth.uid() = user_id);
