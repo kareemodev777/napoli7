@@ -36,6 +36,13 @@ yarn-error.log*
 # vercel
 .vercel
 
+# netlify
+.netlify/
+deno.lock
+
+# supabase
+supabase/.temp/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
