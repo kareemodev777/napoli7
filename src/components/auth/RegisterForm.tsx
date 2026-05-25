@@ -34,6 +34,23 @@ export function RegisterForm() {
         />
       </Field>
       <Field
+        id="reg-mobile"
+        label="Mobile number"
+        required
+        hint="UAE mobile starting with +9715."
+      >
+        <Input
+          id="reg-mobile"
+          type="tel"
+          name="mobile"
+          required
+          inputMode="tel"
+          autoComplete="tel"
+          placeholder="+9715XXXXXXXX"
+          pattern="^\+9715[0-9]{8}$"
+        />
+      </Field>
+      <Field
         id="reg-password"
         label="Password"
         required

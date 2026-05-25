@@ -9,6 +9,13 @@ const registerSchema = z
     firstName: z.string().min(1),
     lastName: z.string().min(1),
     email: z.string().email(),
+    mobile: z
+      .string()
+      .trim()
+      .regex(
+        /^\+9715\d{8}$/,
+        "Enter a valid UAE mobile number starting with +9715.",
+      ),
     password: z.string().min(8, "Use at least 8 characters."),
     confirmPassword: z.string(),
   })
@@ -30,6 +37,7 @@ export async function registerCustomer(
     firstName: formData.get("firstName"),
     lastName: formData.get("lastName"),
     email: formData.get("email"),
+    mobile: formData.get("mobile"),
     password: formData.get("password"),
     confirmPassword: formData.get("confirmPassword"),
   });
@@ -52,6 +60,7 @@ export async function registerCustomer(
       data: {
         first_name: parsed.data.firstName,
         last_name: parsed.data.lastName,
+        mobile: parsed.data.mobile,
       },
     },
   });
