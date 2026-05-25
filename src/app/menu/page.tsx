@@ -4,7 +4,7 @@ import { Footer } from "@/components/site/Footer";
 import { MobileBottomBar } from "@/components/site/MobileBottomBar";
 import { PageHero } from "@/components/site/PageHero";
 import { MenuLayout } from "@/components/catalog/MenuLayout";
-import { CATEGORIES, getActiveProducts } from "@/data/mock/catalog";
+import { getActiveProducts, getCatalogCategories } from "@/lib/catalog";
 
 export const revalidate = 3600;
 
@@ -20,8 +20,11 @@ export const metadata: Metadata = {
   },
 };
 
-export default function MenuPage() {
-  const products = getActiveProducts();
+export default async function MenuPage() {
+  const [products, categories] = await Promise.all([
+    getActiveProducts(),
+    getCatalogCategories(),
+  ]);
   return (
     <>
       <Header />
@@ -31,7 +34,7 @@ export default function MenuPage() {
           heading="Menu"
           intro="Seven pizzas. Five focaccia sandwiches. Three dessert pizzas. Eight drinks. Each one prepared on the same dough, in the same oven, every day."
         />
-        <MenuLayout products={products} categories={CATEGORIES} />
+        <MenuLayout products={products} categories={categories} />
       </main>
       <Footer />
       <MobileBottomBar />

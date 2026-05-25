@@ -1,6 +1,17 @@
-export type CategoryId = "pizza" | "focaccia" | "dessert" | "drinks";
+export type CategoryId = string;
 
-export type SizeId = "small" | "regular";
+export const SIZE_OPTIONS = [
+  { id: "regular", label: "Regular" },
+  { id: "small", label: "Small" },
+  { id: "large", label: "Large" },
+  { id: "family", label: "Family" },
+] as const;
+
+export type SizeId = (typeof SIZE_OPTIONS)[number]["id"];
+
+export function isSizeId(id: string): id is SizeId {
+  return SIZE_OPTIONS.some((option) => option.id === id);
+}
 
 export interface Category {
   id: CategoryId;

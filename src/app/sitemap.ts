@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
-import { PRODUCTS } from "@/data/mock/catalog";
+import { getProductSlugs } from "@/lib/catalog";
 import { SITE_URL } from "@/lib/env";
 
-export default function sitemap(): MetadataRoute.Sitemap {
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const now = new Date();
   const staticPaths = [
     { path: "", changeFrequency: "weekly" as const, priority: 1.0 },
@@ -25,8 +25,9 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  const productPaths = PRODUCTS.filter((p) => p.isActive).map((p) => ({
-    path: `/menu/${p.slug}`,
+  const productSlugs = await getProductSlugs();
+  const productPaths = productSlugs.map((slug) => ({
+    path: `/menu/${slug}`,
     changeFrequency: "weekly" as const,
     priority: 0.6,
   }));

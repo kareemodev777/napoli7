@@ -5,18 +5,19 @@ import { ProductDetail } from "@/components/catalog/ProductDetail";
 import { RelatedProducts } from "@/components/catalog/RelatedProducts";
 import { MenuItemJsonLd } from "@/components/structured-data/MenuItemJsonLd";
 import {
-  CATEGORIES,
-  PRODUCTS,
   getProductBySlug,
+  getProductSlugs,
   getRelatedProducts,
-} from "@/data/mock/catalog";
+  getCatalogCategories,
+} from "@/lib/catalog";
 
 interface Params {
   slug: string;
 }
 
 export async function generateStaticParams(): Promise<Params[]> {
-  return PRODUCTS.filter((p) => p.isActive).map((p) => ({ slug: p.slug }));
+  const slugs = await getProductSlugs();
+  return slugs.map((slug) => ({ slug }));
 }
 
 export async function generateMetadata({
@@ -25,7 +26,7 @@ export async function generateMetadata({
   params: Promise<Params>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
   if (!product) return { title: "Not found" };
   return {
     title: product.name,
@@ -45,11 +46,14 @@ export default async function ProductPage({
   params: Promise<Params>;
 }) {
   const { slug } = await params;
-  const product = getProductBySlug(slug);
+  const product = await getProductBySlug(slug);
   if (!product) notFound();
 
-  const category = CATEGORIES.find((c) => c.id === product.categoryId);
-  const related = getRelatedProducts(product, 3);
+  const [categories, related] = await Promise.all([
+    getCatalogCategories(),
+    getRelatedProducts(product, 3),
+  ]);
+  const category = categories.find((c) => c.id === product.categoryId);
 
   return (
     <SiteShell>
