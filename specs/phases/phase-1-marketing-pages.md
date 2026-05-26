@@ -1,5 +1,6 @@
 # Phase 1 — Marketing & Content Pages
 
+**Status**: Implemented (2026-05-26)
 **Effort**: 2–3 working days
 **Gate**: Visual review and owner approval of all 8 routes before Phase 2 begins.
 **Dependencies**: Homepage already shipped. No backend required.

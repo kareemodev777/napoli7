@@ -1,5 +1,6 @@
 # Phase 4 — Auth, Account, and Payments
 
+**Status**: Implemented (2026-05-26)
 **Effort**: 3–4 working days
 **Gate**: A logged-in customer can view their order history and pay by card via Stripe Checkout. Owner approves.
 **Dependencies**: Phase 3 complete. Stripe account activated (test mode is enough to start; live mode requires UAE business KYC). Supabase Auth configured.

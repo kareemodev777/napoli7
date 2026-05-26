@@ -1,5 +1,6 @@
 # Phase 2 — Menu Catalog (UI + Mock Data)
 
+**Status**: Implemented (2026-05-26)
 **Effort**: 2–3 working days
 **Gate**: Owner approves product card design and product detail page before Phase 3 begins.
 **Dependencies**: Phase 1 complete (Header, Footer, PageHero patterns established).

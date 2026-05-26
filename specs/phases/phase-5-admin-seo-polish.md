@@ -1,5 +1,6 @@
 # Phase 5 — Admin Panel, SEO, Analytics, and Production Polish
 
+**Status**: In Progress (admin orders + catalog CRUD, sitemap, robots, OG, JSON-LD, contact→Resend, Vercel telemetry shipped 2026-05-26 — pending: promo codes, delivery fees, brand photo swap, a11y/perf pass)
 **Effort**: 3–4 working days
 **Gate**: Owner accepts the site as production-ready. All Lighthouse scores pass targets.
 **Dependencies**: Phase 4 complete. Brand photography available. Meta WhatsApp template approved.

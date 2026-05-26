@@ -1,5 +1,6 @@
 # Phase 3 — Cart, Checkout, Order Placement
 
+**Status**: Implemented (2026-05-26)
 **Effort**: 3–5 working days
 **Gate**: A complete test order can be placed and confirmed (COD only). Owner approves the flow.
 **Dependencies**: Phase 2 approved. Supabase project created and env vars set.
