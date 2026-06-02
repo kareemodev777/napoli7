@@ -1,4 +1,6 @@
-# Napoli 7 — Project Update (2026-05-26)
+# Napoli 7 — Project Update (2026-06-03)
+
+> Version history is tracked in `CHANGELOG.md`. Current release: **0.2.0** (promo codes + per-area delivery fees).
 
 Single-store Neapolitan pizzeria webshop (Al Jurf 2, Ajman, UAE). Rebuilt to match the
 Swiss discipline of `webshop.dieci.ch` in the brand's *azzurro* palette.
@@ -86,6 +88,8 @@ through `src/lib/catalog.ts` (Supabase-backed with mock fallback).
 ## What's left (Phase 5 → finish)
 
 Priority order:
+
+0. **Admin delivery-zones management UI** — CRUD over the `delivery_zones` table (area, fee, position, active) so ops can edit fees without SQL. Spec ready: `specs/active/admin-delivery-zones.md` (planning, not yet implemented).
 
 1. **Brand photography** — replace placeholders in `public/images/` (`hero-pizza.jpg`, `article-*.jpg`, `location-block.jpg`, `products/*`). Owner to provide. Run through `next/image` AVIF/WebP optimization.
 
