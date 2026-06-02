@@ -23,14 +23,26 @@ export interface CartItem extends CartItemInput {
   id: string;
 }
 
+export interface AppliedPromo {
+  code: string;
+  amount: number;
+}
+
 interface CartState {
   items: CartItem[];
+  promo: AppliedPromo | null;
   addItem: (input: CartItemInput) => void;
   updateQuantity: (id: string, quantity: number) => void;
   removeItem: (id: string) => void;
   clear: () => void;
+  setPromo: (promo: AppliedPromo) => void;
+  clearPromo: () => void;
   totalQuantity: () => number;
   subtotal: () => number;
+  /** Discount in AED, clamped to never exceed the current subtotal. */
+  discount: () => number;
+  /** Subtotal minus discount, floored at 0. Excludes delivery fee. */
+  total: () => number;
 }
 
 function customizationKey(items: CartCustomization[]) {
@@ -53,6 +65,7 @@ export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
       items: [],
+      promo: null,
       addItem: (input) => {
         const id = makeId(input.productId, input.sizeId, input.customizations);
         set((state) => {
@@ -79,15 +92,29 @@ export const useCart = create<CartState>()(
       removeItem: (id) => {
         set((state) => ({ items: state.items.filter((it) => it.id !== id) }));
       },
-      clear: () => set({ items: [] }),
+      clear: () => set({ items: [], promo: null }),
+      setPromo: (promo) => set({ promo }),
+      clearPromo: () => set({ promo: null }),
       totalQuantity: () => get().items.reduce((s, it) => s + it.quantity, 0),
       subtotal: () =>
         get().items.reduce((s, it) => s + it.unitPrice * it.quantity, 0),
+      discount: () => {
+        const { promo } = get();
+        if (!promo) return 0;
+        return Math.min(promo.amount, get().subtotal());
+      },
+      total: () => Math.max(0, get().subtotal() - get().discount()),
     }),
     {
       name: "napoli7-cart",
       storage: createJSONStorage(() => localStorage),
-      version: 2,
+      version: 3,
+      // v3 added promo state. Drop any persisted promo on upgrade so a stale
+      // discount can't survive a deploy; items are preserved.
+      migrate: (persisted) => {
+        const state = (persisted ?? {}) as Partial<CartState>;
+        return { ...state, promo: null } as CartState;
+      },
     },
   ),
 );

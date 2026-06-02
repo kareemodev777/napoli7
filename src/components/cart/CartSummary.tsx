@@ -1,19 +1,46 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useCart } from "@/store/cart";
 import { formatAed } from "@/components/catalog/PriceBadge";
+import { validatePromoCode } from "@/app/cart/actions";
 
 export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
   const subtotal = useCart((s) => s.subtotal());
   const itemCount = useCart((s) => s.totalQuantity());
-  const [promo, setPromo] = useState("");
+  const promo = useCart((s) => s.promo);
+  const discount = useCart((s) => s.discount());
+  const total = useCart((s) => s.total());
+  const setPromo = useCart((s) => s.setPromo);
+  const clearPromo = useCart((s) => s.clearPromo);
+
+  const [code, setCode] = useState("");
   const [promoError, setPromoError] = useState<string | null>(null);
+  const [pending, startTransition] = useTransition();
 
   function handleApply(e: React.FormEvent) {
     e.preventDefault();
-    setPromoError("Promo codes available soon");
+    setPromoError(null);
+    const entered = code.trim();
+    if (!entered) {
+      setPromoError("Enter a promo code.");
+      return;
+    }
+    startTransition(async () => {
+      const result = await validatePromoCode(entered, subtotal);
+      if (result.error || !result.code || result.amount == null) {
+        setPromoError(result.error ?? "That promo code isn't valid.");
+        return;
+      }
+      setPromo({ code: result.code, amount: result.amount });
+      setCode("");
+    });
+  }
+
+  function handleRemove() {
+    clearPromo();
+    setPromoError(null);
   }
 
   return (
@@ -27,41 +54,66 @@ export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
         >
           {formatAed(subtotal)}
         </Row>
+        {promo ? (
+          <Row label={`Discount · ${promo.code}`}>
+            <span>−{formatAed(discount)}</span>
+          </Row>
+        ) : null}
         <Row label="Delivery fee">Calculated at checkout</Row>
       </dl>
-      <form
-        onSubmit={handleApply}
-        className="mt-6 grid grid-cols-[1fr_auto] gap-2"
-      >
-        <input
-          type="text"
-          value={promo}
-          onChange={(e) => setPromo(e.target.value.toUpperCase())}
-          placeholder="Promo code"
-          aria-label="Promo code"
-          className="border border-border bg-background px-3 py-2.5 text-sm font-display tracking-[0.1em] uppercase placeholder:text-muted-foreground focus:outline-none focus:border-brand"
-        />
-        <button
-          type="submit"
-          className="border border-foreground px-4 py-2.5 font-display text-xs tracking-[0.2em] uppercase hover:bg-foreground hover:text-background"
-        >
-          Apply
-        </button>
-        {promoError ? (
-          <p
-            role="status"
-            className="col-span-2 text-xs text-muted-foreground mt-1"
+
+      {promo ? (
+        <div className="mt-6 flex items-center justify-between gap-3 border border-border bg-background px-3 py-2.5">
+          <span className="font-display text-xs tracking-[0.1em] uppercase">
+            {promo.code} applied
+          </span>
+          <button
+            type="button"
+            onClick={handleRemove}
+            className="font-display text-[11px] tracking-[0.2em] uppercase text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
           >
-            {promoError}
-          </p>
-        ) : null}
-      </form>
+            Remove
+          </button>
+        </div>
+      ) : (
+        <form
+          onSubmit={handleApply}
+          className="mt-6 grid grid-cols-[1fr_auto] gap-2"
+        >
+          <input
+            type="text"
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            placeholder="Promo code"
+            aria-label="Promo code"
+            disabled={pending}
+            className="border border-border bg-background px-3 py-2.5 text-sm font-display tracking-[0.1em] uppercase placeholder:text-muted-foreground focus:outline-none focus:border-brand disabled:opacity-60"
+          />
+          <button
+            type="submit"
+            disabled={pending}
+            aria-busy={pending}
+            className="border border-foreground px-4 py-2.5 font-display text-xs tracking-[0.2em] uppercase hover:bg-foreground hover:text-background disabled:opacity-60"
+          >
+            {pending ? "…" : "Apply"}
+          </button>
+          {promoError ? (
+            <p
+              role="status"
+              className="col-span-2 text-xs text-muted-foreground mt-1"
+            >
+              {promoError}
+            </p>
+          ) : null}
+        </form>
+      )}
+
       <div className="mt-6 border-t border-border pt-4 flex items-baseline justify-between">
         <span className="font-display text-xs tracking-[0.25em] uppercase">
           Total
         </span>
         <span className="font-display text-xl tabular-nums">
-          {formatAed(subtotal)}
+          {formatAed(total)}
         </span>
       </div>
       <Link
