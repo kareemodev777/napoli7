@@ -6,6 +6,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { notifyKitchenEmail } from "@/lib/notifications/email";
 import { notifyKitchenWhatsApp } from "@/lib/notifications/whatsapp";
+import { validatePromo, redeemPromo } from "@/lib/promo";
+import { getDeliveryFee } from "@/lib/checkout";
 import { HAS_SUPABASE } from "@/lib/env";
 
 const customizationSchema = z.object({
@@ -45,6 +47,7 @@ const placeOrderSchema = z.object({
   deliverySlot: z.string().min(1),
   orderNotes: z.string().max(500).optional(),
   paymentMethod: z.enum(["cod", "card"]),
+  promoCode: z.string().max(40).optional(),
   items: z.array(itemSchema).min(1),
 });
 
@@ -72,8 +75,25 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   }
 
   const subtotal = data.items.reduce((s, i) => s + i.lineTotalAed, 0);
-  const deliveryFee = 0;
-  const total = subtotal + deliveryFee;
+
+  // Re-validate the promo server-side — never trust a client-sent amount.
+  let discount = 0;
+  let appliedPromo: string | undefined;
+  if (data.promoCode) {
+    const promoResult = await validatePromo(data.promoCode, subtotal);
+    if (promoResult.code && promoResult.amount) {
+      discount = promoResult.amount;
+      appliedPromo = promoResult.code;
+    }
+    // An invalid/expired code at submit time is ignored (no discount applied);
+    // the cart UI already validated, so this only catches edge races.
+  }
+
+  const deliveryFee =
+    data.deliveryType === "delivery" && data.deliveryAddress
+      ? await getDeliveryFee(data.deliveryAddress.area)
+      : 0;
+  const total = Math.max(0, subtotal - discount) + deliveryFee;
 
   if (!HAS_SUPABASE) {
     const orderId = crypto.randomUUID();
@@ -106,7 +126,9 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
       delivery_slot: data.deliverySlot,
       order_notes: data.orderNotes ?? null,
       payment_method: data.paymentMethod,
-      payment_status: data.paymentMethod === "card" ? "pending" : "pending",
+      payment_status: "pending",
+      promo_code: appliedPromo ?? null,
+      discount_aed: discount,
       subtotal_aed: subtotal,
       delivery_fee_aed: deliveryFee,
       total_aed: total,
@@ -136,6 +158,19 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     .insert(itemRows);
   if (itemsError) {
     console.error("[placeOrder] Order items insert failed:", itemsError);
+  }
+
+  if (appliedPromo) {
+    try {
+      const redeemed = await redeemPromo(appliedPromo);
+      if (!redeemed) {
+        console.warn(
+          `[placeOrder] Promo ${appliedPromo} could not be redeemed (exhausted/expired) on order ${order.order_number}`,
+        );
+      }
+    } catch (e) {
+      console.error("[placeOrder] promo redeem failed:", e);
+    }
   }
 
   await runNotifications({

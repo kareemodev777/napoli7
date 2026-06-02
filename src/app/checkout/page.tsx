@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { SiteShell } from "@/components/site/SiteShell";
 import { PageHero } from "@/components/site/PageHero";
 import { CheckoutForm } from "@/components/checkout/CheckoutForm";
+import { getDeliveryZones, DEFAULT_DELIVERY_FEE } from "@/lib/checkout";
 
 export const metadata: Metadata = {
   title: "Checkout",
@@ -11,7 +12,8 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function CheckoutPage() {
+export default async function CheckoutPage() {
+  const zones = await getDeliveryZones();
   return (
     <SiteShell>
       <PageHero
@@ -24,7 +26,7 @@ export default function CheckoutPage() {
           <Suspense
             fallback={<p className="text-sm text-muted-foreground">Loading…</p>}
           >
-            <CheckoutForm />
+            <CheckoutForm zones={zones} defaultFee={DEFAULT_DELIVERY_FEE} />
           </Suspense>
         </div>
       </section>

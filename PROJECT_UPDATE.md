@@ -40,7 +40,7 @@ Without optional env keys the integrations log to console (graceful fallback —
 
 Migrations live in `supabase/migrations/`. Apply with `supabase db push` or via the SQL editor.
 
-Order: `001 → 002 → 004 → 005 → 006`. (003 was rolled into 001/002.)
+Order: `001 → 002 → 004 → 005 → 006 → 007 → 008`. (003 was rolled into 001/002.)
 
 ---
 
@@ -78,6 +78,8 @@ through `src/lib/catalog.ts` (Supabase-backed with mock fallback).
 - Root `opengraph-image.tsx` + per-product `/menu/[slug]/opengraph-image.tsx` via `next/og`
 - Vercel Analytics + Speed Insights
 - Contact form → Resend
+- **Promo codes** — `007_promo_codes.sql` (`promo_codes` table + `redeem_promo_code` race-safe RPC + `orders.promo_code`/`discount_aed` cols). `validatePromoCode(code, subtotal)` server action in `src/app/cart/actions.ts`, logic in `src/lib/promo.ts` (pct + flat AED, min subtotal, validity window, usage cap, mock fallback). Wired through cart store (`promo`/`discount`/`total`) → `CartSummary` apply/remove → `placeOrder` re-validates + persists + redeems. Seed demo codes: `WELCOME10`, `NAPOLI20`.
+- **Delivery fees per area** — `008_delivery_zones.sql` (`delivery_zones`: `area` PK, `fee_aed`, `position`, `active`; public read + admin RLS; seeded Ajman areas). `getDeliveryZones()`/`getDeliveryFee(area)` + `DEFAULT_DELIVERY_FEE` in `src/lib/checkout.ts` (mock fallback). Checkout page fetches zones server-side → area field is now a zone `<select>` with live fee → fee in order total. `placeOrder` recomputes fee server-side for delivery orders and persists `delivery_fee_aed`. Pickup = free.
 
 ---
 
@@ -85,25 +87,15 @@ through `src/lib/catalog.ts` (Supabase-backed with mock fallback).
 
 Priority order:
 
-1. **Promo codes** — table + checkout validation. UI exists in `src/components/cart/CartSummary.tsx` but is non-functional. Needs:
-   - New migration `007_promo_codes.sql` (`code`, `discount_aed`, `discount_pct`, `min_subtotal_aed`, `valid_from`, `valid_until`, `max_uses`, `active`)
-   - Server action `validatePromoCode(code, subtotal)` returning `{ amount, error? }`
-   - Apply in `CartSummary` + persist on order
+1. **Brand photography** — replace placeholders in `public/images/` (`hero-pizza.jpg`, `article-*.jpg`, `location-block.jpg`, `products/*`). Owner to provide. Run through `next/image` AVIF/WebP optimization.
 
-2. **Delivery fees per area** — flat-fee lookup. Currently the order total has no delivery fee logic. Needs:
-   - New migration `008_delivery_zones.sql` (`area` text PK, `fee_aed` numeric, `active` bool)
-   - Helper `getDeliveryFee(area)` in `src/lib/checkout.ts`
-   - Wire into `/checkout` total + `placeOrder` action
+2. **Per-page canonical tags** — audit `metadata.alternates.canonical` on each route. Currently only metadataBase is set.
 
-3. **Brand photography** — replace placeholders in `public/images/` (`hero-pizza.jpg`, `article-*.jpg`, `location-block.jpg`, `products/*`). Owner to provide. Run through `next/image` AVIF/WebP optimization.
+3. **Final a11y pass** — axe DevTools sweep of every route. Targets: 0 critical, 0 serious.
 
-4. **Per-page canonical tags** — audit `metadata.alternates.canonical` on each route. Currently only metadataBase is set.
+4. **Final performance pass** — Lighthouse target: 90+ on perf/a11y/best-practices/SEO across `/`, `/menu`, `/menu/[slug]`, `/cart`, `/checkout`. Inspect bundle, lazy-load heavy components.
 
-5. **Final a11y pass** — axe DevTools sweep of every route. Targets: 0 critical, 0 serious.
-
-6. **Final performance pass** — Lighthouse target: 90+ on perf/a11y/best-practices/SEO across `/`, `/menu`, `/menu/[slug]`, `/cart`, `/checkout`. Inspect bundle, lazy-load heavy components.
-
-7. *(Optional)* Google Maps interactive embed at `/location` — only if `NEXT_PUBLIC_GOOGLE_MAPS_KEY` provided. Currently static.
+5. *(Optional)* Google Maps interactive embed at `/location` — only if `NEXT_PUBLIC_GOOGLE_MAPS_KEY` provided. Currently static.
 
 ---
 

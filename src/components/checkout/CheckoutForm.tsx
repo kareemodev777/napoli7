@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import type { DeliveryZone } from "@/lib/checkout";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,11 +18,20 @@ function generateTimeSlots(): string[] {
   return ["ASAP", "+30 min", "+60 min", "+90 min", "+120 min"];
 }
 
-export function CheckoutForm() {
+export function CheckoutForm({
+  zones,
+  defaultFee,
+}: {
+  zones: DeliveryZone[];
+  defaultFee: number;
+}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const items = useCart((s) => s.items);
   const subtotal = useCart((s) => s.subtotal());
+  const promo = useCart((s) => s.promo);
+  const discount = useCart((s) => s.discount());
+  const total = useCart((s) => s.total());
   const clearCart = useCart((s) => s.clear);
 
   const hydrated = useMounted();
@@ -34,7 +44,15 @@ export function CheckoutForm() {
   const [deliveryType, setDeliveryType] = useState<"delivery" | "pickup">(
     "delivery",
   );
+  const [area, setArea] = useState(zones[0]?.area ?? "");
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "card">("cod");
+
+  const zoneFee = useMemo(() => {
+    const match = zones.find((z) => z.area === area);
+    return match ? match.fee : defaultFee;
+  }, [zones, area, defaultFee]);
+  const deliveryFee = deliveryType === "delivery" ? zoneFee : 0;
+  const orderTotal = total + deliveryFee;
 
   if (!hydrated) {
     return <p className="text-sm text-muted-foreground">Loading checkout…</p>;
@@ -79,6 +97,7 @@ export function CheckoutForm() {
       deliverySlot: String(formData.get("deliverySlot") ?? "ASAP"),
       orderNotes: String(formData.get("orderNotes") ?? "") || undefined,
       paymentMethod,
+      promoCode: promo?.code,
       items: items.map((it) => ({
         productId: it.productId,
         productName: it.name,
@@ -167,8 +186,26 @@ export function CheckoutForm() {
 
           {deliveryType === "delivery" ? (
             <div className="grid sm:grid-cols-2 gap-5">
-              <Field id="area" label="Area in Ajman" required>
-                <Input id="area" name="area" required placeholder="Al Jurf 2" />
+              <Field
+                id="area"
+                label="Area in Ajman"
+                required
+                hint={`Delivery fee: ${formatAed(zoneFee)}`}
+              >
+                <select
+                  id="area"
+                  name="area"
+                  required
+                  value={area}
+                  onChange={(e) => setArea(e.target.value)}
+                  className="w-full border border-border bg-background px-3 py-2.5 text-sm font-display tracking-[0.1em] uppercase focus:outline-none focus:border-brand"
+                >
+                  {zones.map((z) => (
+                    <option key={z.area} value={z.area}>
+                      {z.area}
+                    </option>
+                  ))}
+                </select>
               </Field>
               <Field id="street" label="Street + building" required>
                 <Input
@@ -284,14 +321,21 @@ export function CheckoutForm() {
         </ul>
         <dl className="mt-4 space-y-2 text-sm">
           <Row label="Subtotal">{formatAed(subtotal)}</Row>
-          <Row label="Delivery fee">TBD — confirmed by the kitchen</Row>
+          {promo ? (
+            <Row label={`Discount · ${promo.code}`}>
+              −{formatAed(discount)}
+            </Row>
+          ) : null}
+          <Row label="Delivery fee">
+            {deliveryType === "delivery" ? formatAed(deliveryFee) : "Free · pickup"}
+          </Row>
         </dl>
         <div className="mt-4 border-t border-border pt-3 flex items-baseline justify-between">
           <span className="font-display text-xs tracking-[0.25em] uppercase">
             Total
           </span>
           <span className="font-display text-xl tabular-nums">
-            {formatAed(subtotal)}
+            {formatAed(orderTotal)}
           </span>
         </div>
       </aside>
