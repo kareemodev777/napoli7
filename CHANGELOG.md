@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Admin delivery-zones management UI** — `/admin/delivery-zones` now lets admins add, edit, rename, hide/show, reorder, and delete `delivery_zones` rows (area, fee, position, active) without using Supabase SQL. Checkout is revalidated when zones change so active areas and fees refresh for customers.
+
 ### Planned
-- Admin delivery-zones management UI — CRUD for `delivery_zones` (area, fee, position, active). Spec: `specs/active/admin-delivery-zones.md` (planning, not yet implemented).
 - Brand photography to replace `public/images/` placeholders.
 - Per-page canonical tags audit.
 - Final a11y (axe) and performance (Lighthouse 90+) passes.

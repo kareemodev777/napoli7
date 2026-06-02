@@ -18,6 +18,12 @@ export default async function AdminLayout({
           <Link href="/admin/catalog" className="hover:text-muted-foreground">
             Catalog
           </Link>
+          <Link
+            href="/admin/delivery-zones"
+            className="hover:text-muted-foreground"
+          >
+            Delivery
+          </Link>
         </div>
       </nav>
       {children}

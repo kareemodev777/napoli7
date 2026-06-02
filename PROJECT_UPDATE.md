@@ -82,14 +82,13 @@ through `src/lib/catalog.ts` (Supabase-backed with mock fallback).
 - Contact form → Resend
 - **Promo codes** — `007_promo_codes.sql` (`promo_codes` table + `redeem_promo_code` race-safe RPC + `orders.promo_code`/`discount_aed` cols). `validatePromoCode(code, subtotal)` server action in `src/app/cart/actions.ts`, logic in `src/lib/promo.ts` (pct + flat AED, min subtotal, validity window, usage cap, mock fallback). Wired through cart store (`promo`/`discount`/`total`) → `CartSummary` apply/remove → `placeOrder` re-validates + persists + redeems. Seed demo codes: `WELCOME10`, `NAPOLI20`.
 - **Delivery fees per area** — `008_delivery_zones.sql` (`delivery_zones`: `area` PK, `fee_aed`, `position`, `active`; public read + admin RLS; seeded Ajman areas). `getDeliveryZones()`/`getDeliveryFee(area)` + `DEFAULT_DELIVERY_FEE` in `src/lib/checkout.ts` (mock fallback). Checkout page fetches zones server-side → area field is now a zone `<select>` with live fee → fee in order total. `placeOrder` recomputes fee server-side for delivery orders and persists `delivery_fee_aed`. Pickup = free.
+- **Admin delivery-zones management UI** — `/admin/delivery-zones` (role-gated via the admin layout) loads all zones including hidden ones, and supports add/edit/rename/delete plus active/hidden toggles and numeric position ordering. Writes use service-role server actions, then revalidate `/admin/delivery-zones` and `/checkout` so checkout reflects live area/fee changes.
 
 ---
 
 ## What's left (Phase 5 → finish)
 
 Priority order:
-
-0. **Admin delivery-zones management UI** — CRUD over the `delivery_zones` table (area, fee, position, active) so ops can edit fees without SQL. Spec ready: `specs/active/admin-delivery-zones.md` (planning, not yet implemented).
 
 1. **Brand photography** — replace placeholders in `public/images/` (`hero-pizza.jpg`, `article-*.jpg`, `location-block.jpg`, `products/*`). Owner to provide. Run through `next/image` AVIF/WebP optimization.
 

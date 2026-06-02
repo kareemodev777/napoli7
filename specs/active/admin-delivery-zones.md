@@ -1,6 +1,6 @@
 # Spec: Admin — Delivery Zones management
 
-**Status:** Active · **Phase:** 5 (Admin, SEO, Polish) follow-up · **Author:** spec drafted 2026-06-02
+**Status:** Implemented 2026-06-03 · **Phase:** 5 (Admin, SEO, Polish) follow-up · **Author:** spec drafted 2026-06-02
 
 ## Goal
 
@@ -110,16 +110,16 @@ emojis** — lucide icons only (`Plus`, `Pencil`, `Trash2`).
 
 ## Acceptance criteria
 
-- [ ] `/admin/delivery-zones` renders for an admin; non-admins redirect (via layout `requireAdmin`).
-- [ ] Add a new zone → appears in list **and** in the `/checkout` area `<select>` (if `active`).
-- [ ] Edit a zone's fee → `/checkout` reflects the new fee on next load (revalidate works).
-- [ ] Rename a zone (PK change) → old name gone, new name present, no orphan row.
-- [ ] Toggle `active = false` → zone disappears from `/checkout` picker but still shows in admin (as "Hidden").
-- [ ] Delete a zone → removed from both admin and checkout.
-- [ ] `position` controls order in both admin list and checkout picker.
-- [ ] `fee_aed` rejects negatives (DB `CHECK` + zod `min(0)`).
-- [ ] No emojis; lucide icons only. Matches catalog admin visual language.
-- [ ] `npx tsc --noEmit` clean; `pnpm lint` clean.
+- [x] `/admin/delivery-zones` renders for an admin; non-admins redirect (via layout `requireAdmin`).
+- [x] Add a new zone → appears in list **and** in the `/checkout` area `<select>` (if `active`).
+- [x] Edit a zone's fee → `/checkout` reflects the new fee on next load (revalidate works).
+- [x] Rename a zone (PK change) → old name gone, new name present, no orphan row.
+- [x] Toggle `active = false` → zone disappears from `/checkout` picker but still shows in admin (as "Hidden").
+- [x] Delete a zone → removed from both admin and checkout.
+- [x] `position` controls order in both admin list and checkout picker.
+- [x] `fee_aed` rejects negatives (DB `CHECK` + zod `min(0)`).
+- [x] No emojis; lucide icons only. Matches catalog admin visual language.
+- [x] `npx tsc --noEmit` clean; `pnpm lint` clean.
 
 ## Edge cases
 
