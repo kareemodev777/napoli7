@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { HAS_SUPABASE } from "@/lib/env";
+import { isAdminUser } from "@/lib/auth/roles";
 
 export async function requireAdmin() {
   if (!HAS_SUPABASE) redirect("/login");
@@ -10,12 +11,6 @@ export async function requireAdmin() {
   } = await supabase.auth.getUser();
   if (!user) redirect("/login");
 
-  const { data: role } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (role?.role !== "admin") redirect("/");
+  if (!(await isAdminUser(user))) redirect("/");
   return user;
 }

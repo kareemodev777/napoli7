@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SiteShell } from "@/components/site/SiteShell";
 import { AccountNav } from "@/components/account/AccountNav";
 import { StatusBadge } from "@/components/account/StatusBadge";
-import { requireAuth } from "@/lib/auth/require-auth";
+import { requireCustomerAccount } from "@/lib/auth/require-auth";
 import { createClient } from "@/lib/supabase/server";
 import { HAS_SUPABASE } from "@/lib/env";
 
@@ -46,7 +46,7 @@ async function loadRecentOrders(userId: string): Promise<RecentOrder[]> {
 }
 
 export default async function AccountPage() {
-  const user = await requireAuth("/account");
+  const user = await requireCustomerAccount("/account");
   const firstName =
     (user?.user_metadata?.first_name as string | undefined) ??
     user.email?.split("@")[0] ??

@@ -3,7 +3,7 @@ import Link from "next/link";
 import { SiteShell } from "@/components/site/SiteShell";
 import { AccountNav } from "@/components/account/AccountNav";
 import { StatusBadge } from "@/components/account/StatusBadge";
-import { requireAuth } from "@/lib/auth/require-auth";
+import { requireCustomerAccount } from "@/lib/auth/require-auth";
 import { createClient } from "@/lib/supabase/server";
 import { HAS_SUPABASE } from "@/lib/env";
 
@@ -50,7 +50,7 @@ async function loadOrders(userId: string): Promise<OrderRow[]> {
 }
 
 export default async function AccountOrdersPage() {
-  const user = await requireAuth("/account/orders");
+  const user = await requireCustomerAccount("/account/orders");
   const orders = await loadOrders(user.id);
 
   return (

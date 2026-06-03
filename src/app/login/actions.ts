@@ -4,6 +4,7 @@ import { z } from "zod";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { HAS_SUPABASE, SITE_URL } from "@/lib/env";
+import { getUserRole, isAdminPath } from "@/lib/auth/roles";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -42,14 +43,21 @@ export async function loginWithPassword(
     };
   }
   const supabase = await createClient();
-  const { error } = await supabase.auth.signInWithPassword({
+  const { data, error } = await supabase.auth.signInWithPassword({
     email: parsed.data.email,
     password: parsed.data.password,
   });
   if (error) {
     return { error: "Incorrect email or password." };
   }
-  redirect(parsed.data.next ?? "/account");
+
+  const requestedNext = parsed.data.next;
+  const role = await getUserRole(data.user.id);
+  if (role === "admin") {
+    redirect(isAdminPath(requestedNext) ? requestedNext! : "/admin");
+  }
+
+  redirect(requestedNext && !isAdminPath(requestedNext) ? requestedNext : "/account");
 }
 
 export async function sendMagicLink(

@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { HAS_SUPABASE } from "@/lib/env";
+import { isAdminUser } from "@/lib/auth/roles";
 
 export async function requireAuth(redirectTo = "/account") {
   if (!HAS_SUPABASE) {
@@ -13,6 +14,12 @@ export async function requireAuth(redirectTo = "/account") {
   if (!user) {
     redirect("/login?next=" + encodeURIComponent(redirectTo));
   }
+  return user;
+}
+
+export async function requireCustomerAccount(redirectTo = "/account") {
+  const user = await requireAuth(redirectTo);
+  if (await isAdminUser(user)) redirect("/admin");
   return user;
 }
 

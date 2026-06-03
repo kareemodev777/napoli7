@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { SiteShell } from "@/components/site/SiteShell";
 import { AccountNav } from "@/components/account/AccountNav";
-import { requireAuth } from "@/lib/auth/require-auth";
+import { requireCustomerAccount } from "@/lib/auth/require-auth";
 
 export const metadata: Metadata = {
   title: "Wishlist",
@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 };
 
 export default async function AccountWishlistPage() {
-  await requireAuth("/account/wishlist");
+  await requireCustomerAccount("/account/wishlist");
   return (
     <SiteShell>
       <section className="px-6 md:px-10 py-12 md:py-16">
