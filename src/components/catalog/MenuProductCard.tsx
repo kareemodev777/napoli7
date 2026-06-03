@@ -48,13 +48,13 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
 
   return (
     <article className="group flex flex-col bg-background border border-border hover:border-foreground transition-colors">
-      <div className="relative aspect-[4/3] overflow-hidden bg-muted">
+      <div className="relative h-56 overflow-hidden bg-muted sm:h-auto sm:aspect-[4/3]">
         <Image
           src={product.imageUrl}
           alt={`${product.name} from Napoli 7`}
           fill
           sizes="(min-width: 1280px) 28vw, (min-width: 768px) 45vw, 100vw"
-          className="object-cover"
+          className="object-contain p-2 sm:object-cover sm:p-0"
         />
         {(product.isVeg || product.isSpicy) && (
           <div className="absolute top-3 right-3 flex items-center gap-2">

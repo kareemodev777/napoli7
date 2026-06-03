@@ -6,6 +6,7 @@ import { ArrowRight } from "lucide-react";
 interface Article {
   href: string;
   img: string;
+  alt: string;
   title: string;
   titleNode?: ReactNode;
   body: string;
@@ -15,12 +16,14 @@ const articles: Article[] = [
   {
     href: "/deals",
     img: "/images/article-welcome.jpg",
+    alt: "Napoli 7 welcome offer — your first Margherita pizza on us",
     title: "Your first Neapolitan pizza is on us.",
     body: "Sign up at Napoli 7 and your first Margherita is free for pickup. One per person, available exclusively through the website. Upgrade to any other pizza by paying the difference.",
   },
   {
     href: "/about",
     img: "/images/article-lievito.jpg",
+    alt: "Slow-fermented lievito madre sourdough, hand-stretched for Neapolitan pizza",
     titleNode: (
       <>
         <em className="italic">Lievito madre.</em> The slow art of dough.
@@ -32,6 +35,7 @@ const articles: Article[] = [
   {
     href: "/about",
     img: "/images/article-seven.jpg",
+    alt: "Seven Neapolitan pizzas — the full Napoli 7 menu laid out",
     title: "Why seven pizzas? A philosophy of restraint.",
     body: "A short menu is a disciplined kitchen. Seven pizzas, every day, the same way. No shortcuts, no rotating specials. Just the seven, made well — that's the whole point of Napoli 7.",
   },
@@ -60,7 +64,7 @@ export function EditorialGrid() {
             </Link>
             <Image
               src={it.img}
-              alt=""
+              alt={it.alt}
               width={800}
               height={600}
               loading="lazy"

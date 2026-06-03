@@ -7,7 +7,6 @@ export const metadata: Metadata = {
   title: "Your cart",
   description: "Review your Napoli 7 order before checkout.",
   alternates: { canonical: "/cart" },
-  robots: { index: false, follow: false },
 };
 
 export default function CartPage() {

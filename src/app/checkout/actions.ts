@@ -101,8 +101,9 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     console.info(
       `[placeOrder] Supabase disabled. Demo order ${orderNumber} (${total.toFixed(2)} AED) for ${data.firstName} ${data.lastName}`,
     );
-    await runNotifications({ data, orderId, orderNumber, total });
     if (data.paymentMethod === "card") {
+      // No kitchen notification here — card orders are only fulfilled after the
+      // Stripe webhook confirms payment. (Demo mode can't reach that path.)
       return {
         orderId,
         orderNumber,
@@ -110,6 +111,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
           "Card payment requires Stripe + Supabase env vars. Choose Cash on Delivery for now.",
       };
     }
+    await runNotifications({ data, orderId, orderNumber, total });
     return { orderId, orderNumber };
   }
 
@@ -173,20 +175,24 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     }
   }
 
-  await runNotifications({
-    data,
-    orderId: order.id,
-    orderNumber: order.order_number,
-    total,
-  });
-
   if (data.paymentMethod === "card") {
+    // Defer fulfillment to the Stripe webhook: the kitchen is notified only
+    // after `checkout.session.completed` confirms the card was actually charged.
+    // Notifying here would alert the kitchen for checkouts the customer abandons.
     return {
       orderId: order.id,
       orderNumber: order.order_number,
       paymentUrl: `/api/checkout/create-session?orderId=${order.id}`,
     };
   }
+
+  // Cash on delivery: there's no payment step, so notify the kitchen now.
+  await runNotifications({
+    data,
+    orderId: order.id,
+    orderNumber: order.order_number,
+    total,
+  });
 
   revalidatePath("/account/orders");
   redirect(`/order/${order.id}/confirmation`);

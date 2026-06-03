@@ -7,42 +7,62 @@ import { FeatureTiles } from "@/components/site/FeatureTiles";
 export const revalidate = 86400;
 
 export const metadata: Metadata = {
-  title: "About — Our Story",
+  title: "About Napoli 7",
   description:
-    "Napoli 7 is built on Neapolitan tradition: Caputo flour, San Marzano DOP, lievito madre, a 450°C oven, and the philosophy of doing seven pizzas perfectly.",
+    "Napoli 7 brings authentic Neapolitan pizza to Ajman, blending Italian craftsmanship with the multicultural spirit of the UAE.",
   alternates: { canonical: "/about" },
   openGraph: {
     title: "About Napoli 7",
     description:
-      "Caputo flour, San Marzano DOP, lievito madre, 450°C oven, the philosophy of seven.",
+      "Authentic Neapolitan pizza inspired by the world, crafted in the UAE.",
   },
 };
 
 const tiles = [
   {
     icon: Flame,
-    title: "Wood-fired",
+    title: "Neapolitan oven",
     description:
-      "Hand-built Neapolitan oven, 450°C floor, ninety-second bake. The leoparded crust is not optional.",
+      "Every pizza is baked at high temperature in our handmade Neapolitan oven for a soft, airy cornicione.",
   },
   {
     icon: Leaf,
-    title: "Fresh ingredients",
+    title: "Italian ingredients",
     description:
-      "Caputo 00 flour, San Marzano DOP tomato, fior di latte mozzarella, basil cut on the day.",
+      "Imported Caputo flour, San Marzano DOP tomatoes, premium Italian ingredients, and traditional technique.",
   },
   {
     icon: Clock,
-    title: "Fast delivery",
+    title: "Slow fermentation",
     description:
-      "Pickup in about fifteen minutes; delivery to Al Jurf in about thirty. Every order is timed.",
+      "True Neapolitan dough, prepared with patience, handcrafted skill, and the rhythm of proper fermentation.",
   },
   {
     icon: ShieldCheck,
-    title: "Hygiene first",
+    title: "Crafted in Ajman",
     description:
-      "Ajman Municipality grade A. Daily cleaning logs. Every pizza is handled by gloved hands.",
+      "Italian tradition reimagined for the Emirates, bringing cultures and flavours together around the same table.",
   },
+];
+
+const aboutParagraphs = [
+  "Napoli 7 was born from a simple vision: bringing authentic Neapolitan pizza to the United Arab Emirates, starting from Ajman.",
+  "Inspired by Naples — the birthplace of pizza — we prepare true Neapolitan dough using imported Italian Caputo flour, slow fermentation, and traditional handcrafted techniques. Every pizza is baked in our handmade Neapolitan oven at high temperature to create the signature soft, airy crust of authentic pizza Napoletana.",
+  "Our classic pizzas honor Italian tradition with San Marzano DOP tomatoes, premium Italian ingredients, and authentic craftsmanship.",
+  "But Napoli 7 is also inspired by the multicultural identity of the UAE itself. Alongside our traditional Napoli Classics, we created the Ajman Collection: a unique menu inspired by the many cultures and communities that shape everyday life across the Emirates.",
+  "From local Emirati creations, including our signature camel pizza, to inspirations from Pakistani, Indian, Bangladeshi, Filipino, Ethiopian, Egyptian and American cuisines, every pizza combines authentic Neapolitan craftsmanship with flavors and ingredients inspired by each culture’s culinary traditions.",
+  "The name Napoli 7 was inspired by the seven Emirates of the UAE and by the timeless symbolism of the number 7 — often associated with harmony, unity, and perfection — reflecting our vision to share our pizzas far beyond borders.",
+];
+
+const storyParagraphs = [
+  "Napoli 7 began with a lifelong passion for authentic Neapolitan pizza.",
+  "As the son of a Neapolitan family, I grew up surrounded by the aroma of fresh dough, wood-fired ovens, and the traditions of Italian cooking. From an early age, I understood that true Neapolitan pizza was something unique — simple, authentic, and deeply connected to Italian culture.",
+  "Curious and passionate, I spent years learning the craft. I worked in pizzerias, trained with experienced pizzaioli, and discovered the traditional techniques that make Neapolitan pizza so special.",
+  "During my travels, I saw how Neapolitan pizza had crossed borders and reached cultures all around the world — from Europe to the United States, Asia, the Middle East, and beyond — appreciated everywhere for its authenticity, simplicity, and flavour.",
+  "That journey inspired the idea behind Napoli 7.",
+  "Not only to bring authentic Neapolitan pizza to the United Arab Emirates, but also to create a place where the traditions of Naples could meet the multicultural spirit of the UAE.",
+  "Today, Napoli 7 combines authentic Italian craftsmanship with flavours inspired by the many cultures that shape life across the Emirates — while always staying true to the soul of Neapolitan pizza.",
+  "Napoli 7 was inspired by a simple belief: great pizza can bring cultures, people, and traditions together around the same table.",
 ];
 
 export default function AboutPage() {
@@ -50,54 +70,35 @@ export default function AboutPage() {
     <SiteShell>
       <PageHero
         eyebrow="Our story"
-        heading="About"
-        intro="A Neapolitan family table, brought to Ajman with the same patience, the same flour, and the same uncompromising bake."
+        heading="About Napoli 7"
+        intro="Authentic Neapolitan Pizza inspired by the world, crafted in the UAE. Neapolitan tradition, reimagined for the Emirates."
       />
 
       <section className="border-t border-border px-6 md:px-10 py-16 md:py-24">
-        <div className="max-w-[1140px] mx-auto grid md:grid-cols-2 gap-12 md:gap-20 items-start">
+        <div className="max-w-[1140px] mx-auto grid md:grid-cols-[0.85fr_1.15fr] gap-12 md:gap-20 items-start">
           <div>
             <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep mb-4">
-              Founder
+              About Napoli 7
             </p>
             <h2 className="font-display text-3xl md:text-4xl uppercase tracking-[1.5px] leading-tight">
-              Born by the bay of Naples
+              Authentic Neapolitan pizza, crafted in Ajman
             </h2>
-            <div className="mt-6 space-y-5 text-base md:text-lg text-muted-foreground leading-relaxed max-w-[60ch]">
-              <p>
-                The kitchen behind Napoli 7 grew up in a Neapolitan home where
-                dough rested for two days, where tomatoes were peeled by hand,
-                and where the Sunday pizza was a ritual that pulled three
-                generations to the same table.
-              </p>
-              <p>
-                Bringing that ritual to Ajman meant changing nothing important.
-                The flour is still Caputo. The tomato is still San Marzano DOP.
-                The starter — our <em className="italic">lievito madre</em> —
-                was carried over and is fed every morning.
-              </p>
-            </div>
           </div>
-          <div>
-            <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep mb-4">
-              The craft
-            </p>
-            <h2 className="font-display text-3xl md:text-4xl uppercase tracking-[1.5px] leading-tight">
-              Caputo, San Marzano, schiaffo
-            </h2>
-            <div className="mt-6 space-y-5 text-base md:text-lg text-muted-foreground leading-relaxed max-w-[60ch]">
-              <p>
-                The base is hand-stretched — the{" "}
-                <em className="italic">schiaffo napoletano</em> — never rolled.
-                The dough rests for forty-eight hours, picks up its sour, opens
-                up like a balloon. The cornicione is soft to the touch and
-                structured at the same time.
+          <div className="space-y-5 text-base md:text-lg text-muted-foreground leading-relaxed">
+            {aboutParagraphs.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+            <div className="border-l-2 border-brand pl-5 text-foreground">
+              <p className="font-display text-2xl md:text-3xl leading-tight">
+                At Napoli 7, our mission is simple: creating a place where
+                cultures, flavors, and people come together.
               </p>
-              <p>
-                The oven runs at 450°C. The pizza enters and turns three times.
-                In ninety seconds the crust is dappled, the cheese has just
-                melted, the basil has wilted exactly once. There is no shortcut
-                and no compromise.
+              <p className="mt-5 text-muted-foreground">
+                Napoli 7 — Authentic Neapolitan Pizza inspired by the world,
+                crafted in the UAE.
+              </p>
+              <p className="mt-2 text-muted-foreground">
+                Neapolitan tradition, reimagined for the Emirates.
               </p>
             </div>
           </div>
@@ -107,20 +108,20 @@ export default function AboutPage() {
       <FeatureTiles tiles={tiles} />
 
       <section className="border-t border-border px-6 md:px-10 py-16 md:py-24 bg-brand-soft">
-        <div className="max-w-[920px] mx-auto text-center">
-          <p className="font-display text-xs tracking-[0.25em] uppercase text-brand-deep mb-4">
-            Philosophy
-          </p>
-          <h2 className="font-display text-3xl md:text-4xl uppercase tracking-[1.5px] leading-tight">
-            Seven, perfectly
-          </h2>
-          <p className="mt-6 text-lg text-muted-foreground leading-relaxed max-w-[55ch] mx-auto">
-            The name comes from the discipline of doing seven pizzas perfectly
-            rather than seventy passably. A short menu makes a better kitchen, a
-            better dough, and a better customer experience. The seven core
-            pizzas on our menu have been refined over years. They are not going
-            anywhere.
-          </p>
+        <div className="max-w-[1140px] mx-auto grid md:grid-cols-[0.85fr_1.15fr] gap-12 md:gap-20 items-start">
+          <div>
+            <p className="font-display text-xs tracking-[0.25em] uppercase text-brand-deep mb-4">
+              Our Story
+            </p>
+            <h2 className="font-display text-3xl md:text-4xl uppercase tracking-[1.5px] leading-tight">
+              From Naples to the Emirates
+            </h2>
+          </div>
+          <div className="space-y-5 text-base md:text-lg text-muted-foreground leading-relaxed">
+            {storyParagraphs.map((paragraph) => (
+              <p key={paragraph}>{paragraph}</p>
+            ))}
+          </div>
         </div>
       </section>
     </SiteShell>

@@ -6,6 +6,7 @@ import { HAS_SUPABASE } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "Orders · Admin",
+  alternates: { canonical: "/admin/orders" },
   robots: { index: false, follow: false },
 };
 

@@ -86,6 +86,8 @@ export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
             onChange={(e) => setCode(e.target.value.toUpperCase())}
             placeholder="Promo code"
             aria-label="Promo code"
+            aria-describedby={promoError ? "promo-error" : undefined}
+            aria-invalid={promoError ? true : undefined}
             disabled={pending}
             className="border border-border bg-background px-3 py-2.5 text-sm font-display tracking-[0.1em] uppercase placeholder:text-muted-foreground focus:outline-none focus:border-brand disabled:opacity-60"
           />
@@ -99,6 +101,7 @@ export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
           </button>
           {promoError ? (
             <p
+              id="promo-error"
               role="status"
               className="col-span-2 text-xs text-muted-foreground mt-1"
             >

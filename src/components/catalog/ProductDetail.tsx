@@ -139,7 +139,7 @@ export function ProductDetail({ product, categoryLabel }: ProductDetailProps) {
 
             {product.customizations.length > 0 ? (
               <div className="mt-10">
-                <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep mb-4">
+                <p className="font-display text-xs tracking-[0.25em] uppercase text-foreground mb-4">
                   Customize
                 </p>
                 <div className="border-b border-border">

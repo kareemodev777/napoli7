@@ -31,7 +31,7 @@ App on `http://localhost:3000`.
 | `NEXT_PUBLIC_SITE_URL` | Sitemap, metadata, OG |
 | `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Catalog reads, auth |
 | `SUPABASE_SERVICE_ROLE_KEY` | Server-side catalog + admin writes |
-| `RESEND_API_KEY` | Kitchen + customer + contact emails |
+| `RESEND_API_KEY` | App-sent kitchen + customer + contact emails |
 | `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Pay by card |
 | `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID` | Kitchen WhatsApp notifications |
 | `ORDER_EMAIL_TO`, `ORDER_EMAIL_FROM` | Email routing (defaults to `info@`/`orders@napoli7.com`) |
@@ -83,6 +83,13 @@ through `src/lib/catalog.ts` (Supabase-backed with mock fallback).
 - **Promo codes** — `007_promo_codes.sql` (`promo_codes` table + `redeem_promo_code` race-safe RPC + `orders.promo_code`/`discount_aed` cols). `validatePromoCode(code, subtotal)` server action in `src/app/cart/actions.ts`, logic in `src/lib/promo.ts` (pct + flat AED, min subtotal, validity window, usage cap, mock fallback). Wired through cart store (`promo`/`discount`/`total`) → `CartSummary` apply/remove → `placeOrder` re-validates + persists + redeems. Seed demo codes: `WELCOME10`, `NAPOLI20`.
 - **Delivery fees per area** — `008_delivery_zones.sql` (`delivery_zones`: `area` PK, `fee_aed`, `position`, `active`; public read + admin RLS; seeded Ajman areas). `getDeliveryZones()`/`getDeliveryFee(area)` + `DEFAULT_DELIVERY_FEE` in `src/lib/checkout.ts` (mock fallback). Checkout page fetches zones server-side → area field is now a zone `<select>` with live fee → fee in order total. `placeOrder` recomputes fee server-side for delivery orders and persists `delivery_fee_aed`. Pickup = free.
 - **Admin delivery-zones management UI** — `/admin/delivery-zones` (role-gated via the admin layout) loads all zones including hidden ones, and supports add/edit/rename/delete plus active/hidden toggles and numeric position ordering. Writes use service-role server actions, then revalidate `/admin/delivery-zones` and `/checkout` so checkout reflects live area/fee changes.
+- **Admin-only console routing** — admin login now lands on `/admin`; the admin console has its own dashboard/navigation for Dashboard, Orders, Catalog, Delivery, and Promos; customer account routes redirect admins back to the admin console.
+- **Saved-address management** — `/account/addresses` now uses real customer saved-address actions (add, delete, set default) instead of the old Supabase-auth placeholder message.
+- **Branded auth emails** — Supabase Auth site URL now points at `https://napoli7.com`, production/Vercel redirect URLs are allow-listed, and confirmation/magic-link/invite/email-change/reauthentication/password-reset templates use a branded Napoli 7 HTML layout. Confirmation resend was tested for the latest registered user.
+- **Brand photography placeholders + optimization** — all `public/images/` assets (`hero-pizza.jpg`, `article-*.jpg`, `location-block.jpg`, `products/*` ×23) replaced with locally generated, fully-owned brand placeholders (no external/copyrighted assets) and recompressed for launch (hero 194 KB → 58 KB; products ~10–27 KB each). Regenerate with `node scripts/generate-brand-images.mjs`. Owner swap-to-real-photo guide + specs in `docs/OWNER_PHOTO_CHECKLIST.md`; paths/filenames are stable so no code changes are needed on swap. Editorial images lazy-load through `next/image`; Supabase-backed catalog rows resolve known products to these local launch assets so stale remote storage URLs cannot blank menu cards.
+- **Per-page canonical tags** — `metadata.alternates.canonical` audited across every `src/app` route and now present everywhere, including noindex private/admin/order-confirmation pages. Static routes set it inline; dynamic routes (`/menu/[slug]`, `/order/[id]/confirmation`, `/admin/catalog/[id]`) emit per-instance canonicals via `generateMetadata`.
+- **Accessibility pass** — descriptive `alt` text on editorial images (previously empty), `aria-describedby`/`aria-invalid` wiring on the cart promo input → inline `role="status"` error, explicit `aria-label` on the hero delivery-area input, homepage `h1`, mobile order `nav` landmark, and stronger contrast for menu/detail microcopy. Puppeteer + axe-core verified 0 serious / 0 critical WCAG 2 A/AA violations on `/`, `/menu`, `/menu/margherita-classic`, `/cart`, and `/checkout`.
+- **Lighthouse launch gate** — local production build on port 3307 verified target routes at 90+ performance/SEO: `/` 91/100/96/92, `/menu` 90/100/96/100, `/menu/margherita-classic` 93/100/96/100, `/cart` 93/100/96/100, `/checkout` 93/98/96/100 (performance/accessibility/best-practices/SEO).
 
 ---
 
@@ -90,15 +97,13 @@ through `src/lib/catalog.ts` (Supabase-backed with mock fallback).
 
 Priority order:
 
-1. **Brand photography** — replace placeholders in `public/images/` (`hero-pizza.jpg`, `article-*.jpg`, `location-block.jpg`, `products/*`). Owner to provide. Run through `next/image` AVIF/WebP optimization.
+1. **Real brand photography** — owner to supply real photos to replace the owned placeholders, dropped in at the same paths per `docs/OWNER_PHOTO_CHECKLIST.md` (no code changes needed).
 
-2. **Per-page canonical tags** — audit `metadata.alternates.canonical` on each route. Currently only metadataBase is set.
+2. **Supabase Auth SMTP / sender reputation** — auth emails are branded in Supabase's built-in sender and production redirects are fixed. Next hardening step is to connect verified Napoli 7 SMTP/Resend SMTP credentials in Supabase Auth for stronger deliverability and sender-domain reputation.
 
-3. **Final a11y pass** — axe DevTools sweep of every route. Targets: 0 critical, 0 serious.
+3. **Production readiness / domain replacement** — once real content/images/env are approved, point production from the Netlify preview toward replacing the current `napoli7.com` site.
 
-4. **Final performance pass** — Lighthouse target: 90+ on perf/a11y/best-practices/SEO across `/`, `/menu`, `/menu/[slug]`, `/cart`, `/checkout`. Inspect bundle, lazy-load heavy components.
-
-5. *(Optional)* Google Maps interactive embed at `/location` — only if `NEXT_PUBLIC_GOOGLE_MAPS_KEY` provided. Currently static.
+4. *(Optional)* Google Maps interactive embed at `/location` — only if `NEXT_PUBLIC_GOOGLE_MAPS_KEY` provided. Currently static.
 
 ---
 

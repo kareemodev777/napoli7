@@ -1,642 +1,2413 @@
-import type {
-  Category,
-  Product,
-  CategoryId,
-  ProductSize,
-} from "@/data/types/catalog";
+import type { Category, Product } from "@/data/types/catalog";
 
 export const CATEGORIES: Category[] = [
   {
-    id: "pizza",
-    label: "Pizza",
-    description:
-      "Artisan Neapolitan pizza — Caputo flour, San Marzano DOP tomatoes, lievito madre, handmade Neapolitan oven.",
-    position: 0,
+    "id": "ajman-pizza",
+    "label": "Ajman Pizza Collection",
+    "description": "Neapolitan pizza reimagined with flavors inspired by Ajman and the cultures of the Emirates.",
+    "position": 0
   },
   {
-    id: "focaccia",
-    label: "Focaccia",
-    description:
-      "Focaccia sandwiches — same artisan dough, filled with premium ingredients.",
-    position: 1,
+    "id": "italian-pizza",
+    "label": "Italian Pizza Collection",
+    "description": "Authentic Neapolitan-style classics with Italian ingredients and traditional craft.",
+    "position": 1
   },
   {
-    id: "dessert",
-    label: "Dessert",
-    description: "Sweet pizzas to finish.",
-    position: 2,
+    "id": "focaccia",
+    "label": "Focaccia Sandwiches",
+    "description": "Focaccia sandwiches made with Napoli 7 dough and premium fillings.",
+    "position": 2
   },
   {
-    id: "drinks",
-    label: "Drinks",
-    description: "Cold drinks to accompany your meal.",
-    position: 3,
+    "id": "dessert",
+    "label": "Desserts",
+    "description": "Sweet pizzas to finish.",
+    "position": 3
   },
+  {
+    "id": "drinks",
+    "label": "Drinks",
+    "description": "Cold drinks to accompany your meal.",
+    "position": 4
+  }
 ];
-
-function pizzaSizes(small: number): ProductSize[] {
-  return [
-    { id: "small", label: "Small", detail: "24cm", price: small },
-    { id: "regular", label: "Regular", detail: "30cm", price: small + 10 },
-  ];
-}
-
-function singleSize(
-  price: number,
-  label = "Regular",
-  detail = "",
-): ProductSize[] {
-  return [{ id: "regular", label, detail, price }];
-}
 
 export const PRODUCTS: Product[] = [
   {
-    id: "11111111-0000-0000-0000-000000000001",
-    slug: "margherita-classic",
-    categoryId: "pizza",
-    name: "Margherita Classic",
-    nameIt: "Margherita",
-    description:
-      "Hand-stretched sourdough base, San Marzano DOP tomato sauce, fior di latte mozzarella, fresh basil, extra virgin olive oil. The benchmark by which all Neapolitan pizza is measured.",
-    price: 29.0,
-    sizes: pizzaSizes(29.0),
-    isVeg: true,
-    isSpicy: false,
-    isActive: true,
-    position: 0,
-    imageUrl: "/images/products/margherita-classic.jpg",
-    customizations: [
+    "id": "indian-spicy-chicken-kebab",
+    "slug": "indian-spicy-chicken-kebab",
+    "categoryId": "ajman-pizza",
+    "name": "Indian - Spicy Chicken Kebab",
+    "nameIt": null,
+    "description": "Cooking cream, Fior di latte mozzarella, Extra virgin olive oil, Onion, Chicken kebab, Jalapeño, Ranch sauce.",
+    "price": 43.0,
+    "sizes": [
       {
-        ingredient: "San Marzano tomato sauce",
-        extraPrice: 5.0,
-        removable: true,
-        position: 0,
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 43.0
       },
       {
-        ingredient: "Fior di latte mozzarella",
-        extraPrice: 7.0,
-        removable: true,
-        position: 1,
-      },
-      {
-        ingredient: "Extra virgin olive oil",
-        extraPrice: 2.0,
-        removable: true,
-        position: 2,
-      },
-      {
-        ingredient: "Fresh basil",
-        extraPrice: 2.0,
-        removable: true,
-        position: 3,
-      },
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 29.0
+      }
     ],
+    "isVeg": false,
+    "isSpicy": true,
+    "isActive": true,
+    "position": 0,
+    "imageUrl": "/images/products/indian-spicy-chicken-kebab.jpg",
+    "customizations": [
+      {
+        "ingredient": "Cooking cream",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Extra virgin olive oil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Onion",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Chicken kebab",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Jalapeño",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 5
+      },
+      {
+        "ingredient": "Ranch sauce",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 6
+      },
+      {
+        "ingredient": "Black olive",
+        "extraPrice": 3.0,
+        "removable": false,
+        "position": 7
+      }
+    ]
   },
   {
-    id: "11111111-0000-0000-0000-000000000002",
-    slug: "vegetable-ortolana",
-    categoryId: "pizza",
-    name: "Vegetable",
-    nameIt: "Ortolana",
-    description:
-      "A vibrant medley of grilled seasonal vegetables on San Marzano base with fior di latte. Fresh, colourful, and satisfying without compromise.",
-    price: 38.0,
-    sizes: pizzaSizes(38.0),
-    isVeg: true,
-    isSpicy: false,
-    isActive: true,
-    position: 1,
-    imageUrl: "/images/products/vegetable-ortolana.jpg",
-    customizations: [
+    "id": "indian-paneer",
+    "slug": "indian-paneer",
+    "categoryId": "ajman-pizza",
+    "name": "Indian - Paneer",
+    "nameIt": null,
+    "description": "San Marzano tomato sauce, Fior di latte mozzarella, Paneer, Bell pepper, Onion.",
+    "price": 38.0,
+    "sizes": [
       {
-        ingredient: "San Marzano tomato sauce",
-        extraPrice: 5.0,
-        removable: true,
-        position: 0,
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 38.0
       },
       {
-        ingredient: "Fior di latte mozzarella",
-        extraPrice: 7.0,
-        removable: true,
-        position: 1,
-      },
-      {
-        ingredient: "Grilled vegetables",
-        extraPrice: 6.0,
-        removable: false,
-        position: 2,
-      },
-      {
-        ingredient: "Extra virgin olive oil",
-        extraPrice: 2.0,
-        removable: true,
-        position: 3,
-      },
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 25.0
+      }
     ],
+    "isVeg": true,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 1,
+    "imageUrl": "/images/products/indian-paneer.png",
+    "customizations": [
+      {
+        "ingredient": "San Marzano tomato sauce",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Paneer",
+        "extraPrice": 5.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Bell pepper",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Onion",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Jalapeño",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 5
+      },
+      {
+        "ingredient": "Black olive",
+        "extraPrice": 3.0,
+        "removable": false,
+        "position": 6
+      },
+      {
+        "ingredient": "Sun-dried tomato",
+        "extraPrice": 4.0,
+        "removable": false,
+        "position": 7
+      }
+    ]
   },
   {
-    id: "11111111-0000-0000-0000-000000000003",
-    slug: "merguez",
-    categoryId: "pizza",
-    name: "Merguez",
-    nameIt: null,
-    description:
-      "Bold, spiced merguez sausage on a San Marzano base with fior di latte. North African character, Neapolitan execution.",
-    price: 39.0,
-    sizes: pizzaSizes(39.0),
-    isVeg: false,
-    isSpicy: true,
-    isActive: true,
-    position: 2,
-    imageUrl: "/images/products/merguez.jpg",
-    customizations: [
+    "id": "indian-vegan-tofu",
+    "slug": "indian-vegan-tofu",
+    "categoryId": "ajman-pizza",
+    "name": "Indian - Vegan Tofu",
+    "nameIt": null,
+    "description": "San Marzano tomato sauce, Vegan cheese, Onion, Fresh basil, Bell pepper, Tofu, Black olive, Tandoori sauce.",
+    "price": 45.0,
+    "sizes": [
       {
-        ingredient: "San Marzano tomato sauce",
-        extraPrice: 5.0,
-        removable: true,
-        position: 0,
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 45.0
       },
       {
-        ingredient: "Fior di latte mozzarella",
-        extraPrice: 7.0,
-        removable: true,
-        position: 1,
-      },
-      {
-        ingredient: "Merguez sausage",
-        extraPrice: 8.0,
-        removable: false,
-        position: 2,
-      },
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 31.0
+      }
     ],
+    "isVeg": true,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 2,
+    "imageUrl": "/images/products/indian-vegan-tofu.jpg",
+    "customizations": [
+      {
+        "ingredient": "San Marzano tomato sauce",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Vegan cheese",
+        "extraPrice": 9.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Onion",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Fresh basil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Bell pepper",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Tofu",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 5
+      },
+      {
+        "ingredient": "Black olive",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 6
+      },
+      {
+        "ingredient": "Tandoori sauce",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 7
+      },
+      {
+        "ingredient": "Mushroom",
+        "extraPrice": 2.0,
+        "removable": false,
+        "position": 8
+      },
+      {
+        "ingredient": "Sun-dried tomato",
+        "extraPrice": 4.0,
+        "removable": false,
+        "position": 9
+      },
+      {
+        "ingredient": "Artichokes",
+        "extraPrice": 2.0,
+        "removable": false,
+        "position": 10
+      },
+      {
+        "ingredient": "Bell pepper",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 11
+      }
+    ]
   },
   {
-    id: "11111111-0000-0000-0000-000000000004",
-    slug: "diavola-piccante",
-    categoryId: "pizza",
-    name: "Spicy Peperoni",
-    nameIt: "Diavola Piccante",
-    description:
-      "San Marzano, zesty Italian pepperoni, fior di latte. The heat is present but not overpowering — this is Neapolitan spice, not aggression.",
-    price: 48.0,
-    sizes: pizzaSizes(48.0),
-    isVeg: false,
-    isSpicy: true,
-    isActive: true,
-    position: 3,
-    imageUrl: "/images/products/diavola-piccante.jpg",
-    customizations: [
+    "id": "pakistan-mutton-kebab",
+    "slug": "pakistan-mutton-kebab",
+    "categoryId": "ajman-pizza",
+    "name": "Pakistan - Mutton Kebab",
+    "nameIt": null,
+    "description": "Cooking cream, Fior di latte mozzarella, Fresh basil, Oregano, Onion, Mutton kebab, Ranch sauce, Jalapeño.",
+    "price": 45.0,
+    "sizes": [
       {
-        ingredient: "San Marzano tomato sauce",
-        extraPrice: 5.0,
-        removable: true,
-        position: 0,
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 45.0
       },
       {
-        ingredient: "Fior di latte mozzarella",
-        extraPrice: 7.0,
-        removable: true,
-        position: 1,
-      },
-      {
-        ingredient: "Italian pepperoni",
-        extraPrice: 9.0,
-        removable: false,
-        position: 2,
-      },
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 32.0
+      }
     ],
+    "isVeg": false,
+    "isSpicy": true,
+    "isActive": true,
+    "position": 3,
+    "imageUrl": "/images/products/pakistan-mutton-kebab.png",
+    "customizations": [
+      {
+        "ingredient": "Cooking cream",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Fresh basil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Oregano",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Onion",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Mutton kebab",
+        "extraPrice": 7.0,
+        "removable": true,
+        "position": 5
+      },
+      {
+        "ingredient": "Ranch sauce",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 6
+      },
+      {
+        "ingredient": "Jalapeño",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 7
+      },
+      {
+        "ingredient": "Black olive",
+        "extraPrice": 3.0,
+        "removable": false,
+        "position": 8
+      },
+      {
+        "ingredient": "Bell pepper",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 9
+      }
+    ]
   },
   {
-    id: "11111111-0000-0000-0000-000000000005",
-    slug: "quattro-stagioni",
-    categoryId: "pizza",
-    name: "Four Season",
-    nameIt: "Quattro Stagioni",
-    description:
-      "The Italian classic, divided into four sections, each with its own topping. Ham, artichoke, mushroom, olives. The whole year on one pizza.",
-    price: 49.0,
-    sizes: pizzaSizes(49.0),
-    isVeg: false,
-    isSpicy: false,
-    isActive: true,
-    position: 4,
-    imageUrl: "/images/products/quattro-stagioni.jpg",
-    customizations: [
+    "id": "uae-camel-kebab",
+    "slug": "uae-camel-kebab",
+    "categoryId": "ajman-pizza",
+    "name": "UAE - Camel Kebab",
+    "nameIt": null,
+    "description": "Cooking cream, Fior di latte mozzarella, Oregano, Onion, Ranch sauce, Camel meat, Jalapeño.",
+    "price": 43.0,
+    "sizes": [
       {
-        ingredient: "San Marzano tomato sauce",
-        extraPrice: 5.0,
-        removable: true,
-        position: 0,
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 43.0
       },
       {
-        ingredient: "Fior di latte mozzarella",
-        extraPrice: 7.0,
-        removable: true,
-        position: 1,
-      },
-      {
-        ingredient: "Cooked ham",
-        extraPrice: 6.0,
-        removable: true,
-        position: 2,
-      },
-      {
-        ingredient: "Artichoke",
-        extraPrice: 5.0,
-        removable: true,
-        position: 3,
-      },
-      { ingredient: "Mushroom", extraPrice: 4.0, removable: true, position: 4 },
-      {
-        ingredient: "Black olives",
-        extraPrice: 3.0,
-        removable: true,
-        position: 5,
-      },
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 29.0
+      }
     ],
+    "isVeg": false,
+    "isSpicy": true,
+    "isActive": true,
+    "position": 4,
+    "imageUrl": "/images/products/uae-camel-kebab.jpg",
+    "customizations": [
+      {
+        "ingredient": "Cooking cream",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Oregano",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Onion",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Ranch sauce",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Camel meat",
+        "extraPrice": 5.0,
+        "removable": true,
+        "position": 5
+      },
+      {
+        "ingredient": "Jalapeño",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 6
+      },
+      {
+        "ingredient": "Black olive",
+        "extraPrice": 3.0,
+        "removable": false,
+        "position": 7
+      },
+      {
+        "ingredient": "Bell pepper",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 8
+      }
+    ]
   },
   {
-    id: "11111111-0000-0000-0000-000000000006",
-    slug: "bresaola-truffle",
-    categoryId: "pizza",
-    name: "Bresaola Truffle",
-    nameIt: null,
-    description:
-      "Air-dried bresaola, truffle oil, rucola, fior di latte on a white base. The most luxurious pizza on the menu — reserved for when the occasion calls for it.",
-    price: 59.0,
-    sizes: pizzaSizes(59.0),
-    isVeg: false,
-    isSpicy: false,
-    isActive: true,
-    position: 5,
-    imageUrl: "/images/products/bresaola-truffle.jpg",
-    customizations: [
+    "id": "bangladesh-spicy-beef-kebab",
+    "slug": "bangladesh-spicy-beef-kebab",
+    "categoryId": "ajman-pizza",
+    "name": "Bangladesh - Spicy Beef Kebab",
+    "nameIt": null,
+    "description": "Cooking cream, Fior di latte mozzarella, Ranch sauce, Fresh basil, Oregano, Jalapeño, Beef kebab.",
+    "price": 43.0,
+    "sizes": [
       {
-        ingredient: "Fior di latte mozzarella",
-        extraPrice: 7.0,
-        removable: true,
-        position: 0,
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 43.0
       },
       {
-        ingredient: "Bresaola",
-        extraPrice: 12.0,
-        removable: false,
-        position: 1,
-      },
-      {
-        ingredient: "Truffle oil",
-        extraPrice: 6.0,
-        removable: true,
-        position: 2,
-      },
-      {
-        ingredient: "Wild rucola",
-        extraPrice: 3.0,
-        removable: true,
-        position: 3,
-      },
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 28.0
+      }
     ],
+    "isVeg": false,
+    "isSpicy": true,
+    "isActive": true,
+    "position": 5,
+    "imageUrl": "/images/products/bangladesh-spicy-beef-kebab.jpg",
+    "customizations": [
+      {
+        "ingredient": "Cooking cream",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Ranch sauce",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Fresh basil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Oregano",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Jalapeño",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 5
+      },
+      {
+        "ingredient": "Beef kebab",
+        "extraPrice": 7.0,
+        "removable": true,
+        "position": 6
+      },
+      {
+        "ingredient": "Black olive",
+        "extraPrice": 3.0,
+        "removable": false,
+        "position": 7
+      },
+      {
+        "ingredient": "Bell pepper",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 8
+      }
+    ]
   },
   {
-    id: "11111111-0000-0000-0000-000000000007",
-    slug: "prosciutto-rucola",
-    categoryId: "pizza",
-    name: "Prosciutto & Rucola",
-    nameIt: null,
-    description:
-      "Prosciutto crudo, wild rucola, cherry tomatoes, shaved Parmigiano. Added after baking, never cooked. This is how it is done in Naples.",
-    price: 69.0,
-    sizes: pizzaSizes(69.0),
-    isVeg: false,
-    isSpicy: false,
-    isActive: true,
-    position: 6,
-    imageUrl: "/images/products/prosciutto-rucola.jpg",
-    customizations: [
+    "id": "afghanistan-chicken-kebab",
+    "slug": "afghanistan-chicken-kebab",
+    "categoryId": "ajman-pizza",
+    "name": "Afghanistan - Chicken Kebab",
+    "nameIt": null,
+    "description": "Cooking cream, Fior di latte mozzarella, Extra virgin olive oil, Onion, Chicken kebab, Ranch sauce.",
+    "price": 43.0,
+    "sizes": [
       {
-        ingredient: "Fior di latte mozzarella",
-        extraPrice: 7.0,
-        removable: true,
-        position: 0,
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 43.0
       },
       {
-        ingredient: "Prosciutto crudo",
-        extraPrice: 14.0,
-        removable: false,
-        position: 1,
-      },
-      {
-        ingredient: "Wild rucola",
-        extraPrice: 3.0,
-        removable: true,
-        position: 2,
-      },
-      {
-        ingredient: "Cherry tomatoes",
-        extraPrice: 3.0,
-        removable: true,
-        position: 3,
-      },
-      {
-        ingredient: "Shaved Parmigiano",
-        extraPrice: 5.0,
-        removable: true,
-        position: 4,
-      },
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 29.0
+      }
     ],
+    "isVeg": false,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 6,
+    "imageUrl": "/images/products/afghanistan-chicken-kebab.jpg",
+    "customizations": [
+      {
+        "ingredient": "Cooking cream",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Extra virgin olive oil",
+        "extraPrice": null,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Onion",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Chicken kebab",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Ranch sauce",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 5
+      },
+      {
+        "ingredient": "Black olive",
+        "extraPrice": 3.0,
+        "removable": false,
+        "position": 6
+      },
+      {
+        "ingredient": "Bell pepper",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 7
+      }
+    ]
   },
   {
-    id: "22222222-0000-0000-0000-000000000001",
-    slug: "focaccia-vegetables",
-    categoryId: "focaccia",
-    name: "Focaccia Sandwich Vegetables",
-    nameIt: null,
-    description:
-      "Artisan focaccia bread filled with grilled seasonal vegetables. Light, fresh, and satisfying.",
-    price: 23.0,
-    sizes: singleSize(23.0),
-    isVeg: true,
-    isSpicy: false,
-    isActive: true,
-    position: 0,
-    imageUrl: "/images/products/focaccia-vegetables.jpg",
-    customizations: [],
+    "id": "filipino-chicken-adobo",
+    "slug": "filipino-chicken-adobo",
+    "categoryId": "ajman-pizza",
+    "name": "Filipino - Chicken Adobo",
+    "nameIt": null,
+    "description": "San Marzano tomato sauce, Fior di latte mozzarella, Fresh basil, Onion, Adobo sauce, Grilled chicken.",
+    "price": 39.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 39.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 25.0
+      }
+    ],
+    "isVeg": false,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 7,
+    "imageUrl": "/images/products/filipino-chicken-adobo.jpg",
+    "customizations": [
+      {
+        "ingredient": "San Marzano tomato sauce",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Fresh basil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Onion",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Adobo sauce",
+        "extraPrice": null,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Grilled chicken",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 5
+      },
+      {
+        "ingredient": "Black olive",
+        "extraPrice": 3.0,
+        "removable": false,
+        "position": 6
+      },
+      {
+        "ingredient": "Bell pepper",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 7
+      },
+      {
+        "ingredient": "Jalapeño",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 8
+      }
+    ]
   },
   {
-    id: "22222222-0000-0000-0000-000000000002",
-    slug: "focaccia-spicy-pepperoni",
-    categoryId: "focaccia",
-    name: "Focaccia Sandwich Spicy Pepperoni",
-    nameIt: null,
-    description:
-      "Artisan focaccia with Italian pepperoni and a hint of heat. Compact and punchy.",
-    price: 26.0,
-    sizes: singleSize(26.0),
-    isVeg: false,
-    isSpicy: true,
-    isActive: true,
-    position: 1,
-    imageUrl: "/images/products/focaccia-spicy-pepperoni.jpg",
-    customizations: [],
+    "id": "egyptian-merguez-egyptian-sausage",
+    "slug": "egyptian-merguez-egyptian-sausage",
+    "categoryId": "ajman-pizza",
+    "name": "Egyptian - Merguez (Egyptian Sausage)",
+    "nameIt": null,
+    "description": "San Marzano tomato sauce, Fior di latte mozzarella, Fresh basil, Onion, Merguez sausage.",
+    "price": 36.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 36.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 24.0
+      }
+    ],
+    "isVeg": false,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 8,
+    "imageUrl": "/images/products/egyptian-merguez-egyptian-sausage.jpg",
+    "customizations": [
+      {
+        "ingredient": "San Marzano tomato sauce",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Fresh basil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Onion",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Merguez sausage",
+        "extraPrice": 5.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Black olive",
+        "extraPrice": 3.0,
+        "removable": false,
+        "position": 5
+      },
+      {
+        "ingredient": "Bell pepper",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 6
+      },
+      {
+        "ingredient": "Jalapeño",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 7
+      }
+    ]
   },
   {
-    id: "22222222-0000-0000-0000-000000000003",
-    slug: "focaccia-bresaola",
-    categoryId: "focaccia",
-    name: "Focaccia Sandwich Bresaola",
-    nameIt: null,
-    description:
-      "Air-dried bresaola with rucola on artisan focaccia. Elegant and light.",
-    price: 29.0,
-    sizes: singleSize(29.0),
-    isVeg: false,
-    isSpicy: false,
-    isActive: true,
-    position: 2,
-    imageUrl: "/images/products/focaccia-bresaola.jpg",
-    customizations: [],
+    "id": "ethiopian-kitfo",
+    "slug": "ethiopian-kitfo",
+    "categoryId": "ajman-pizza",
+    "name": "Ethiopian - Kitfo",
+    "nameIt": null,
+    "description": "San Marzano tomato sauce, Fior di latte mozzarella, Fresh basil, Kitfo beef.",
+    "price": 43.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 43.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 29.0
+      }
+    ],
+    "isVeg": false,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 9,
+    "imageUrl": "/images/products/ethiopian-kitfo.jpg",
+    "customizations": [
+      {
+        "ingredient": "San Marzano tomato sauce",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Fresh basil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Kitfo beef",
+        "extraPrice": 8.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Onion",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 4
+      }
+    ]
   },
   {
-    id: "22222222-0000-0000-0000-000000000004",
-    slug: "focaccia-veal-ham",
-    categoryId: "focaccia",
-    name: "Focaccia Sandwich Veal Ham",
-    nameIt: null,
-    description: "Premium veal ham with fresh condiments on artisan focaccia.",
-    price: 34.0,
-    sizes: singleSize(34.0),
-    isVeg: false,
-    isSpicy: false,
-    isActive: true,
-    position: 3,
-    imageUrl: "/images/products/focaccia-veal-ham.jpg",
-    customizations: [],
+    "id": "american-legend-chicken",
+    "slug": "american-legend-chicken",
+    "categoryId": "ajman-pizza",
+    "name": "American - Legend Chicken",
+    "nameIt": null,
+    "description": "Cooking cream, Fior di latte mozzarella, Extra virgin olive oil, Oregano, Jalapeño, Onion, Ranch sauce, Grilled chicken.",
+    "price": 43.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 43.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 29.0
+      }
+    ],
+    "isVeg": false,
+    "isSpicy": true,
+    "isActive": true,
+    "position": 10,
+    "imageUrl": "/images/products/american-legend-chicken.jpg",
+    "customizations": [
+      {
+        "ingredient": "Cooking cream",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Extra virgin olive oil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Oregano",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Jalapeño",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Onion",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 5
+      },
+      {
+        "ingredient": "Ranch sauce",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 6
+      },
+      {
+        "ingredient": "Grilled chicken",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 7
+      },
+      {
+        "ingredient": "Black olive",
+        "extraPrice": 3.0,
+        "removable": false,
+        "position": 8
+      },
+      {
+        "ingredient": "Bell pepper",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 9
+      },
+      {
+        "ingredient": "Mushroom",
+        "extraPrice": 2.0,
+        "removable": false,
+        "position": 10
+      }
+    ]
   },
   {
-    id: "22222222-0000-0000-0000-000000000005",
-    slug: "focaccia-prosciutto-rucola",
-    categoryId: "focaccia",
-    name: "Focaccia Sandwich Prosciutto & Rucola",
-    nameIt: null,
-    description:
-      "Prosciutto crudo and wild rucola on artisan focaccia. The most premium focaccia on the menu.",
-    price: 48.0,
-    sizes: singleSize(48.0),
-    isVeg: false,
-    isSpicy: false,
-    isActive: true,
-    position: 4,
-    imageUrl: "/images/products/focaccia-prosciutto-rucola.jpg",
-    customizations: [],
+    "id": "american-pepperoni",
+    "slug": "american-pepperoni",
+    "categoryId": "ajman-pizza",
+    "name": "American - Pepperoni",
+    "nameIt": null,
+    "description": "San Marzano tomato sauce, Fior di latte mozzarella, Fresh basil, Pepperoni.",
+    "price": 38.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 38.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 25.0
+      }
+    ],
+    "isVeg": false,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 11,
+    "imageUrl": "/images/products/american-pepperoni.jpg",
+    "customizations": [
+      {
+        "ingredient": "San Marzano tomato sauce",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Fresh basil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Pepperoni",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Black olive",
+        "extraPrice": 3.0,
+        "removable": false,
+        "position": 4
+      },
+      {
+        "ingredient": "Bell pepper",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 5
+      },
+      {
+        "ingredient": "Onion",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 6
+      }
+    ]
   },
   {
-    id: "33333333-0000-0000-0000-000000000001",
-    slug: "nutella-pizza",
-    categoryId: "dessert",
-    name: "Nutella Pizza",
-    nameIt: null,
-    description:
-      "The same artisan dough, baked and dressed with Nutella. Simple, indulgent, and the right way to finish.",
-    price: 15.0,
-    sizes: pizzaSizes(15.0),
-    isVeg: true,
-    isSpicy: false,
-    isActive: true,
-    position: 0,
-    imageUrl: "/images/products/nutella-pizza.jpg",
-    customizations: [],
+    "id": "american-hawaiian",
+    "slug": "american-hawaiian",
+    "categoryId": "ajman-pizza",
+    "name": "American - Hawaiian",
+    "nameIt": null,
+    "description": "San Marzano tomato sauce, Fior di latte mozzarella, Veal ham, Pineapple, Extra virgin olive oil, Fresh basil.",
+    "price": 49.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 49.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 35.0
+      }
+    ],
+    "isVeg": false,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 12,
+    "imageUrl": "/images/products/american-hawaiian.jpg",
+    "customizations": [
+      {
+        "ingredient": "San Marzano tomato sauce",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Veal ham",
+        "extraPrice": 9.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Pineapple",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Extra virgin olive oil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Fresh basil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 5
+      },
+      {
+        "ingredient": "Jalapeño",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 6
+      },
+      {
+        "ingredient": "Mushroom",
+        "extraPrice": 2.0,
+        "removable": false,
+        "position": 7
+      }
+    ]
   },
   {
-    id: "33333333-0000-0000-0000-000000000002",
-    slug: "lotus-biscoff-pizza",
-    categoryId: "dessert",
-    name: "Lotus Biscoff Pizza",
-    nameIt: null,
-    description:
-      "Artisan dough base with Lotus Biscoff spread and crushed biscuits. A Gulf-favourite dessert on Neapolitan dough.",
-    price: 21.0,
-    sizes: pizzaSizes(21.0),
-    isVeg: true,
-    isSpicy: false,
-    isActive: true,
-    position: 1,
-    imageUrl: "/images/products/lotus-biscoff-pizza.jpg",
-    customizations: [],
+    "id": "margherita",
+    "slug": "margherita",
+    "categoryId": "italian-pizza",
+    "name": "Margherita",
+    "nameIt": null,
+    "description": "San Marzano tomato sauce, Fior di latte mozzarella, Oregano, Extra virgin olive oil, Fresh basil.",
+    "price": 28.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 28.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 19.0
+      }
+    ],
+    "isVeg": true,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 0,
+    "imageUrl": "/images/products/margherita.jpg",
+    "customizations": [
+      {
+        "ingredient": "San Marzano tomato sauce",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Oregano",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Extra virgin olive oil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Fresh basil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Black olive",
+        "extraPrice": 3.0,
+        "removable": false,
+        "position": 5
+      },
+      {
+        "ingredient": "Artichokes",
+        "extraPrice": 2.0,
+        "removable": false,
+        "position": 6
+      },
+      {
+        "ingredient": "Sun-dried tomato",
+        "extraPrice": 4.0,
+        "removable": false,
+        "position": 7
+      }
+    ]
   },
   {
-    id: "33333333-0000-0000-0000-000000000003",
-    slug: "pistachio-pizza",
-    categoryId: "dessert",
-    name: "Pistachio Pizza",
-    nameIt: null,
-    description:
-      "Pistachio cream on artisan dough, topped with crushed pistachios. The premium dessert choice.",
-    price: 39.0,
-    sizes: pizzaSizes(39.0),
-    isVeg: true,
-    isSpicy: false,
-    isActive: true,
-    position: 2,
-    imageUrl: "/images/products/pistachio-pizza.jpg",
-    customizations: [],
+    "id": "tonno-tuna",
+    "slug": "tonno-tuna",
+    "categoryId": "italian-pizza",
+    "name": "Tonno (Tuna)",
+    "nameIt": null,
+    "description": "San Marzano tomato sauce, Fior di latte mozzarella, Extra virgin olive oil, Fresh basil, Oregano, Onion, Tuna.",
+    "price": 43.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 43.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 29.0
+      }
+    ],
+    "isVeg": false,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 1,
+    "imageUrl": "/images/products/tonno-tuna.jpg",
+    "customizations": [
+      {
+        "ingredient": "San Marzano tomato sauce",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Extra virgin olive oil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Fresh basil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Oregano",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Onion",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 5
+      },
+      {
+        "ingredient": "Tuna",
+        "extraPrice": 8.0,
+        "removable": true,
+        "position": 6
+      },
+      {
+        "ingredient": "Black olive",
+        "extraPrice": 3.0,
+        "removable": false,
+        "position": 7
+      },
+      {
+        "ingredient": "Bell pepper",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 8
+      },
+      {
+        "ingredient": "Mushroom",
+        "extraPrice": 2.0,
+        "removable": false,
+        "position": 9
+      },
+      {
+        "ingredient": "Jalapeño",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 10
+      }
+    ]
   },
   {
-    id: "44444444-0000-0000-0000-000000000001",
-    slug: "water",
-    categoryId: "drinks",
-    name: "Water",
-    nameIt: null,
-    description: "500ml still water.",
-    price: 3.0,
-    sizes: singleSize(3.0, "Bottle", "500ml"),
-    isVeg: true,
-    isSpicy: false,
-    isActive: true,
-    position: 0,
-    imageUrl: "/images/products/water.jpg",
-    customizations: [],
+    "id": "ortolana-vegetarian",
+    "slug": "ortolana-vegetarian",
+    "categoryId": "italian-pizza",
+    "name": "Ortolana (Vegetarian)",
+    "nameIt": null,
+    "description": "San Marzano tomato sauce, Fior di latte mozzarella, Fresh basil, Mushrooms, Eggplant, Sun-dried tomato, Artichokes, Black olive, Bell pepper.",
+    "price": 41.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 41.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 27.0
+      }
+    ],
+    "isVeg": true,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 2,
+    "imageUrl": "/images/products/ortolana-vegetarian.jpg",
+    "customizations": [
+      {
+        "ingredient": "San Marzano tomato sauce",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Fresh basil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Mushrooms",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Eggplant",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Sun-dried tomato",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 5
+      },
+      {
+        "ingredient": "Artichokes",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 6
+      },
+      {
+        "ingredient": "Black olive",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 7
+      },
+      {
+        "ingredient": "Bell pepper",
+        "extraPrice": 1.0,
+        "removable": true,
+        "position": 8
+      },
+      {
+        "ingredient": "Onion",
+        "extraPrice": 0.0,
+        "removable": false,
+        "position": 9
+      }
+    ]
   },
   {
-    id: "44444444-0000-0000-0000-000000000002",
-    slug: "pepsi",
-    categoryId: "drinks",
-    name: "Pepsi",
-    nameIt: null,
-    description: "330ml can.",
-    price: 5.0,
-    sizes: singleSize(5.0, "Can", "330ml"),
-    isVeg: true,
-    isSpicy: false,
-    isActive: true,
-    position: 1,
-    imageUrl: "/images/products/pepsi.jpg",
-    customizations: [],
+    "id": "quattro-formaggi-four-cheese",
+    "slug": "quattro-formaggi-four-cheese",
+    "categoryId": "italian-pizza",
+    "name": "Quattro Formaggi (Four Cheese)",
+    "nameIt": null,
+    "description": "San Marzano tomato sauce, Fior di latte mozzarella, Gorgonzola, Provolone, Parmesan, Fresh basil.",
+    "price": 44.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 44.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 30.0
+      }
+    ],
+    "isVeg": true,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 3,
+    "imageUrl": "/images/products/quattro-formaggi-four-cheese.jpg",
+    "customizations": [
+      {
+        "ingredient": "San Marzano tomato sauce",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Gorgonzola",
+        "extraPrice": 4.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Provolone",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Parmesan",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Fresh basil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 5
+      },
+      {
+        "ingredient": "Mushroom",
+        "extraPrice": 2.0,
+        "removable": false,
+        "position": 6
+      }
+    ]
   },
   {
-    id: "44444444-0000-0000-0000-000000000003",
-    slug: "coca-cola",
-    categoryId: "drinks",
-    name: "Coca-Cola",
-    nameIt: null,
-    description: "330ml can.",
-    price: 5.0,
-    sizes: singleSize(5.0, "Can", "330ml"),
-    isVeg: true,
-    isSpicy: false,
-    isActive: true,
-    position: 2,
-    imageUrl: "/images/products/coca-cola.jpg",
-    customizations: [],
+    "id": "frutti-di-mare-seafood-pizza",
+    "slug": "frutti-di-mare-seafood-pizza",
+    "categoryId": "italian-pizza",
+    "name": "Frutti Di Mare (Seafood Pizza)",
+    "nameIt": null,
+    "description": "San Marzano tomato sauce, Fior di latte mozzarella, Garlic, Parsley, Seafood mix: mussels, clams, shrimp, calamari & octopus.",
+    "price": 44.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 44.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 29.0
+      }
+    ],
+    "isVeg": false,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 4,
+    "imageUrl": "/images/products/frutti-di-mare-seafood-pizza.jpg",
+    "customizations": [
+      {
+        "ingredient": "San Marzano tomato sauce",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Garlic",
+        "extraPrice": null,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Parsley",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Seafood mix: mussels, clams, shrimp, calamari & octopus",
+        "extraPrice": 8.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Black olive",
+        "extraPrice": 3.0,
+        "removable": false,
+        "position": 5
+      },
+      {
+        "ingredient": "Onion",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 6
+      },
+      {
+        "ingredient": "Jalapeño",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 7
+      }
+    ]
   },
   {
-    id: "44444444-0000-0000-0000-000000000004",
-    slug: "mirinda",
-    categoryId: "drinks",
-    name: "Mirinda",
-    nameIt: null,
-    description: "330ml can.",
-    price: 5.0,
-    sizes: singleSize(5.0, "Can", "330ml"),
-    isVeg: true,
-    isSpicy: false,
-    isActive: true,
-    position: 3,
-    imageUrl: "/images/products/mirinda.jpg",
-    customizations: [],
+    "id": "diavola-piccante-spicy-italian-beef-salami",
+    "slug": "diavola-piccante-spicy-italian-beef-salami",
+    "categoryId": "italian-pizza",
+    "name": "Diavola Piccante (Spicy Italian Beef Salami)",
+    "nameIt": null,
+    "description": "San Marzano tomato sauce, Fior di latte mozzarella, Fresh basil, Oregano, Spicy halal beef salami.",
+    "price": 46.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 46.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 31.0
+      }
+    ],
+    "isVeg": false,
+    "isSpicy": true,
+    "isActive": true,
+    "position": 5,
+    "imageUrl": "/images/products/diavola-piccante-spicy-italian-beef-salami.jpg",
+    "customizations": [
+      {
+        "ingredient": "San Marzano tomato sauce",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Fresh basil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Oregano",
+        "extraPrice": null,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Spicy halal beef salami",
+        "extraPrice": 9.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Black olive",
+        "extraPrice": 3.0,
+        "removable": false,
+        "position": 5
+      },
+      {
+        "ingredient": "Onion",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 6
+      },
+      {
+        "ingredient": "Bell pepper",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 7
+      }
+    ]
   },
   {
-    id: "44444444-0000-0000-0000-000000000005",
-    slug: "mountain-dew",
-    categoryId: "drinks",
-    name: "Mountain Dew",
-    nameIt: null,
-    description: "330ml can.",
-    price: 5.0,
-    sizes: singleSize(5.0, "Can", "330ml"),
-    isVeg: true,
-    isSpicy: false,
-    isActive: true,
-    position: 4,
-    imageUrl: "/images/products/mountain-dew.jpg",
-    customizations: [],
+    "id": "quattro-stagioni-four-seasons",
+    "slug": "quattro-stagioni-four-seasons",
+    "categoryId": "italian-pizza",
+    "name": "Quattro Stagioni (Four Seasons)",
+    "nameIt": null,
+    "description": "San Marzano tomato sauce, Fior di latte mozzarella, Fresh basil, Artichokes, Mushrooms, Bell pepper, Veal ham.",
+    "price": 49.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 49.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 34.0
+      }
+    ],
+    "isVeg": false,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 6,
+    "imageUrl": "/images/products/quattro-stagioni-four-seasons.jpg",
+    "customizations": [
+      {
+        "ingredient": "San Marzano tomato sauce",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Fresh basil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Artichokes",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Mushrooms",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Bell pepper",
+        "extraPrice": 1.0,
+        "removable": true,
+        "position": 5
+      },
+      {
+        "ingredient": "Veal ham",
+        "extraPrice": 9.0,
+        "removable": true,
+        "position": 6
+      },
+      {
+        "ingredient": "Black olive",
+        "extraPrice": 3.0,
+        "removable": false,
+        "position": 7
+      },
+      {
+        "ingredient": "Onion",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 8
+      },
+      {
+        "ingredient": "Bell pepper",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 9
+      }
+    ]
   },
   {
-    id: "44444444-0000-0000-0000-000000000006",
-    slug: "7up",
-    categoryId: "drinks",
-    name: "7 Up",
-    nameIt: null,
-    description: "330ml can.",
-    price: 5.0,
-    sizes: singleSize(5.0, "Can", "330ml"),
-    isVeg: true,
-    isSpicy: false,
-    isActive: true,
-    position: 5,
-    imageUrl: "/images/products/7up.jpg",
-    customizations: [],
+    "id": "mortadella-beef-ham",
+    "slug": "mortadella-beef-ham",
+    "categoryId": "italian-pizza",
+    "name": "Mortadella (Beef Ham)",
+    "nameIt": null,
+    "description": "Cooking cream, Fior di latte mozzarella, Fresh basil, Mortadella, Pistachio.",
+    "price": 49.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 49.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 34.0
+      }
+    ],
+    "isVeg": false,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 7,
+    "imageUrl": "/images/products/mortadella-beef-ham.jpg",
+    "customizations": [
+      {
+        "ingredient": "Cooking cream",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Fresh basil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Mortadella",
+        "extraPrice": 10.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Pistachio",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Cherry tomato",
+        "extraPrice": 3.0,
+        "removable": false,
+        "position": 5
+      },
+      {
+        "ingredient": "Rocket",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 6
+      }
+    ]
   },
   {
-    id: "44444444-0000-0000-0000-000000000007",
-    slug: "sprite",
-    categoryId: "drinks",
-    name: "Sprite",
-    nameIt: null,
-    description: "330ml can.",
-    price: 5.0,
-    sizes: singleSize(5.0, "Can", "330ml"),
-    isVeg: true,
-    isSpicy: false,
-    isActive: true,
-    position: 6,
-    imageUrl: "/images/products/sprite.jpg",
-    customizations: [],
+    "id": "prosciutto-e-funghi-veal-ham-and-mushroom",
+    "slug": "prosciutto-e-funghi-veal-ham-and-mushroom",
+    "categoryId": "italian-pizza",
+    "name": "Prosciutto e Funghi (Veal Ham & Mushroom)",
+    "nameIt": null,
+    "description": "San Marzano tomato sauce, Fior di latte mozzarella, Extra virgin olive oil, Fresh basil, Veal ham, Mushrooms.",
+    "price": 52.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 52.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 36.0
+      }
+    ],
+    "isVeg": false,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 8,
+    "imageUrl": "/images/products/prosciutto-e-funghi-veal-ham-and-mushroom.jpg",
+    "customizations": [
+      {
+        "ingredient": "San Marzano tomato sauce",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Extra virgin olive oil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Fresh basil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Veal ham",
+        "extraPrice": 10.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Mushrooms",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 5
+      },
+      {
+        "ingredient": "Artichokes",
+        "extraPrice": 2.0,
+        "removable": false,
+        "position": 6
+      },
+      {
+        "ingredient": "Black olive",
+        "extraPrice": 3.0,
+        "removable": false,
+        "position": 7
+      }
+    ]
   },
   {
-    id: "44444444-0000-0000-0000-000000000008",
-    slug: "fanta",
-    categoryId: "drinks",
-    name: "Fanta",
-    nameIt: null,
-    description: "330ml can.",
-    price: 5.0,
-    sizes: singleSize(5.0, "Can", "330ml"),
-    isVeg: true,
-    isSpicy: false,
-    isActive: true,
-    position: 7,
-    imageUrl: "/images/products/fanta.jpg",
-    customizations: [],
+    "id": "bresaola-beef-dry-ham",
+    "slug": "bresaola-beef-dry-ham",
+    "categoryId": "italian-pizza",
+    "name": "Bresaola (Beef Dry Ham)",
+    "nameIt": null,
+    "description": "San Marzano tomato sauce, Fior di latte mozzarella, Extra virgin olive oil, Fresh basil, Bresaola, Parmesan, Rocket.",
+    "price": 58.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 58.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 39.0
+      }
+    ],
+    "isVeg": false,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 9,
+    "imageUrl": "/images/products/bresaola-beef-dry-ham.jpg",
+    "customizations": [
+      {
+        "ingredient": "San Marzano tomato sauce",
+        "extraPrice": 4.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Extra virgin olive oil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Fresh basil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Bresaola",
+        "extraPrice": 12.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Parmesan",
+        "extraPrice": 3.0,
+        "removable": true,
+        "position": 5
+      },
+      {
+        "ingredient": "Rocket",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 6
+      },
+      {
+        "ingredient": "Cherry tomato",
+        "extraPrice": 3.0,
+        "removable": false,
+        "position": 7
+      }
+    ]
   },
+  {
+    "id": "focaccia-mortadella",
+    "slug": "focaccia-mortadella",
+    "categoryId": "focaccia",
+    "name": "Focaccia Mortadella",
+    "nameIt": null,
+    "description": "Fior di latte mozzarella, Extra virgin olive oil, Salt, Rosemary, Mortadella, Pesto, Pistachio, Cherry tomato.",
+    "price": 48.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 48.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 35.0
+      }
+    ],
+    "isVeg": false,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 0,
+    "imageUrl": "/images/products/focaccia-mortadella.jpg",
+    "customizations": [
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 4.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Extra virgin olive oil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Salt",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Rosemary",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Mortadella",
+        "extraPrice": 6.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Pesto",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 5
+      },
+      {
+        "ingredient": "Pistachio",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 6
+      },
+      {
+        "ingredient": "Cherry tomato",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 7
+      },
+      {
+        "ingredient": "Rocket",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 8
+      }
+    ]
+  },
+  {
+    "id": "focaccia-veal-ham",
+    "slug": "focaccia-veal-ham",
+    "categoryId": "focaccia",
+    "name": "Focaccia Veal Ham",
+    "nameIt": null,
+    "description": "Fior di latte mozzarella, Extra virgin olive oil, Salt, Rosemary, Veal ham, Cherry tomato, Ranch sauce.",
+    "price": 42.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 42.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 29.0
+      }
+    ],
+    "isVeg": false,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 1,
+    "imageUrl": "/images/products/focaccia-veal-ham.jpg",
+    "customizations": [
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 4.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Extra virgin olive oil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Salt",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Rosemary",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Veal ham",
+        "extraPrice": 9.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Cherry tomato",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 5
+      },
+      {
+        "ingredient": "Ranch sauce",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 6
+      },
+      {
+        "ingredient": "Rocket",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 7
+      }
+    ]
+  },
+  {
+    "id": "focaccia-bresaola",
+    "slug": "focaccia-bresaola",
+    "categoryId": "focaccia",
+    "name": "Focaccia Bresaola",
+    "nameIt": null,
+    "description": "Fior di latte mozzarella, Extra virgin olive oil, Salt, Bresaola, Cherry tomato, Rocket, Ranch sauce.",
+    "price": 46.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 46.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 32.0
+      }
+    ],
+    "isVeg": false,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 2,
+    "imageUrl": "/images/products/focaccia-bresaola.jpg",
+    "customizations": [
+      {
+        "ingredient": "Fior di latte mozzarella",
+        "extraPrice": 4.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Extra virgin olive oil",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Salt",
+        "extraPrice": 0.0,
+        "removable": true,
+        "position": 2
+      },
+      {
+        "ingredient": "Bresaola",
+        "extraPrice": 10.0,
+        "removable": true,
+        "position": 3
+      },
+      {
+        "ingredient": "Cherry tomato",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 4
+      },
+      {
+        "ingredient": "Rocket",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 5
+      },
+      {
+        "ingredient": "Ranch sauce",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 6
+      }
+    ]
+  },
+  {
+    "id": "nutella-pizza",
+    "slug": "nutella-pizza",
+    "categoryId": "dessert",
+    "name": "Nutella Pizza",
+    "nameIt": null,
+    "description": "Nutella cream, Chocolate.",
+    "price": 19.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 19.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 13.0
+      }
+    ],
+    "isVeg": true,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 0,
+    "imageUrl": "/images/products/nutella-pizza.jpg",
+    "customizations": [
+      {
+        "ingredient": "Nutella cream",
+        "extraPrice": 5.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Chocolate",
+        "extraPrice": 1.0,
+        "removable": true,
+        "position": 1
+      },
+      {
+        "ingredient": "Sugar powder",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 2
+      },
+      {
+        "ingredient": "Banana",
+        "extraPrice": 1.0,
+        "removable": false,
+        "position": 3
+      }
+    ]
+  },
+  {
+    "id": "lotus-pizza",
+    "slug": "lotus-pizza",
+    "categoryId": "dessert",
+    "name": "Lotus Pizza",
+    "nameIt": null,
+    "description": "Lotus cream, Lotus biscuit.",
+    "price": 19.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 19.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 13.0
+      }
+    ],
+    "isVeg": true,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 1,
+    "imageUrl": "/images/products/lotus-pizza.jpg",
+    "customizations": [
+      {
+        "ingredient": "Lotus cream",
+        "extraPrice": 4.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Lotus biscuit",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 1
+      }
+    ]
+  },
+  {
+    "id": "pistachio-pizza",
+    "slug": "pistachio-pizza",
+    "categoryId": "dessert",
+    "name": "Pistachio Pizza",
+    "nameIt": null,
+    "description": "Pistachio cream, Pistachio nuts.",
+    "price": 19.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Medium",
+        "detail": "Medium pizza",
+        "price": 19.0
+      },
+      {
+        "id": "small",
+        "label": "Small",
+        "detail": "Small pizza",
+        "price": 13.0
+      }
+    ],
+    "isVeg": true,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 2,
+    "imageUrl": "/images/products/pistachio-pizza.jpg",
+    "customizations": [
+      {
+        "ingredient": "Pistachio cream",
+        "extraPrice": 4.0,
+        "removable": true,
+        "position": 0
+      },
+      {
+        "ingredient": "Pistachio nuts",
+        "extraPrice": 2.0,
+        "removable": true,
+        "position": 1
+      }
+    ]
+  },
+  {
+    "id": "coca-cola",
+    "slug": "coca-cola",
+    "categoryId": "drinks",
+    "name": "Coca-Cola",
+    "nameIt": null,
+    "description": "Coca-Cola drink.",
+    "price": 4.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Regular",
+        "detail": "",
+        "price": 4.0
+      }
+    ],
+    "isVeg": true,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 0,
+    "imageUrl": "/images/products/coca-cola.jpg",
+    "customizations": []
+  },
+  {
+    "id": "coca-cola-zero",
+    "slug": "coca-cola-zero",
+    "categoryId": "drinks",
+    "name": "Coca-Cola Zero",
+    "nameIt": null,
+    "description": "Coca-Cola Zero drink.",
+    "price": 4.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Regular",
+        "detail": "",
+        "price": 4.0
+      }
+    ],
+    "isVeg": true,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 1,
+    "imageUrl": "/images/products/coca-cola-zero.jpg",
+    "customizations": []
+  },
+  {
+    "id": "fanta",
+    "slug": "fanta",
+    "categoryId": "drinks",
+    "name": "Fanta",
+    "nameIt": null,
+    "description": "Fanta drink.",
+    "price": 4.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Regular",
+        "detail": "",
+        "price": 4.0
+      }
+    ],
+    "isVeg": true,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 2,
+    "imageUrl": "/images/products/fanta.jpg",
+    "customizations": []
+  },
+  {
+    "id": "sprite",
+    "slug": "sprite",
+    "categoryId": "drinks",
+    "name": "Sprite",
+    "nameIt": null,
+    "description": "Sprite drink.",
+    "price": 4.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Regular",
+        "detail": "",
+        "price": 4.0
+      }
+    ],
+    "isVeg": true,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 3,
+    "imageUrl": "/images/products/sprite.jpg",
+    "customizations": []
+  },
+  {
+    "id": "water",
+    "slug": "water",
+    "categoryId": "drinks",
+    "name": "Water",
+    "nameIt": null,
+    "description": "Water drink.",
+    "price": 1.0,
+    "sizes": [
+      {
+        "id": "regular",
+        "label": "Regular",
+        "detail": "",
+        "price": 1.0
+      }
+    ],
+    "isVeg": true,
+    "isSpicy": false,
+    "isActive": true,
+    "position": 4,
+    "imageUrl": "/images/products/water.jpg",
+    "customizations": []
+  }
 ];
 
-export function getProductBySlug(slug: string): Product | undefined {
-  return PRODUCTS.find((p) => p.slug === slug && p.isActive);
+export function getActiveProducts() {
+  return PRODUCTS.filter((product) => product.isActive);
 }
 
-export function getProductsByCategory(categoryId: CategoryId): Product[] {
-  return PRODUCTS.filter((p) => p.categoryId === categoryId && p.isActive).sort(
-    (a, b) => a.position - b.position,
-  );
+export function getProductBySlug(slug: string) {
+  return PRODUCTS.find((product) => product.slug === slug && product.isActive);
 }
 
-export function getActiveProducts(): Product[] {
-  return PRODUCTS.filter((p) => p.isActive).sort((a, b) => {
-    const c =
-      CATEGORIES.findIndex((cat) => cat.id === a.categoryId) -
-      CATEGORIES.findIndex((cat) => cat.id === b.categoryId);
-    if (c !== 0) return c;
-    return a.position - b.position;
-  });
-}
-
-export function getRelatedProducts(product: Product, count = 3): Product[] {
-  const same = PRODUCTS.filter(
-    (p) =>
-      p.categoryId === product.categoryId && p.id !== product.id && p.isActive,
-  );
-  const others = PRODUCTS.filter(
-    (p) => p.categoryId !== product.categoryId && p.isActive,
-  );
-  return [...same, ...others].slice(0, count);
+export function getRelatedProducts(product: Product, limit = 3) {
+  return PRODUCTS.filter(
+    (candidate) =>
+      candidate.isActive &&
+      candidate.categoryId === product.categoryId &&
+      candidate.slug !== product.slug,
+  ).slice(0, limit);
 }

@@ -15,6 +15,10 @@ const eslintConfig = defineConfig([
     ".netlify/**",
     "node_modules/**",
     "supabase/.temp/**",
+    // Bun test files import "bun:test", which the Next/TS eslint resolver and
+    // tsc don't know about. They run via `bun test`, not the Next build.
+    "**/*.test.ts",
+    "**/*.test.tsx",
   ]),
 ]);
 

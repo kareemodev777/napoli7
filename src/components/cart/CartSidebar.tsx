@@ -29,7 +29,7 @@ export function CartSidebar() {
       className="bg-background border border-border flex flex-col h-[calc(100vh-160px)] sticky top-6 max-w-full"
     >
       <header className="px-5 pt-5 pb-4 border-b border-border">
-        <p className="font-display text-[10px] tracking-[0.25em] uppercase text-azure-deep">
+        <p className="font-display text-[10px] tracking-[0.25em] uppercase text-foreground">
           Your order
         </p>
         <h2 className="mt-1 font-display text-2xl uppercase tracking-[1.5px] leading-tight">

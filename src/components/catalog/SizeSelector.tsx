@@ -45,7 +45,7 @@ export function SizeSelector({
               <span
                 className={
                   "block text-[9px] tracking-[0.15em] mt-0.5 " +
-                  (active ? "text-background/70" : "text-muted-foreground/70")
+                  (active ? "text-background/85" : "text-muted-foreground")
                 }
               >
                 {s.detail}

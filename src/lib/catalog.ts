@@ -55,6 +55,57 @@ type SizeRow = {
   position: number;
 };
 
+const LOCAL_PRODUCT_IMAGES: Record<string, string> = {
+  "margherita-classic": "margherita-classic.jpg",
+  vegetable: "vegetable-ortolana.jpg",
+  "vegetable-ortolana": "vegetable-ortolana.jpg",
+  merguez: "merguez.jpg",
+  "spicy-peperoni": "diavola-piccante.jpg",
+  "diavola-piccante": "diavola-piccante.jpg",
+  "four-season": "quattro-stagioni.jpg",
+  "quattro-stagioni": "quattro-stagioni.jpg",
+  "bresaola-truffle": "bresaola-truffle.jpg",
+  "prosciutto-rucola": "prosciutto-rucola.jpg",
+  "focaccia-vegetables": "focaccia-vegetables.jpg",
+  "focaccia-spicy-pepperoni": "focaccia-spicy-pepperoni.jpg",
+  "focaccia-bresaola": "focaccia-bresaola.jpg",
+  "focaccia-veal-ham": "focaccia-veal-ham.jpg",
+  "focaccia-prosciutto-rucola": "focaccia-prosciutto-rucola.jpg",
+  "nutella-pizza": "nutella-pizza.jpg",
+  "lotus-biscoff-pizza": "lotus-biscoff-pizza.jpg",
+  "pistachio-pizza": "pistachio-pizza.jpg",
+  water: "water.jpg",
+  pepsi: "pepsi.jpg",
+  "coca-cola": "coca-cola.jpg",
+  mirinda: "mirinda.jpg",
+  "mountain-dew": "mountain-dew.jpg",
+  "7-up": "7up.jpg",
+  "7up": "7up.jpg",
+  sprite: "sprite.jpg",
+  fanta: "fanta.jpg",
+};
+
+function imageKeyFromUrl(imageUrl: string): string | null {
+  try {
+    const pathname = imageUrl.startsWith("http")
+      ? new URL(imageUrl).pathname
+      : imageUrl;
+    const filename = pathname.split("/").pop()?.replace(/\.[^.]+$/, "");
+    return filename?.replace(/-\d{8,}$/, "") ?? null;
+  } catch {
+    return null;
+  }
+}
+
+function resolveProductImageUrl(row: ProductRow): string {
+  const key = imageKeyFromUrl(row.image_url);
+  const filename =
+    (key ? LOCAL_PRODUCT_IMAGES[key] : undefined) ??
+    LOCAL_PRODUCT_IMAGES[row.slug];
+
+  return filename ? `/images/products/${filename}` : row.image_url;
+}
+
 function mapCategory(row: CategoryRow): Category {
   return {
     id: row.id,
@@ -112,7 +163,7 @@ function mapProduct(row: ProductRow): Product {
     isSpicy: row.is_spicy,
     isActive: row.is_active,
     position: row.position,
-    imageUrl: row.image_url,
+    imageUrl: resolveProductImageUrl(row),
     customizations,
   };
 }

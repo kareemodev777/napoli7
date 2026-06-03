@@ -36,7 +36,8 @@ export function MobileBottomBar() {
   const amount = mounted ? subtotal : 0;
 
   return (
-    <div
+    <nav
+      aria-label="Mobile order actions"
       className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-background border-t border-border flex"
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
     >
@@ -74,6 +75,6 @@ export function MobileBottomBar() {
           </span>
         ) : null}
       </Link>
-    </div>
+    </nav>
   );
 }

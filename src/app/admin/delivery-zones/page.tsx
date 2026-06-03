@@ -4,19 +4,13 @@ import { Pencil, Plus } from "lucide-react";
 import { DeleteZoneButton } from "./DeleteZoneButton";
 import { Badge, ZoneForm, money } from "./form-components";
 import type { DeliveryZoneRow } from "./types";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { AdminModal } from "@/components/admin/AdminModal";
 import { HAS_SUPABASE_SERVICE } from "@/lib/env";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 
 export const metadata: Metadata = {
   title: "Delivery Zones · Admin",
+  alternates: { canonical: "/admin/delivery-zones" },
   robots: { index: false, follow: false },
 };
 
@@ -52,55 +46,29 @@ function IconButton({
 
 function AddZoneModal() {
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          className="inline-flex h-10 items-center gap-2 rounded-md bg-brand px-3 font-display text-xs uppercase tracking-[0.14em] text-primary-foreground hover:bg-brand-hover"
-        >
-          <Plus className="h-4 w-4" strokeWidth={1.7} />
-          Zone
-        </button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="font-display text-xl uppercase tracking-[0.08em]">
-            Add delivery zone
-          </DialogTitle>
-          <DialogDescription>
-            Add an Ajman area and its flat delivery fee. Active zones appear in
-            the checkout area picker.
-          </DialogDescription>
-        </DialogHeader>
-        <ZoneForm />
-      </DialogContent>
-    </Dialog>
+    <AdminModal
+      title="Add delivery zone"
+      description="Add an Ajman area and its flat delivery fee. Active zones appear in the checkout area picker."
+      triggerLabel="Add delivery zone"
+      triggerClassName="inline-flex h-10 items-center gap-2 rounded-md bg-brand px-3 font-display text-xs uppercase tracking-[0.14em] text-primary-foreground hover:bg-brand-hover"
+      trigger={<><Plus className="h-4 w-4" strokeWidth={1.7} />Zone</>}
+    >
+      <ZoneForm />
+    </AdminModal>
   );
 }
 
 function EditZoneModal({ zone }: { zone: DeliveryZoneRow }) {
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <button type="button" aria-label={`Edit ${zone.area}`}>
-          <IconButton label="Edit zone">
-            <Pencil className="h-4 w-4" strokeWidth={1.7} />
-          </IconButton>
-        </button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="font-display text-xl uppercase tracking-[0.08em]">
-            Edit delivery zone
-          </DialogTitle>
-          <DialogDescription>
-            Rename the area, adjust its fee, reorder it, or hide it from
-            checkout.
-          </DialogDescription>
-        </DialogHeader>
-        <ZoneForm zone={zone} />
-      </DialogContent>
-    </Dialog>
+    <AdminModal
+      title="Edit delivery zone"
+      description="Rename the area, adjust its fee, reorder it, or hide it from checkout."
+      triggerLabel={`Edit ${zone.area}`}
+      triggerClassName="inline-flex h-10 w-10 items-center justify-center rounded-md"
+      trigger={<IconButton label="Edit zone"><Pencil className="h-4 w-4" strokeWidth={1.7} /></IconButton>}
+    >
+      <ZoneForm zone={zone} />
+    </AdminModal>
   );
 }
 

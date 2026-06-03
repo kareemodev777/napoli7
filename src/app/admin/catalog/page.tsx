@@ -12,19 +12,13 @@ import {
   money,
 } from "./form-components";
 import type { CategoryRow, ProductRow } from "./types";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { AdminModal } from "@/components/admin/AdminModal";
 import { HAS_SUPABASE_SERVICE } from "@/lib/env";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 
 export const metadata: Metadata = {
   title: "Catalog · Admin",
+  alternates: { canonical: "/admin/catalog" },
   robots: { index: false, follow: false },
 };
 
@@ -66,74 +60,61 @@ function IconButton({
   );
 }
 
+const primaryTriggerClassName =
+  "inline-flex h-10 items-center gap-2 rounded-md bg-brand px-3 font-display text-xs uppercase tracking-[0.14em] text-primary-foreground hover:bg-brand-hover";
+
 function AddCategoryModal({ count }: { count: number }) {
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          className="inline-flex h-10 items-center gap-2 rounded-md bg-brand px-3 font-display text-xs uppercase tracking-[0.14em] text-primary-foreground hover:bg-brand-hover"
-        >
+    <AdminModal
+      title="Add category"
+      description="Create a menu group such as Pizza, Dessert, or Drinks."
+      triggerLabel="Add category"
+      triggerClassName={primaryTriggerClassName}
+      trigger={
+        <>
           <Plus className="h-4 w-4" strokeWidth={1.7} />
           Category
-        </button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle className="font-display text-xl uppercase tracking-[0.08em]">
-            Add category
-          </DialogTitle>
-          <DialogDescription>
-            Create a menu group such as Pizza, Dessert, or Drinks.
-          </DialogDescription>
-        </DialogHeader>
-        <form action={upsertCategory} className="grid gap-3">
-          <Field label="Category name" name="label" required />
-          <Field
-            label="Short ID"
-            name="id"
-            required
-            hint="Example: pasta, salad, drinks."
-          />
-          <Field label="Description" name="description" />
-          <Field
-            label="Display order"
-            name="position"
-            type="number"
-            defaultValue={count}
-          />
-          <SaveButton>Add category</SaveButton>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <form action={upsertCategory} className="grid gap-3">
+        <Field label="Category name" name="label" required />
+        <Field
+          label="Short ID"
+          name="id"
+          required
+          hint="Example: pasta, salad, drinks."
+        />
+        <Field label="Description" name="description" />
+        <Field
+          label="Display order"
+          name="position"
+          type="number"
+          defaultValue={count}
+        />
+        <SaveButton>Add category</SaveButton>
+      </form>
+    </AdminModal>
   );
 }
 
 function AddProductModal({ categories }: { categories: CategoryRow[] }) {
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          className="inline-flex h-10 items-center gap-2 rounded-md bg-brand px-3 font-display text-xs uppercase tracking-[0.14em] text-primary-foreground hover:bg-brand-hover"
-        >
+    <AdminModal
+      title="Add menu item"
+      description="Add the basic details first. Prices and ingredients can be edited from the item page after it is created."
+      triggerLabel="Add menu item"
+      triggerClassName={primaryTriggerClassName}
+      maxWidthClassName="max-w-3xl"
+      trigger={
+        <>
           <Plus className="h-4 w-4" strokeWidth={1.7} />
           Item
-        </button>
-      </DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
-        <DialogHeader>
-          <DialogTitle className="font-display text-xl uppercase tracking-[0.08em]">
-            Add menu item
-          </DialogTitle>
-          <DialogDescription>
-            Add the basic details first. Prices and ingredients can be edited
-            from the item page after it is created.
-          </DialogDescription>
-        </DialogHeader>
-        <ProductForm categories={categories} />
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <ProductForm categories={categories} />
+    </AdminModal>
   );
 }
 

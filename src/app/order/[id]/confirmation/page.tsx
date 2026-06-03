@@ -3,16 +3,25 @@ import Link from "next/link";
 import { SiteShell } from "@/components/site/SiteShell";
 import { HAS_SUPABASE } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
+import { PaymentStatusPoller } from "./PaymentStatusPoller";
 
 interface Params {
   id: string;
 }
 
-export const metadata: Metadata = {
-  title: "Order confirmed",
-  description: "Your Napoli 7 order has been received.",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<Params>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  return {
+    title: "Order confirmed",
+    description: "Your Napoli 7 order has been received.",
+    alternates: { canonical: `/order/${id}/confirmation` },
+    robots: { index: false, follow: false },
+  };
+}
 
 interface OrderForConfirmation {
   id: string;
@@ -70,6 +79,78 @@ async function loadOrder(id: string): Promise<OrderForConfirmation | null> {
   };
 }
 
+type PaymentView = {
+  eyebrow: string;
+  heading: string;
+  message: string;
+  /** Show the order summary + track button (a confirmed/processing order). */
+  showOrder: boolean;
+  /** Card payment still pending — keep refreshing until the webhook lands. */
+  poll: boolean;
+  /** Payment failed — offer a retry back to checkout. */
+  showRetry: boolean;
+};
+
+function deriveView(order: OrderForConfirmation): PaymentView {
+  const isCard = order.paymentMethod === "card";
+
+  if (!isCard) {
+    return {
+      eyebrow: "Confirmation",
+      heading: "Order received.",
+      message:
+        "Your order is in. Pay cash to the driver on arrival. Estimated delivery: 30–45 minutes.",
+      showOrder: true,
+      poll: false,
+      showRetry: false,
+    };
+  }
+
+  switch (order.paymentStatus) {
+    case "paid":
+      return {
+        eyebrow: "Payment received",
+        heading: "Order confirmed.",
+        message:
+          "Your card payment went through and the kitchen has your order. Estimated delivery: 30–45 minutes.",
+        showOrder: true,
+        poll: false,
+        showRetry: false,
+      };
+    case "failed":
+      return {
+        eyebrow: "Payment failed",
+        heading: "Payment didn’t go through.",
+        message:
+          "Your card wasn’t charged. You can try again, or call us on +971 6 534 5772 to place the order by phone.",
+        showOrder: false,
+        poll: false,
+        showRetry: true,
+      };
+    case "refunded":
+      return {
+        eyebrow: "Refunded",
+        heading: "This order was refunded.",
+        message:
+          "We’ve refunded your card. Refunds take a few business days to appear. Questions? Call +971 6 534 5772.",
+        showOrder: true,
+        poll: false,
+        showRetry: false,
+      };
+    case "pending":
+    default:
+      return {
+        eyebrow: "Payment processing",
+        heading: "Confirming your payment…",
+        message:
+          "Hang tight — we’re confirming your card payment. This page updates automatically and usually takes a few seconds.",
+        showOrder: true,
+        poll: true,
+        showRetry: false,
+      };
+  }
+}
+
 export default async function OrderConfirmationPage({
   params,
 }: {
@@ -77,28 +158,30 @@ export default async function OrderConfirmationPage({
 }) {
   const { id } = await params;
   const order = await loadOrder(id);
+  const view = order ? deriveView(order) : null;
 
   return (
     <SiteShell>
       <section className="px-6 md:px-10 py-16 md:py-24">
         <div className="max-w-[720px] mx-auto">
-          <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep mb-4">
-            Confirmation
-          </p>
-          <h1 className="font-display text-4xl md:text-5xl leading-tight">
-            Order confirmed.
-          </h1>
-          {order ? (
+          {order && view ? (
             <>
+              {view.poll ? <PaymentStatusPoller /> : null}
+              <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep mb-4">
+                {view.eyebrow}
+              </p>
+              <h1 className="font-display text-4xl md:text-5xl leading-tight">
+                {view.heading}
+              </h1>
               <p className="mt-4 text-lg text-muted-foreground">
                 Order number{" "}
                 <span className="font-display tracking-[0.1em] text-foreground">
                   {order.orderNumber}
                 </span>
-                . Estimated delivery: 30–45 minutes.
+                . {view.message}
               </p>
 
-              {order.items.length > 0 ? (
+              {view.showOrder && order.items.length > 0 ? (
                 <ul className="mt-10 border-t border-border">
                   {order.items.map((it, i) => (
                     <li
@@ -123,12 +206,21 @@ export default async function OrderConfirmationPage({
               ) : null}
 
               <div className="mt-10 flex flex-wrap items-center gap-4">
-                <Link
-                  href={`/track?orderId=${encodeURIComponent(order.orderNumber)}&phone=${encodeURIComponent(order.customerPhone)}`}
-                  className="inline-flex items-center bg-brand text-primary-foreground px-8 py-4 font-display text-sm tracking-[0.2em] uppercase hover:bg-brand-hover"
-                >
-                  Track your order
-                </Link>
+                {view.showRetry ? (
+                  <Link
+                    href="/checkout"
+                    className="inline-flex items-center bg-brand text-primary-foreground px-8 py-4 font-display text-sm tracking-[0.2em] uppercase hover:bg-brand-hover"
+                  >
+                    Try payment again
+                  </Link>
+                ) : view.showOrder ? (
+                  <Link
+                    href={`/track?orderId=${encodeURIComponent(order.orderNumber)}&phone=${encodeURIComponent(order.customerPhone)}`}
+                    className="inline-flex items-center bg-brand text-primary-foreground px-8 py-4 font-display text-sm tracking-[0.2em] uppercase hover:bg-brand-hover"
+                  >
+                    Track your order
+                  </Link>
+                ) : null}
                 <Link
                   href="/menu"
                   className="inline-flex items-center border border-foreground px-8 py-4 font-display text-sm tracking-[0.2em] uppercase hover:bg-foreground hover:text-background"
@@ -138,10 +230,18 @@ export default async function OrderConfirmationPage({
               </div>
             </>
           ) : (
-            <p className="mt-6 text-base text-muted-foreground">
-              Order not found. The kitchen may not have logged this order — call
-              us if you need help on +971 6 534 5772.
-            </p>
+            <>
+              <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep mb-4">
+                Confirmation
+              </p>
+              <h1 className="font-display text-4xl md:text-5xl leading-tight">
+                Order not found.
+              </h1>
+              <p className="mt-6 text-base text-muted-foreground">
+                The kitchen may not have logged this order — call us if you need
+                help on +971 6 534 5772.
+              </p>
+            </>
           )}
         </div>
       </section>

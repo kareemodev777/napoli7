@@ -18,22 +18,23 @@ import {
   money,
 } from "../form-components";
 import type { CategoryRow, ProductRow } from "../types";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { AdminModal } from "@/components/admin/AdminModal";
 import { SIZE_OPTIONS, type SizeId } from "@/data/types/catalog";
 import { HAS_SUPABASE_SERVICE } from "@/lib/env";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 
-export const metadata: Metadata = {
-  title: "Edit item · Admin",
-  robots: { index: false, follow: false },
-};
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<Params>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  return {
+    title: "Edit item · Admin",
+    alternates: { canonical: `/admin/catalog/${id}` },
+    robots: { index: false, follow: false },
+  };
+}
 
 export const dynamic = "force-dynamic";
 
@@ -49,45 +50,35 @@ function AddPriceModal({
   defaultPrice: number;
 }) {
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <button
-          type="button"
-          className="inline-flex h-10 items-center gap-2 rounded-md bg-brand px-3 font-display text-xs uppercase tracking-[0.14em] text-primary-foreground hover:bg-brand-hover"
-        >
+    <AdminModal
+      title="Add price"
+      description="Add a small, regular, large, or family price option for this item."
+      triggerLabel="Add price"
+      triggerClassName="inline-flex h-10 items-center gap-2 rounded-md bg-brand px-3 font-display text-xs uppercase tracking-[0.14em] text-primary-foreground hover:bg-brand-hover"
+      maxWidthClassName="max-w-xl"
+      trigger={
+        <>
           <Plus className="h-4 w-4" strokeWidth={1.7} />
           Price
-        </button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-xl">
-        <DialogHeader>
-          <DialogTitle className="font-display text-xl uppercase tracking-[0.08em]">
-            Add price
-          </DialogTitle>
-          <DialogDescription>
-            Add a small, regular, large, or family price option for this item.
-          </DialogDescription>
-        </DialogHeader>
-        <form
-          action={upsertSize}
-          className="grid gap-3 sm:grid-cols-2"
-        >
-          <input type="hidden" name="product_id" value={productId} />
-          <SizeSelect defaultValue="regular" />
-          <Field label="Label" name="label" defaultValue="Regular" />
-          <Field label="Detail" name="detail" />
-          <Field
-            label="Price"
-            name="price_aed"
-            type="number"
-            defaultValue={defaultPrice}
-          />
-          <div className="sm:col-span-2">
-            <SaveButton>Add price</SaveButton>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+        </>
+      }
+    >
+      <form action={upsertSize} className="grid gap-3 sm:grid-cols-2">
+        <input type="hidden" name="product_id" value={productId} />
+        <SizeSelect defaultValue="regular" />
+        <Field label="Label" name="label" defaultValue="Regular" />
+        <Field label="Detail" name="detail" />
+        <Field
+          label="Price"
+          name="price_aed"
+          type="number"
+          defaultValue={defaultPrice}
+        />
+        <div className="sm:col-span-2">
+          <SaveButton>Add price</SaveButton>
+        </div>
+      </form>
+    </AdminModal>
   );
 }
 

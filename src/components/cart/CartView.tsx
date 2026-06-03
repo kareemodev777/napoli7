@@ -10,15 +10,7 @@ export function CartView() {
   const items = useCart((s) => s.items);
   const hydrated = useMounted();
 
-  if (!hydrated) {
-    return (
-      <div className="text-center py-16 text-sm text-muted-foreground">
-        Loading cart…
-      </div>
-    );
-  }
-
-  if (items.length === 0) {
+  if (!hydrated || items.length === 0) {
     return <EmptyCart />;
   }
 

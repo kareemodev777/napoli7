@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/payments/stripe";
 import { createServiceRoleClient } from "@/lib/supabase/service";
+import { sendKitchenNotificationsForOrder } from "@/lib/notifications/kitchen";
 import { HAS_STRIPE, HAS_SUPABASE_SERVICE } from "@/lib/env";
 
 export const runtime = "nodejs";
@@ -44,13 +45,32 @@ export async function POST(req: Request) {
           typeof session.payment_intent === "string"
             ? session.payment_intent
             : session.payment_intent?.id;
-        await supabase
+        // Atomic, idempotent transition: only the FIRST delivery of this event
+        // flips pending -> paid and gets a row back. Stripe retries (at-least-
+        // once delivery) match no row, so the kitchen is notified exactly once.
+        const { data: transitioned, error: updateError } = await supabase
           .from("orders")
           .update({
             payment_status: "paid",
             stripe_payment_intent: paymentIntentId,
           })
-          .eq("id", orderId);
+          .eq("id", orderId)
+          .neq("payment_status", "paid")
+          .select("id");
+
+        if (updateError) {
+          console.error(
+            "[stripe-webhook] paid transition failed:",
+            updateError,
+          );
+          // 500 so Stripe retries rather than dropping the paid signal.
+          return new NextResponse("update failed", { status: 500 });
+        }
+
+        if (transitioned && transitioned.length > 0) {
+          // Real pending -> paid transition: now (and only now) fulfill.
+          await sendKitchenNotificationsForOrder(orderId);
+        }
       }
       break;
     }

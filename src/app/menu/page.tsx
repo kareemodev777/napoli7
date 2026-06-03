@@ -11,12 +11,12 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "Menu",
   description:
-    "Browse the Napoli 7 menu — seven Neapolitan pizzas, five focaccia sandwiches, three dessert pizzas, and eight cold drinks.",
+    "Browse the Napoli 7 menu — the Ajman Pizza Collection, Italian classics, focaccia sandwiches, dessert pizzas, and cold drinks.",
   alternates: { canonical: "/menu" },
   openGraph: {
     title: "Menu · Napoli 7",
     description:
-      "Seven pizzas, five focaccia, three desserts, eight drinks. Order online.",
+      "Ajman originals, Italian classics, focaccia sandwiches, dessert pizzas, and drinks. Order online.",
   },
 };
 
@@ -32,7 +32,7 @@ export default async function MenuPage() {
         <PageHero
           eyebrow="Order online"
           heading="Menu"
-          intro="Seven pizzas. Five focaccia sandwiches. Three dessert pizzas. Eight drinks. Each one prepared on the same dough, in the same oven, every day."
+          intro="Ajman originals, Italian classics, focaccia sandwiches, dessert pizzas, and drinks — all updated from the official Napoli 7 menu document."
         />
         <MenuLayout products={products} categories={categories} />
       </main>

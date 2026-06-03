@@ -1,6 +1,3 @@
-"use client";
-
-import { useMemo } from "react";
 import type { Category, Product } from "@/data/types/catalog";
 import { MenuProductCard } from "./MenuProductCard";
 import { MenuCategoryNav } from "./MenuCategoryNav";
@@ -12,16 +9,13 @@ interface MenuLayoutProps {
 }
 
 export function MenuLayout({ products, categories }: MenuLayoutProps) {
-  const grouped = useMemo(() => {
-    const result = new Map<string, Product[]>();
-    categories.forEach((c) => {
-      const items = products
-        .filter((p) => p.categoryId === c.id)
-        .sort((a, b) => a.position - b.position);
-      if (items.length > 0) result.set(c.id, items);
-    });
-    return result;
-  }, [products, categories]);
+  const grouped = new Map<string, Product[]>();
+  categories.forEach((c) => {
+    const items = products
+      .filter((p) => p.categoryId === c.id)
+      .sort((a, b) => a.position - b.position);
+    if (items.length > 0) grouped.set(c.id, items);
+  });
 
   return (
     <div className="grid lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_400px] gap-10 px-6 md:px-10 pt-6 pb-24 lg:pb-16 max-w-[1500px] mx-auto">
@@ -43,7 +37,7 @@ export function MenuLayout({ products, categories }: MenuLayoutProps) {
               >
                 <header className="flex items-baseline justify-between flex-wrap gap-3 mb-6 md:mb-8 pb-4 border-b border-border">
                   <div>
-                    <p className="font-display text-[10px] tracking-[0.25em] uppercase text-azure-deep mb-2">
+                    <p className="font-display text-[10px] tracking-[0.25em] uppercase text-foreground mb-2">
                       {String(items.length).padStart(2, "0")} items
                     </p>
                     <h2

@@ -1,0 +1,31 @@
+# Netlify production config for Napoli7 (Next.js 16, App Router).
+#
+# Netlify is the production owner for this site (napoli7.netlify.app). The
+# committed config lives here; the generated `.netlify/` dir stays gitignored.
+#
+# Required environment variables (set in the Netlify UI / CLI, never committed):
+#   NEXT_PUBLIC_SITE_URL                 -> the deployed origin, e.g. https://napoli7.netlify.app
+#   STRIPE_SECRET_KEY                    -> server only
+#   NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
+#   STRIPE_WEBHOOK_SECRET                -> server only (from the Stripe dashboard endpoint)
+#   NEXT_PUBLIC_SUPABASE_URL
+#   NEXT_PUBLIC_SUPABASE_ANON_KEY
+#   SUPABASE_SERVICE_ROLE_KEY            -> server only
+#   RESEND_API_KEY                       -> server only (omit to fall back to console logging)
+#   ORDER_EMAIL_TO / ORDER_EMAIL_FROM
+#   WHATSAPP_ACCESS_TOKEN / WHATSAPP_PHONE_NUMBER_ID / KITCHEN_WHATSAPP_NUMBER
+#
+# See .env.example for the full list.
+
+[build]
+  # Matches the committed bun.lock so installs are reproducible. Netlify
+  # auto-detects bun from bun.lock; the plugin manages the publish directory,
+  # so do not set `publish` here.
+  command = "bun run build"
+
+[build.environment]
+  # Next.js 16 requires Node 20+. Pin to the current LTS used locally.
+  NODE_VERSION = "22"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"

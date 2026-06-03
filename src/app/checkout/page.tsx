@@ -9,7 +9,6 @@ export const metadata: Metadata = {
   title: "Checkout",
   description: "Place your Napoli 7 order — pickup or delivery.",
   alternates: { canonical: "/checkout" },
-  robots: { index: false, follow: false },
 };
 
 export default async function CheckoutPage() {

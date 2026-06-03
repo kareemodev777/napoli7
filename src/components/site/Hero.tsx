@@ -10,11 +10,13 @@ export function Hero() {
 
   return (
     <section className="relative mx-4 md:mx-6 h-[62svh] md:h-[68svh] min-h-[460px] max-h-[640px] overflow-hidden">
+      <h1 className="sr-only">Napoli 7 — authentic Neapolitan pizza in Ajman</h1>
       <Image
         src="/images/hero-pizza.jpg"
         alt="Hand-stretched Neapolitan pizza, fresh from a wood-fired oven"
         fill
         priority
+        fetchPriority="high"
         sizes="100vw"
         className="object-cover"
       />
@@ -31,6 +33,7 @@ export function Hero() {
             value={postcode}
             onChange={(e) => setPostcode(e.target.value)}
             placeholder="Your area in Ajman"
+            aria-label="Your delivery area in Ajman"
             className="w-full text-lg font-display py-2 border-b-2 border-foreground bg-transparent focus:outline-none placeholder:text-muted-foreground"
           />
           <Link
@@ -79,7 +82,7 @@ export function Hero() {
         aria-label="First Margherita on us — sign up to claim"
         className="absolute right-2 sm:right-6 md:right-12 bottom-2 sm:bottom-8 md:bottom-12 z-10 w-[88px] h-[88px] sm:w-[140px] sm:h-[140px] md:w-[170px] md:h-[170px] grid place-items-center text-white font-display hover:rotate-0 -rotate-[8deg] transition-transform duration-500"
         style={{
-          background: "var(--color-azure)",
+          background: "var(--color-brand)",
           clipPath:
             "polygon(50% 0%, 58% 8%, 68% 3%, 73% 13%, 84% 11%, 86% 22%, 96% 25%, 94% 36%, 100% 45%, 94% 54%, 100% 65%, 90% 70%, 92% 81%, 81% 83%, 79% 94%, 68% 90%, 60% 98%, 50% 92%, 40% 98%, 32% 90%, 21% 94%, 19% 83%, 8% 81%, 10% 70%, 0% 65%, 6% 54%, 0% 45%, 6% 36%, 4% 25%, 14% 22%, 16% 11%, 27% 13%, 32% 3%, 42% 8%)",
         }}
