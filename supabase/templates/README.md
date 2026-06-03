@@ -16,9 +16,9 @@ under **Authentication → Emails → Templates**, then **Save**.
 ## Design
 - White canvas, navy `#1E3A8A` CTA, sharp 0px corners, Helvetica-family UPPERCASE
   headings — per `docs/DESIGN.md`. Italian-flag micro-strip at the top.
-- Logo loads from `https://napoli7.netlify.app/logo.png` (always-live, survives the
-  custom-domain cutover). If the canonical domain is preferred later, swap to
-  `https://napoli7.com/logo.png` once DNS is confirmed.
+- Logo loads from the canonical `https://napoli7.com/logo.png` (DNS is live and
+  serving over SSL). The `napoli7.netlify.app/logo.png` subdomain still works as a
+  fallback if the apex ever changes.
 - Forces light mode (`color-scheme: light only`) so clients don't dark-invert it.
 - Bulletproof for Outlook (VML button), mobile-responsive, hidden preheader.
 
