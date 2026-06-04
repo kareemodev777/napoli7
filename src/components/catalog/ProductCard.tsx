@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { Product } from "@/data/types/catalog";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { VegDot } from "./VegDot";
 import { SpicyDot } from "./SpicyDot";
 import { PriceBadge } from "./PriceBadge";
@@ -13,7 +13,7 @@ export function ProductCard({ product }: { product: Product }) {
         className="relative block aspect-[4/3] overflow-hidden bg-muted"
         aria-label={`${product.name} — view product`}
       >
-        <Image
+        <SmartImage
           src={product.imageUrl}
           alt={`${product.name} from Napoli 7`}
           fill

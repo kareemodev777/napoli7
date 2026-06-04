@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import type {
   CartCustomization,
   CustomizationChoice,
@@ -88,14 +88,15 @@ export function ProductDetail({ product, categoryLabel }: ProductDetailProps) {
           ]}
         />
         <div className="mt-10 grid lg:grid-cols-[1.15fr_1fr] gap-10 lg:gap-16 items-start">
-          <div className="relative aspect-[4/3] bg-muted overflow-hidden rounded-md">
-            <Image
+          <div className="relative aspect-[1/1] sm:aspect-[4/3] bg-muted overflow-hidden rounded-md">
+            <SmartImage
               src={product.imageUrl}
               alt={`${product.name} from Napoli 7`}
               fill
               priority
               sizes="(min-width: 1024px) 55vw, 100vw"
-              className="object-cover"
+              className="object-contain p-3 sm:p-5"
+              overlayClassName="rounded-md"
             />
           </div>
           <div>

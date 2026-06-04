@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Trash2 } from "lucide-react";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { useCart } from "@/store/cart";
 import type { CartItem } from "@/store/cart";
 import { QuantityStepper } from "@/components/catalog/QuantityStepper";
@@ -31,12 +31,12 @@ export function CartLineItem({ item }: { item: CartItem }) {
         className="relative aspect-[4/3] bg-muted overflow-hidden block"
         aria-label={`${item.name} — view product`}
       >
-        <Image
+        <SmartImage
           src={item.imageUrl}
           alt={item.name}
           fill
           sizes="120px"
-          className="object-cover"
+          className="object-contain p-2"
         />
       </Link>
       <div className="min-w-0">

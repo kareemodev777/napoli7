@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { Plus, Minus, Trash2, ArrowRight, ShoppingBag } from "lucide-react";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { useCart, type CartItem } from "@/store/cart";
 import { useMounted } from "@/lib/use-mounted";
 import { formatAed } from "@/components/catalog/PriceBadge";
@@ -158,12 +158,12 @@ function CartRow({
   return (
     <li className="grid grid-cols-[56px_1fr_auto] gap-3 p-4">
       <div className="relative aspect-square bg-muted overflow-hidden">
-        <Image
+        <SmartImage
           src={item.imageUrl}
           alt={item.name}
           fill
           sizes="56px"
-          className="object-cover"
+          className="object-contain p-1"
         />
       </div>
       <div className="min-w-0">

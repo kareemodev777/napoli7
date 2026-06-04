@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { ShoppingBag, Sliders } from "lucide-react";
+import { SmartImage } from "@/components/ui/SmartImage";
 import type { Product, SizeId } from "@/data/types/catalog";
 import { useCart } from "@/store/cart";
 import { VegDot } from "./VegDot";
@@ -48,13 +48,13 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
 
   return (
     <article className="group flex flex-col bg-background border border-border hover:border-foreground transition-colors">
-      <div className="relative h-56 overflow-hidden bg-muted sm:h-auto sm:aspect-[4/3]">
-        <Image
+      <div className="relative aspect-[1/1] overflow-hidden bg-muted sm:aspect-[4/3]">
+        <SmartImage
           src={product.imageUrl}
           alt={`${product.name} from Napoli 7`}
           fill
           sizes="(min-width: 1280px) 28vw, (min-width: 768px) 45vw, 100vw"
-          className="object-contain p-2 sm:object-cover sm:p-0"
+          className="object-contain p-3 sm:p-4"
         />
         {(product.isVeg || product.isSpicy) && (
           <div className="absolute top-3 right-3 flex items-center gap-2">
