@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import Image from "next/image";
+import { SmartImage } from "@/components/ui/SmartImage";
 import { Plus, Minus, X, ShoppingBag } from "lucide-react";
 import {
   Dialog,
@@ -243,12 +243,12 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
 
         <aside className="overflow-y-auto px-6 md:px-10 py-6 bg-muted/40">
           <div className="relative aspect-[4/3] bg-muted overflow-hidden">
-            <Image
+            <SmartImage
               src={product.imageUrl}
               alt={`${product.name} from Napoli 7`}
               fill
               sizes="(min-width: 768px) 360px, 90vw"
-              className="object-cover"
+              className="object-contain p-4"
             />
             {(product.isVeg || product.isSpicy) && (
               <div className="absolute top-3 right-3 flex items-center gap-2">

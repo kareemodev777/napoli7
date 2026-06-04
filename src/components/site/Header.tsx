@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { User, ChevronDown } from "lucide-react";
+import { User } from "lucide-react";
 import { Logo } from "./Logo";
 import { CartIcon } from "@/components/cart/CartIcon";
 import { MobileNav } from "./MobileNav";
@@ -31,14 +31,6 @@ export function Header() {
         </nav>
       </div>
       <div className="flex items-center gap-3 md:gap-5 lg:gap-6 font-display text-sm">
-        {/* Language toggle — hidden on mobile (lives in drawer footer) */}
-        <button
-          type="button"
-          className="hidden md:flex items-center gap-1 hover:opacity-60"
-          aria-label="Language"
-        >
-          EN <ChevronDown className="h-3 w-3" strokeWidth={1.5} />
-        </button>
         {/* Account icon — hidden on mobile (lives in drawer footer) */}
         <Link
           href="/account"

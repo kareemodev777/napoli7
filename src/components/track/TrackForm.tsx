@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { trackOrder, type TrackOrderResult } from "@/app/track/actions";
-import { StatusTimeline } from "./StatusTimeline";
+import { TrackStatus } from "./TrackStatus";
 
 const initial: TrackOrderResult = {};
 
@@ -58,16 +58,7 @@ export function TrackForm() {
       ) : null}
 
       {state.order ? (
-        <div className="space-y-4">
-          <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep">
-            Order {state.order.orderNumber}
-          </p>
-          <StatusTimeline status={state.order.status} />
-          <p className="text-sm text-muted-foreground">
-            {state.order.deliveryType === "delivery" ? "Delivery" : "Pickup"} ·{" "}
-            {state.order.deliverySlot}
-          </p>
-        </div>
+        <TrackStatus key={state.order.id} order={state.order} />
       ) : null}
     </div>
   );

@@ -2,15 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import {
-  Menu,
-  X,
-  ChevronRight,
-  ChevronDown,
-  Phone,
-  MessageCircle,
-  User,
-} from "lucide-react";
+import { Menu, X, ChevronRight, Phone, MessageCircle, User } from "lucide-react";
 import { Logo } from "./Logo";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 import { useRouteChange } from "@/lib/use-route-change";
@@ -231,16 +223,6 @@ export function MobileNav() {
             <User className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden />
             Login / Account
           </Link>
-
-          {/* Language pill */}
-          <button
-            type="button"
-            aria-label="Language"
-            className="flex items-center gap-1 h-11 font-display text-sm uppercase tracking-[1.5px] hover:opacity-60 transition-opacity"
-          >
-            <span>EN</span>
-            <ChevronDown className="h-3 w-3" strokeWidth={1.5} aria-hidden />
-          </button>
 
           {/* Phone */}
           <a

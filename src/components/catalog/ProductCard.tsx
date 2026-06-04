@@ -10,7 +10,7 @@ export function ProductCard({ product }: { product: Product }) {
     <article className="group flex flex-col bg-card border border-border hover:shadow-sm transition-shadow">
       <Link
         href={`/menu/${product.slug}`}
-        className="relative block aspect-[4/3] overflow-hidden bg-muted"
+        className="relative block aspect-[1/1] overflow-hidden bg-muted sm:aspect-[4/3]"
         aria-label={`${product.name} — view product`}
       >
         <SmartImage
@@ -18,7 +18,7 @@ export function ProductCard({ product }: { product: Product }) {
           alt={`${product.name} from Napoli 7`}
           fill
           sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-          className="object-cover"
+          className="object-contain p-3 sm:p-4"
         />
         {(product.isVeg || product.isSpicy) && (
           <div className="absolute top-3 right-3 flex items-center gap-2">

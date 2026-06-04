@@ -21,6 +21,8 @@ export interface TrackedOrder {
   deliveryType: "delivery" | "pickup";
   deliverySlot: string;
   createdAt: string;
+  /** Normalised phone the order was matched on — used by the status poller. */
+  phone: string;
 }
 
 export interface TrackOrderResult {
@@ -76,6 +78,7 @@ export async function trackOrder(
       deliveryType: order.delivery_type,
       deliverySlot: order.delivery_slot,
       createdAt: order.created_at,
+      phone: parsed.data.phone,
     },
   };
 }

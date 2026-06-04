@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { StatusSelect } from "@/components/admin/StatusSelect";
-import { StatusBadge } from "@/components/account/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
 import { HAS_SUPABASE } from "@/lib/env";
 
@@ -111,12 +110,9 @@ export default async function AdminOrdersPage() {
                     {o.deliveryType}
                   </td>
                   <td className="py-4 pr-4 text-xs">{o.deliverySlot}</td>
-                  <td className="py-4 pr-4">
-                    <StatusBadge status={o.status} />
-                  </td>
-                  <td className="py-4 pr-4">
-                    <StatusSelect orderId={o.id} current={o.status} />
-                  </td>
+                  {/* Renders both the live status badge cell and the
+                      update-select cell, kept in sync optimistically. */}
+                  <StatusSelect orderId={o.id} current={o.status} />
                   <td className="py-4 pr-4">
                     <Link
                       href={`/admin/orders/${o.id}`}

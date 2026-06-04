@@ -2,8 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SiteShell } from "@/components/site/SiteShell";
 import { AccountNav } from "@/components/account/AccountNav";
-import { ReorderButton } from "@/components/account/ReorderButton";
-import { StatusBadge } from "@/components/account/StatusBadge";
+import { LiveOrders } from "@/components/account/LiveOrders";
 import { requireCustomerAccount } from "@/lib/auth/require-auth";
 import { createClient } from "@/lib/supabase/server";
 import { HAS_SUPABASE } from "@/lib/env";
@@ -181,40 +180,24 @@ export default async function AccountOrdersPage() {
                 </Link>
               </div>
             ) : (
-              <ul className="mt-10 border-t border-border">
-                {orders.map((o) => {
-                  const summary =
+              <LiveOrders
+                orders={orders.map((o) => ({
+                  id: o.id,
+                  orderNumber: o.orderNumber,
+                  totalAed: o.totalAed,
+                  status: o.status,
+                  summary:
                     o.items.length === 0
                       ? "No items"
                       : `${o.items[0].quantity} × ${o.items[0].product_name}` +
                         (o.items.length > 1
                           ? ` + ${o.items.length - 1} more`
-                          : "");
-                  return (
-                    <li
-                      key={o.id}
-                      className="grid grid-cols-1 md:grid-cols-[140px_1fr_140px_120px_110px] gap-3 md:gap-6 items-baseline py-5 border-b border-border"
-                    >
-                      <span className="font-display tabular-nums tracking-[0.1em] text-sm">
-                        {o.orderNumber}
-                      </span>
-                      <span className="text-sm text-muted-foreground">
-                        {summary}
-                      </span>
-                      <span className="font-display tabular-nums text-sm">
-                        {o.totalAed.toFixed(2)} AED
-                      </span>
-                      <StatusBadge status={o.status} />
-                      <ReorderButton
-                        items={o.reorderItems}
-                        changedCount={o.reorderChangedCount}
-                        unavailableCount={o.reorderUnavailableCount}
-                        disabled={o.reorderItems.length === 0}
-                      />
-                    </li>
-                  );
-                })}
-              </ul>
+                          : ""),
+                  reorderItems: o.reorderItems,
+                  reorderChangedCount: o.reorderChangedCount,
+                  reorderUnavailableCount: o.reorderUnavailableCount,
+                }))}
+              />
             )}
           </div>
         </div>

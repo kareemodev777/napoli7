@@ -2,6 +2,17 @@ import { describe, expect, test } from "bun:test";
 import { customerStatusMessage } from "./whatsapp";
 
 describe("customerStatusMessage", () => {
+  test("formats preparing updates", () => {
+    expect(
+      customerStatusMessage({
+        orderNumber: "N7-00042",
+        status: "preparing",
+      }),
+    ).toBe(
+      "Napoli 7: your order N7-00042 is now being prepared in the kitchen 🍕",
+    );
+  });
+
   test("formats out-for-delivery updates", () => {
     expect(
       customerStatusMessage({
