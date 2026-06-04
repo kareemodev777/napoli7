@@ -116,9 +116,13 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   }
 
   const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .insert({
+      user_id: user?.id ?? null,
       customer_name: `${data.firstName} ${data.lastName}`,
       customer_phone: data.phone,
       customer_email: data.email,

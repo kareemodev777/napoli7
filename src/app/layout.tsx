@@ -39,6 +39,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const enableVercelInsights = Boolean(process.env.VERCEL);
+
   return (
     <html
       lang="en"
@@ -52,8 +54,12 @@ export default function RootLayout({
           Skip to content
         </a>
         {children}
-        <Analytics />
-        <SpeedInsights />
+        {enableVercelInsights ? (
+          <>
+            <Analytics />
+            <SpeedInsights />
+          </>
+        ) : null}
       </body>
     </html>
   );

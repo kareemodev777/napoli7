@@ -3,6 +3,10 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import type { DeliveryZone } from "@/lib/checkout";
+import {
+  chooseCheckoutArea,
+  type CheckoutInitialDetails,
+} from "@/lib/checkout-prefill";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -21,9 +25,11 @@ function generateTimeSlots(): string[] {
 export function CheckoutForm({
   zones,
   defaultFee,
+  initialDetails = {},
 }: {
   zones: DeliveryZone[];
   defaultFee: number;
+  initialDetails?: CheckoutInitialDetails;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -44,7 +50,12 @@ export function CheckoutForm({
   const [deliveryType, setDeliveryType] = useState<"delivery" | "pickup">(
     "delivery",
   );
-  const [area, setArea] = useState(zones[0]?.area ?? "");
+  const [area, setArea] = useState(() =>
+    chooseCheckoutArea({
+      zones,
+      preferredArea: initialDetails.deliveryAddress?.area,
+    }),
+  );
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "card">("cod");
 
   const zoneFee = useMemo(() => {
@@ -142,10 +153,22 @@ export function CheckoutForm({
         <Section title="Contact details">
           <div className="grid sm:grid-cols-2 gap-5">
             <Field id="firstName" label="First name" required>
-              <Input id="firstName" name="firstName" required />
+              <Input
+                id="firstName"
+                name="firstName"
+                required
+                defaultValue={initialDetails.firstName ?? ""}
+                autoComplete="given-name"
+              />
             </Field>
             <Field id="lastName" label="Last name" required>
-              <Input id="lastName" name="lastName" required />
+              <Input
+                id="lastName"
+                name="lastName"
+                required
+                defaultValue={initialDetails.lastName ?? ""}
+                autoComplete="family-name"
+              />
             </Field>
             <Field
               id="phone"
@@ -160,10 +183,19 @@ export function CheckoutForm({
                 required
                 placeholder="+971501234567"
                 pattern="^\+971[0-9]{8,9}$"
+                defaultValue={initialDetails.phone ?? ""}
+                autoComplete="tel"
               />
             </Field>
             <Field id="email" label="Email" required>
-              <Input id="email" name="email" type="email" required />
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                required
+                defaultValue={initialDetails.email ?? ""}
+                autoComplete="email"
+              />
             </Field>
           </div>
         </Section>
@@ -213,13 +245,23 @@ export function CheckoutForm({
                   name="street"
                   required
                   placeholder="Sheikh Rashid bin Abdul Aziz St, Building 213"
+                  defaultValue={initialDetails.deliveryAddress?.street ?? ""}
+                  autoComplete="street-address"
                 />
               </Field>
               <Field id="flat" label="Flat / apartment">
-                <Input id="flat" name="flat" />
+                <Input
+                  id="flat"
+                  name="flat"
+                  defaultValue={initialDetails.deliveryAddress?.flat ?? ""}
+                />
               </Field>
               <Field id="addressNotes" label="Delivery instructions">
-                <Input id="addressNotes" name="addressNotes" />
+                <Input
+                  id="addressNotes"
+                  name="addressNotes"
+                  defaultValue={initialDetails.deliveryAddress?.notes ?? ""}
+                />
               </Field>
             </div>
           ) : (
