@@ -29,3 +29,13 @@
 
 [[plugins]]
   package = "@netlify/plugin-nextjs"
+
+# Long-lived cache for the email/brand logo. Next.js serves files in `public/`
+# with `max-age=0, must-revalidate`, which forces email image proxies (e.g.
+# Gmail's googleusercontent.com) to re-fetch the logo on every open and adds a
+# visible load delay in transactional/auth emails. The logo is stable, so cache
+# it immutably; bust with a `?v=N` query param if it ever changes.
+[[headers]]
+  for = "/logo.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
