@@ -6,7 +6,17 @@ export interface DeliveryZone {
   fee: number;
 }
 
-/** Fee charged when the delivery area isn't in the zone table. */
+export interface DeliveryFeeResult {
+  /** True only when the area matches an active delivery zone. */
+  supported: boolean;
+  /** Fee in AED for a supported area; 0 when unsupported. */
+  fee: number;
+}
+
+/**
+ * Placeholder fee used purely for client-side display fallback. It is NEVER
+ * charged for an unknown area — unsupported areas are blocked, not billed.
+ */
 export const DEFAULT_DELIVERY_FEE = 20;
 
 // Mirrors the seed in 008. Used when Supabase service env vars are absent
@@ -28,6 +38,27 @@ function normalizeArea(area: string): string {
   return area.trim().toLowerCase();
 }
 
+/**
+ * Pure zone match (case-insensitive). Returns the matching zone or null. Kept
+ * pure so the supported/blocked decision is unit-testable without Supabase.
+ */
+export function matchDeliveryZone(
+  zones: DeliveryZone[],
+  area: string,
+): DeliveryZone | null {
+  if (!area.trim()) return null;
+  return zones.find((z) => normalizeArea(z.area) === normalizeArea(area)) ?? null;
+}
+
+/** Pure: resolve the fee/supported result for an area against a zone list. */
+export function resolveDeliveryFeeFromZones(
+  zones: DeliveryZone[],
+  area: string,
+): DeliveryFeeResult {
+  const match = matchDeliveryZone(zones, area);
+  return match ? { supported: true, fee: match.fee } : { supported: false, fee: 0 };
+}
+
 /** Active delivery zones, ordered for display. Falls back to mock data. */
 export async function getDeliveryZones(): Promise<DeliveryZone[]> {
   if (!HAS_SUPABASE_SERVICE) return MOCK_ZONES;
@@ -42,9 +73,11 @@ export async function getDeliveryZones(): Promise<DeliveryZone[]> {
 
     if (error) {
       console.error("[checkout] delivery zone load failed", error);
-      return MOCK_ZONES;
+      // Supabase is configured, so fail closed: do not silently re-enable mock
+      // zones when the owner disabled/deleted live delivery areas.
+      return [];
     }
-    if (!data || data.length === 0) return MOCK_ZONES;
+    if (!data || data.length === 0) return [];
 
     return data.map((row) => ({
       area: row.area as string,
@@ -52,17 +85,18 @@ export async function getDeliveryZones(): Promise<DeliveryZone[]> {
     }));
   } catch (error) {
     console.error("[checkout] delivery zone load failed", error);
-    return MOCK_ZONES;
+    return [];
   }
 }
 
 /**
- * Flat delivery fee for an area (case-insensitive match). Unknown or empty
- * areas fall back to DEFAULT_DELIVERY_FEE.
+ * Authoritative delivery fee for an area. Unknown/disabled areas come back as
+ * `{ supported: false }` so the caller can BLOCK the order rather than charge a
+ * default fee for an area Napoli 7 doesn't deliver to.
  */
-export async function getDeliveryFee(area: string): Promise<number> {
-  if (!area.trim()) return DEFAULT_DELIVERY_FEE;
+export async function resolveDeliveryFee(
+  area: string,
+): Promise<DeliveryFeeResult> {
   const zones = await getDeliveryZones();
-  const match = zones.find((z) => normalizeArea(z.area) === normalizeArea(area));
-  return match ? match.fee : DEFAULT_DELIVERY_FEE;
+  return resolveDeliveryFeeFromZones(zones, area);
 }

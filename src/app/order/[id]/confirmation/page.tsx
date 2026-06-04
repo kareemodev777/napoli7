@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SiteShell } from "@/components/site/SiteShell";
 import { HAS_SUPABASE } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
+import { CartClearer } from "./CartClearer";
 import { PaymentStatusPoller } from "./PaymentStatusPoller";
 
 interface Params {
@@ -29,6 +30,7 @@ interface OrderForConfirmation {
   totalAed: number;
   paymentMethod: string;
   paymentStatus: string;
+  deliveryType: "delivery" | "pickup";
   customerPhone: string;
   items: Array<{
     name: string;
@@ -45,6 +47,7 @@ async function loadOrder(id: string): Promise<OrderForConfirmation | null> {
       totalAed: 0,
       paymentMethod: "cod",
       paymentStatus: "pending",
+      deliveryType: "delivery",
       customerPhone: "",
       items: [],
     };
@@ -53,7 +56,7 @@ async function loadOrder(id: string): Promise<OrderForConfirmation | null> {
   const { data: order } = await supabase
     .from("orders")
     .select(
-      "id, order_number, total_aed, payment_method, payment_status, customer_phone, order_items(product_name, quantity, line_total_aed)",
+      "id, order_number, total_aed, payment_method, payment_status, delivery_type, customer_phone, order_items(product_name, quantity, line_total_aed)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -64,6 +67,7 @@ async function loadOrder(id: string): Promise<OrderForConfirmation | null> {
     totalAed: Number(order.total_aed),
     paymentMethod: order.payment_method,
     paymentStatus: order.payment_status,
+    deliveryType: order.delivery_type,
     customerPhone: order.customer_phone,
     items: (order.order_items ?? []).map(
       (it: {
@@ -93,13 +97,16 @@ type PaymentView = {
 
 function deriveView(order: OrderForConfirmation): PaymentView {
   const isCard = order.paymentMethod === "card";
+  const isPickup = order.deliveryType === "pickup";
+  const estimate = isPickup
+    ? "Pickup is usually ready in around 15 minutes."
+    : "Estimated delivery: 30–45 minutes.";
 
   if (!isCard) {
     return {
       eyebrow: "Confirmation",
       heading: "Order received.",
-      message:
-        "Your order is in. Pay cash to the driver on arrival. Estimated delivery: 30–45 minutes.",
+      message: `Your order is in. Pay cash ${isPickup ? "at pickup" : "to the driver on arrival"}. Payment status: pending. ${estimate}`,
       showOrder: true,
       poll: false,
       showRetry: false,
@@ -111,8 +118,7 @@ function deriveView(order: OrderForConfirmation): PaymentView {
       return {
         eyebrow: "Payment received",
         heading: "Order confirmed.",
-        message:
-          "Your card payment went through and the kitchen has your order. Estimated delivery: 30–45 minutes.",
+        message: `Your card payment went through and the kitchen has your order. Payment status: paid. ${estimate}`,
         showOrder: true,
         poll: false,
         showRetry: false,
@@ -167,6 +173,10 @@ export default async function OrderConfirmationPage({
           {order && view ? (
             <>
               {view.poll ? <PaymentStatusPoller /> : null}
+              {view.showOrder &&
+              (order.paymentMethod !== "card" || order.paymentStatus === "paid") ? (
+                <CartClearer />
+              ) : null}
               <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep mb-4">
                 {view.eyebrow}
               </p>

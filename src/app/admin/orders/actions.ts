@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { notifyCustomerStatusEmail } from "@/lib/notifications/email";
+import { notifyCustomerStatusWhatsApp } from "@/lib/notifications/whatsapp";
+import { restorePromoForCancelledOrder } from "@/lib/promo";
 
 const updateStatusSchema = z.object({
   orderId: z.string().uuid(),
@@ -27,13 +29,25 @@ export async function updateOrderStatus(formData: FormData) {
     .from("orders")
     .update({ status: parsed.data.status })
     .eq("id", parsed.data.orderId)
-    .select("order_number, customer_email")
+    .select("order_number, customer_email, customer_phone")
     .single();
 
   if (error || !order) {
     return { error: "Update failed. Try again." };
   }
 
+  // Restore any redeemed promo usage on cancellation — exactly once, even if the
+  // order is "cancelled" repeatedly (guarded atomically in the RPC).
+  if (parsed.data.status === "cancelled") {
+    try {
+      await restorePromoForCancelledOrder(parsed.data.orderId);
+    } catch (e) {
+      console.error("[updateOrderStatus] promo restore failed:", e);
+    }
+  }
+
+  // Customer status notifications. Each channel is isolated and best-effort so a
+  // failure never blocks the status change (UC-92, UC-99).
   if (
     parsed.data.status === "out_for_delivery" ||
     parsed.data.status === "delivered" ||
@@ -46,7 +60,16 @@ export async function updateOrderStatus(formData: FormData) {
         status: parsed.data.status,
       });
     } catch (e) {
-      console.error("[updateOrderStatus] customer notify failed:", e);
+      console.error("[updateOrderStatus] customer email failed:", e);
+    }
+    try {
+      await notifyCustomerStatusWhatsApp({
+        customerPhone: order.customer_phone,
+        orderNumber: order.order_number,
+        status: parsed.data.status,
+      });
+    } catch (e) {
+      console.error("[updateOrderStatus] customer whatsapp failed:", e);
     }
   }
 

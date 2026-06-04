@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { notifyKitchenEmail } from "@/lib/notifications/email";
 import { notifyKitchenWhatsApp } from "@/lib/notifications/whatsapp";
 import { validatePromo, redeemPromo } from "@/lib/promo";
-import { getDeliveryFee } from "@/lib/checkout";
+import { resolveDeliveryFee } from "@/lib/checkout";
+import { canonicalizeCheckoutCart } from "@/lib/checkout-pricing";
 import { planAddressSave, type AddressLike } from "@/lib/saved-address";
 import { HAS_SUPABASE } from "@/lib/env";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -20,6 +21,7 @@ const customizationSchema = z.object({
 const itemSchema = z.object({
   productId: z.string().uuid(),
   productName: z.string(),
+  sizeId: z.enum(["small", "regular", "large", "family"]),
   basePriceAed: z.number().positive(),
   quantity: z.number().int().min(1).max(20),
   customizations: z.array(customizationSchema),
@@ -75,7 +77,74 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     return { error: "Add a delivery address or switch to pickup." };
   }
 
-  const subtotal = data.items.reduce((s, i) => s + i.lineTotalAed, 0);
+  let canonicalItems = data.items.map((item) => ({
+    productId: item.productId,
+    productName: item.productName,
+    basePriceAed: item.basePriceAed,
+    quantity: item.quantity,
+    customizations: item.customizations,
+    lineTotalAed: item.lineTotalAed,
+  }));
+  let subtotal = canonicalItems.reduce((s, i) => s + i.lineTotalAed, 0);
+
+  if (HAS_SUPABASE) {
+    const productIds = [...new Set(data.items.map((item) => item.productId))];
+    const supabase = await createClient();
+    const { data: products, error: productError } = await supabase
+      .from("products")
+      .select(
+        "id, name, price_aed, is_active, product_sizes(size_id, label, price_aed), product_customizations(ingredient, extra_price, removable)",
+      )
+      .in("id", productIds);
+
+    if (productError || !products) {
+      console.error("[placeOrder] product validation failed:", productError);
+      return {
+        error:
+          "We could not validate the latest menu prices. Please refresh and try again.",
+      };
+    }
+
+    const canonical = canonicalizeCheckoutCart(
+      data.items.map((item) => ({
+        productId: item.productId,
+        productName: item.productName,
+        sizeId: item.sizeId,
+        quantity: item.quantity,
+        customizations: item.customizations,
+      })),
+      products.map((product) => ({
+        id: product.id,
+        name: product.name,
+        priceAed: Number(product.price_aed),
+        isActive: Boolean(product.is_active),
+        sizes: (product.product_sizes ?? []).map(
+          (size: { size_id: string; label: string; price_aed: number | string }) => ({
+            sizeId: size.size_id,
+            label: size.label,
+            priceAed: Number(size.price_aed),
+          }),
+        ),
+        customizations: (product.product_customizations ?? []).map(
+          (customization: {
+            ingredient: string;
+            extra_price: number | string | null;
+            removable: boolean;
+          }) => ({
+            ingredient: customization.ingredient,
+            extraPrice:
+              customization.extra_price === null
+                ? null
+                : Number(customization.extra_price),
+            removable: Boolean(customization.removable),
+          }),
+        ),
+      })),
+    );
+    if (!canonical.ok) return { error: canonical.error };
+    canonicalItems = canonical.items;
+    subtotal = canonical.subtotalAed;
+  }
 
   // Re-validate the promo server-side — never trust a client-sent amount.
   let discount = 0;
@@ -90,10 +159,19 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     // the cart UI already validated, so this only catches edge races.
   }
 
-  const deliveryFee =
-    data.deliveryType === "delivery" && data.deliveryAddress
-      ? await getDeliveryFee(data.deliveryAddress.area)
-      : 0;
+  // Authoritative delivery-zone check. An unsupported area is blocked outright —
+  // never charged a default fee — mirroring the client-side guard (UC-45).
+  let deliveryFee = 0;
+  if (data.deliveryType === "delivery" && data.deliveryAddress) {
+    const zone = await resolveDeliveryFee(data.deliveryAddress.area);
+    if (!zone.supported) {
+      return {
+        error:
+          "We don't deliver to that area yet. Choose a supported area or switch to pickup.",
+      };
+    }
+    deliveryFee = zone.fee;
+  }
   const total = Math.max(0, subtotal - discount) + deliveryFee;
 
   if (!HAS_SUPABASE) {
@@ -151,7 +229,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     };
   }
 
-  const itemRows = data.items.map((item) => ({
+  const itemRows = canonicalItems.map((item) => ({
     order_id: order.id,
     product_id: item.productId,
     product_name: item.productName,

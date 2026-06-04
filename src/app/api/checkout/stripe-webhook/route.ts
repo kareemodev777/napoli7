@@ -56,7 +56,9 @@ export async function POST(req: Request) {
             stripe_payment_intent: paymentIntentId,
           })
           .eq("id", orderId)
-          .neq("payment_status", "paid")
+          .eq("payment_method", "card")
+          .eq("payment_status", "pending")
+          .neq("status", "cancelled")
           .select("id, promo_code");
 
         if (updateError) {

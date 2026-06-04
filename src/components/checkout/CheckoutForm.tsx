@@ -102,11 +102,15 @@ export function CheckoutForm({
     );
   }
 
-  const zoneFee = useMemo(() => {
-    const match = zones.find((z) => z.area === area);
-    return match ? match.fee : defaultFee;
-  }, [zones, area, defaultFee]);
-  const deliveryFee = deliveryType === "delivery" ? zoneFee : 0;
+  const matchedZone = useMemo(
+    () => zones.find((z) => z.area === area) ?? null,
+    [zones, area],
+  );
+  // A delivery order to an area outside the active zones is blocked, never
+  // charged a fallback fee (UC-45). Pickup is always "supported".
+  const areaSupported = deliveryType !== "delivery" || matchedZone !== null;
+  const zoneFee = matchedZone ? matchedZone.fee : defaultFee;
+  const deliveryFee = deliveryType === "delivery" && matchedZone ? zoneFee : 0;
   const orderTotal = total + deliveryFee;
 
   if (!hydrated) {
@@ -127,6 +131,12 @@ export function CheckoutForm({
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    if (!areaSupported) {
+      setError(
+        "We don't deliver to that area yet. Choose a supported area or switch to pickup.",
+      );
+      return;
+    }
     const form = e.currentTarget;
     const formData = new FormData(form);
 
@@ -156,6 +166,7 @@ export function CheckoutForm({
       items: items.map((it) => ({
         productId: it.productId,
         productName: it.name,
+        sizeId: it.sizeId,
         basePriceAed: it.basePrice,
         quantity: it.quantity,
         customizations: it.customizations,
@@ -285,7 +296,11 @@ export function CheckoutForm({
                 id="area"
                 label="Area in Ajman"
                 required
-                hint={`Delivery fee: ${formatAed(zoneFee)}`}
+                hint={
+                  areaSupported
+                    ? `Delivery fee: ${formatAed(zoneFee)}`
+                    : "We don't deliver to that area yet — switch to pickup."
+                }
               >
                 <select
                   id="area"
@@ -293,8 +308,15 @@ export function CheckoutForm({
                   required
                   value={area}
                   onChange={(e) => setArea(e.target.value)}
-                  className="w-full border border-border bg-background px-3 py-2.5 text-sm font-display tracking-[0.1em] uppercase focus:outline-none focus:border-brand"
+                  aria-invalid={!areaSupported}
+                  className={
+                    "w-full border bg-background px-3 py-2.5 text-sm font-display tracking-[0.1em] uppercase focus:outline-none focus:border-brand " +
+                    (areaSupported ? "border-border" : "border-flag-red")
+                  }
                 >
+                  {zones.length === 0 ? (
+                    <option value="">No delivery areas available</option>
+                  ) : null}
                   {zones.map((z) => (
                     <option key={z.area} value={z.area}>
                       {z.area}
@@ -407,11 +429,15 @@ export function CheckoutForm({
 
         <button
           type="submit"
-          disabled={pending}
+          disabled={pending || !areaSupported}
           aria-busy={pending}
           className="w-full inline-flex items-center justify-center bg-brand text-primary-foreground py-4 font-display text-sm tracking-[0.2em] uppercase hover:bg-brand-hover disabled:opacity-50"
         >
-          {pending ? "Placing order…" : "Place order"}
+          {pending
+            ? "Placing order…"
+            : !areaSupported
+              ? "Delivery unavailable for this area"
+              : "Place order"}
         </button>
       </div>
 

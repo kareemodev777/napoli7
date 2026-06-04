@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { createCheckoutSession, getStripe } from "@/lib/payments/stripe";
+import { cardCheckoutEligibility } from "@/lib/payments/eligibility";
 import { HAS_STRIPE, HAS_SUPABASE_SERVICE } from "@/lib/env";
 
 export const runtime = "nodejs";
@@ -28,7 +29,7 @@ export async function GET(req: Request) {
   const { data: order, error } = await supabase
     .from("orders")
     .select(
-      "id, customer_email, payment_status, stripe_session_id, subtotal_aed, discount_aed, delivery_fee_aed, total_aed, promo_code, order_items(product_name, quantity, line_total_aed)",
+      "id, status, payment_method, customer_email, payment_status, stripe_session_id, subtotal_aed, discount_aed, delivery_fee_aed, total_aed, promo_code, order_items(product_name, quantity, line_total_aed)",
     )
     .eq("id", parsed.data.orderId)
     .maybeSingle();
@@ -42,9 +43,19 @@ export async function GET(req: Request) {
     req.url,
   ).toString();
 
-  // Already paid — don't create another session, send them to confirmation.
-  if (order.payment_status === "paid") {
-    return NextResponse.redirect(confirmationUrl, 303);
+  // Refuse to start (or restart) payment for any order that shouldn't be
+  // charged: COD, cancelled, already paid, or no longer pending.
+  const eligibility = cardCheckoutEligibility({
+    status: order.status,
+    paymentMethod: order.payment_method,
+    paymentStatus: order.payment_status,
+  });
+  if (!eligibility.ok) {
+    // Already paid — just send them to the confirmation page.
+    if (eligibility.alreadyPaid) {
+      return NextResponse.redirect(confirmationUrl, 303);
+    }
+    return NextResponse.json({ error: eligibility.reason }, { status: 409 });
   }
 
   // Reuse an existing still-open session instead of spawning a duplicate

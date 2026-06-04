@@ -140,6 +140,57 @@ export async function validatePromo(
 }
 
 /**
+ * Whether a promo redemption was actually consumed for an order — and therefore
+ * needs crediting back when the order is cancelled. COD consumes the code at
+ * placement; card only after the payment succeeds. Pure for unit testing; the
+ * authoritative, race-safe check lives in the `claim_promo_restore` RPC.
+ */
+export function promoRedemptionWasConsumed(order: {
+  promoCode: string | null;
+  paymentMethod: "cod" | "card";
+  paymentStatus: string;
+}): boolean {
+  if (!order.promoCode) return false;
+  return order.paymentMethod === "cod" || order.paymentStatus === "paid";
+}
+
+/**
+ * Credit back exactly one promo redemption for a cancelled order. The
+ * `claim_promo_restore` RPC flips the order's `promo_restored` flag false->true
+ * and returns the code only on the FIRST call (race-safe, exactly-once); the
+ * counter is decremented only when a code comes back. Safe to call repeatedly.
+ * Returns true only when a restoration actually happened.
+ */
+export async function restorePromoForCancelledOrder(
+  orderId: string,
+): Promise<boolean> {
+  if (!HAS_SUPABASE_SERVICE) return false;
+
+  const supabase = createServiceRoleClient();
+  const { data: code, error } = await supabase.rpc("claim_promo_restore", {
+    p_order_id: orderId,
+  });
+  if (error) {
+    console.error("[promo] restore claim failed", error);
+    return false;
+  }
+  if (!code) return false; // nothing redeemed, or already restored
+
+  const { error: restoreError } = await supabase.rpc("restore_promo_code", {
+    p_code: code,
+  });
+  if (restoreError) {
+    // The claim already marked the order restored; log loudly for reconciliation.
+    console.error(
+      `[promo] counter decrement failed for ${code} on order ${orderId}`,
+      restoreError,
+    );
+    return false;
+  }
+  return true;
+}
+
+/**
  * Atomically redeem a code (increments times_used only if still redeemable).
  * Returns true when redeemed. No-op success in mock mode (no Supabase service).
  */
