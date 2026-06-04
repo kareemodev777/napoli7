@@ -7,7 +7,9 @@ import { notifyKitchenEmail } from "@/lib/notifications/email";
 import { notifyKitchenWhatsApp } from "@/lib/notifications/whatsapp";
 import { validatePromo, redeemPromo } from "@/lib/promo";
 import { getDeliveryFee } from "@/lib/checkout";
+import { planAddressSave, type AddressLike } from "@/lib/saved-address";
 import { HAS_SUPABASE } from "@/lib/env";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 const customizationSchema = z.object({
   ingredient: z.string(),
@@ -165,7 +167,20 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     console.error("[placeOrder] Order items insert failed:", itemsError);
   }
 
-  if (appliedPromo) {
+  // Save the delivery address to the customer's profile so future checkouts
+  // prefill it. First saved address becomes their default automatically.
+  if (
+    user &&
+    data.deliveryType === "delivery" &&
+    data.deliveryAddress
+  ) {
+    await persistDeliveryAddress(supabase, user.id, data.deliveryAddress);
+  }
+
+  // Redeem the promo only for cash on delivery, which is confirmed the moment
+  // it's placed. Card orders defer redemption to the Stripe webhook so a code is
+  // never consumed by a checkout the customer abandons before paying.
+  if (appliedPromo && data.paymentMethod === "cod") {
     try {
       const redeemed = await redeemPromo(appliedPromo);
       if (!redeemed) {
@@ -182,6 +197,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     // Defer fulfillment to the Stripe webhook: the kitchen is notified only
     // after `checkout.session.completed` confirms the card was actually charged.
     // Notifying here would alert the kitchen for checkouts the customer abandons.
+    // The promo (if any) is redeemed there too, for the same reason.
     return {
       orderId: order.id,
       orderNumber: order.order_number,
@@ -199,6 +215,45 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
 
   revalidatePath("/account/orders");
   return { orderId: order.id, orderNumber: order.order_number };
+}
+
+async function persistDeliveryAddress(
+  supabase: SupabaseClient,
+  userId: string,
+  address: AddressLike & { notes?: string },
+) {
+  try {
+    const { data: existing } = await supabase
+      .from("saved_addresses")
+      .select("street, area, flat")
+      .eq("user_id", userId);
+
+    const { shouldSave, makeDefault } = planAddressSave(
+      (existing ?? []) as AddressLike[],
+      address,
+    );
+    if (!shouldSave) return;
+
+    if (makeDefault) {
+      await supabase
+        .from("saved_addresses")
+        .update({ is_default: false })
+        .eq("user_id", userId);
+    }
+
+    await supabase.from("saved_addresses").insert({
+      user_id: userId,
+      label: "Delivery",
+      street: address.street,
+      area: address.area,
+      flat: address.flat || null,
+      notes: address.notes || null,
+      is_default: makeDefault,
+    });
+  } catch (e) {
+    // Saving the address is a convenience, never block order placement on it.
+    console.error("[placeOrder] save address failed:", e);
+  }
 }
 
 async function runNotifications(args: {

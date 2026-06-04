@@ -29,7 +29,16 @@ export async function addAddress(formData: FormData) {
 
   const supabase = await createClient();
 
-  if (parsed.data.isDefault) {
+  // The first address a customer saves is always their default — there's
+  // nothing else to deliver to. After that, respect the checkbox.
+  const { count } = await supabase
+    .from("saved_addresses")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", user.id);
+  const isFirst = (count ?? 0) === 0;
+  const makeDefault = isFirst || parsed.data.isDefault;
+
+  if (makeDefault) {
     await supabase
       .from("saved_addresses")
       .update({ is_default: false })
@@ -43,7 +52,7 @@ export async function addAddress(formData: FormData) {
     area: parsed.data.area,
     flat: parsed.data.flat || null,
     notes: parsed.data.notes || null,
-    is_default: parsed.data.isDefault,
+    is_default: makeDefault,
   });
 
   revalidatePath("/account/addresses");

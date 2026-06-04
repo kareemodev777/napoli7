@@ -224,7 +224,7 @@ export function MobileNav() {
         <div className="border-t border-border px-5 py-5 space-y-1">
           {/* Login / Account */}
           <Link
-            href="/login"
+            href="/account"
             onClick={close}
             className="flex items-center gap-3 h-11 font-display text-sm uppercase tracking-[1.5px] hover:opacity-60 transition-opacity"
           >

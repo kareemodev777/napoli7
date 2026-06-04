@@ -8,9 +8,9 @@ import { HAS_SUPABASE } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import {
   buildCheckoutInitialDetails,
-  type CheckoutInitialAddress,
   type CheckoutInitialDetails,
 } from "@/lib/checkout-prefill";
+import type { CheckoutSavedAddress } from "@/components/checkout/CheckoutForm";
 
 export const metadata: Metadata = {
   title: "Checkout",
@@ -18,44 +18,64 @@ export const metadata: Metadata = {
   alternates: { canonical: "/checkout" },
 };
 
-async function loadCheckoutInitialDetails(): Promise<CheckoutInitialDetails> {
-  if (!HAS_SUPABASE) return {};
+interface CheckoutAccountData {
+  initialDetails: CheckoutInitialDetails;
+  savedAddresses: CheckoutSavedAddress[];
+}
+
+async function loadCheckoutAccountData(): Promise<CheckoutAccountData> {
+  if (!HAS_SUPABASE) return { initialDetails: {}, savedAddresses: [] };
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return {};
+  if (!user) return { initialDetails: {}, savedAddresses: [] };
 
-  const { data: address } = await supabase
+  // Load every saved address (default first) so the customer can pick one.
+  const { data: rows } = await supabase
     .from("saved_addresses")
-    .select("street, area, flat, notes")
+    .select("id, label, street, area, flat, notes, is_default")
     .eq("user_id", user.id)
     .order("is_default", { ascending: false })
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order("created_at", { ascending: false });
 
-  return buildCheckoutInitialDetails({
-    email: user.email,
-    metadata: user.user_metadata,
-    address: address
-      ? ({
-          street: address.street,
-          area: address.area,
-          flat: address.flat ?? undefined,
-          notes: address.notes ?? undefined,
-        } satisfies CheckoutInitialAddress)
-      : null,
-  });
+  const savedAddresses: CheckoutSavedAddress[] = (rows ?? []).map((row) => ({
+    id: row.id,
+    label: row.label,
+    street: row.street,
+    area: row.area,
+    flat: row.flat ?? undefined,
+    notes: row.notes ?? undefined,
+    isDefault: Boolean(row.is_default),
+  }));
+
+  const defaultAddress = savedAddresses[0];
+
+  return {
+    initialDetails: buildCheckoutInitialDetails({
+      email: user.email,
+      metadata: user.user_metadata,
+      address: defaultAddress
+        ? {
+            street: defaultAddress.street,
+            area: defaultAddress.area,
+            flat: defaultAddress.flat,
+            notes: defaultAddress.notes,
+          }
+        : null,
+    }),
+    savedAddresses,
+  };
 }
 
 export default async function CheckoutPage() {
-  const [zones, initialDetails] = await Promise.all([
+  const [zones, accountData] = await Promise.all([
     getDeliveryZones(),
-    loadCheckoutInitialDetails(),
+    loadCheckoutAccountData(),
   ]);
+  const { initialDetails, savedAddresses } = accountData;
 
   return (
     <SiteShell>
@@ -73,6 +93,7 @@ export default async function CheckoutPage() {
               zones={zones}
               defaultFee={DEFAULT_DELIVERY_FEE}
               initialDetails={initialDetails}
+              savedAddresses={savedAddresses}
             />
           </Suspense>
         </div>

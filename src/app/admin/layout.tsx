@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { AdminNav } from "@/components/admin/AdminNav";
+import { NotificationBell } from "@/components/admin/NotificationBell";
 import { requireAdmin } from "@/lib/auth/require-admin";
+import { countActionableOrders } from "@/lib/admin/orders";
 import { signOut } from "@/app/login/actions";
 
 export default async function AdminLayout({
@@ -9,6 +11,7 @@ export default async function AdminLayout({
   children: React.ReactNode;
 }) {
   await requireAdmin();
+  const actionableOrders = await countActionableOrders();
 
   return (
     <main id="main" className="min-h-screen bg-background text-foreground">
@@ -26,7 +29,10 @@ export default async function AdminLayout({
             </p>
           </div>
           <div className="flex flex-col gap-3 md:items-end">
-            <AdminNav />
+            <div className="flex items-center gap-3">
+              <NotificationBell initialCount={actionableOrders} />
+              <AdminNav />
+            </div>
             <form action={signOut}>
               <button
                 type="submit"

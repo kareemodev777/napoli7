@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/payments/stripe";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { sendKitchenNotificationsForOrder } from "@/lib/notifications/kitchen";
+import { redeemPromo } from "@/lib/promo";
 import { HAS_STRIPE, HAS_SUPABASE_SERVICE } from "@/lib/env";
 
 export const runtime = "nodejs";
@@ -56,7 +57,7 @@ export async function POST(req: Request) {
           })
           .eq("id", orderId)
           .neq("payment_status", "paid")
-          .select("id");
+          .select("id, promo_code");
 
         if (updateError) {
           console.error(
@@ -70,6 +71,18 @@ export async function POST(req: Request) {
         if (transitioned && transitioned.length > 0) {
           // Real pending -> paid transition: now (and only now) fulfill.
           await sendKitchenNotificationsForOrder(orderId);
+
+          // Redeem the promo now that the card payment is confirmed. Guarded by
+          // the pending -> paid transition above, so Stripe retries never
+          // double-count it.
+          const promoCode = transitioned[0]?.promo_code;
+          if (promoCode) {
+            try {
+              await redeemPromo(promoCode);
+            } catch (e) {
+              console.error("[stripe-webhook] promo redeem failed:", e);
+            }
+          }
         }
       }
       break;

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { StatusSelect } from "@/components/admin/StatusSelect";
 import { StatusBadge } from "@/components/account/StatusBadge";
 import { createClient } from "@/lib/supabase/server";
@@ -78,6 +79,7 @@ export default async function AdminOrdersPage() {
                 <th className="py-3 pr-4">Slot</th>
                 <th className="py-3 pr-4">Status</th>
                 <th className="py-3 pr-4">Update</th>
+                <th className="py-3 pr-4">Edit</th>
               </tr>
             </thead>
             <tbody>
@@ -114,6 +116,14 @@ export default async function AdminOrdersPage() {
                   </td>
                   <td className="py-4 pr-4">
                     <StatusSelect orderId={o.id} current={o.status} />
+                  </td>
+                  <td className="py-4 pr-4">
+                    <Link
+                      href={`/admin/orders/${o.id}`}
+                      className="inline-flex items-center border border-border px-3 py-2 font-display text-[10px] uppercase tracking-[0.16em] hover:bg-muted"
+                    >
+                      Edit
+                    </Link>
                   </td>
                 </tr>
               ))}

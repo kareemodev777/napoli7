@@ -14,6 +14,7 @@ export const dynamic = "force-dynamic";
 interface DashboardStats {
   ordersToday: number;
   revenueToday: number;
+  actionableOrders: number;
   openOrders: number;
   catalogItems: number;
   activePromos: number;
@@ -25,6 +26,7 @@ async function loadStats(): Promise<DashboardStats> {
     return {
       ordersToday: 0,
       revenueToday: 0,
+      actionableOrders: 0,
       openOrders: 0,
       catalogItems: 0,
       activePromos: 0,
@@ -36,27 +38,35 @@ async function loadStats(): Promise<DashboardStats> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const [todayOrders, openOrders, catalogItems, promos, zones] = await Promise.all([
-    supabase
-      .from("orders")
-      .select("total_aed", { count: "exact" })
-      .gte("created_at", today.toISOString()),
-    supabase
-      .from("orders")
-      .select("id", { count: "exact", head: true })
-      .in("status", ["received", "preparing", "out_for_delivery"]),
-    supabase
-      .from("products")
-      .select("id", { count: "exact", head: true }),
-    supabase
-      .from("promo_codes")
-      .select("code", { count: "exact", head: true })
-      .eq("active", true),
-    supabase
-      .from("delivery_zones")
-      .select("area", { count: "exact", head: true })
-      .eq("active", true),
-  ]);
+  const [todayOrders, actionableOrders, openOrders, catalogItems, promos, zones] =
+    await Promise.all([
+      supabase
+        .from("orders")
+        .select("total_aed", { count: "exact" })
+        .gte("created_at", today.toISOString()),
+      // Untreated + actionable: received AND (cash on delivery OR already paid).
+      // Excludes abandoned, unpaid card checkouts.
+      supabase
+        .from("orders")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "received")
+        .or("payment_method.eq.cod,payment_status.eq.paid"),
+      supabase
+        .from("orders")
+        .select("id", { count: "exact", head: true })
+        .in("status", ["received", "preparing", "out_for_delivery"]),
+      supabase
+        .from("products")
+        .select("id", { count: "exact", head: true }),
+      supabase
+        .from("promo_codes")
+        .select("code", { count: "exact", head: true })
+        .eq("active", true),
+      supabase
+        .from("delivery_zones")
+        .select("area", { count: "exact", head: true })
+        .eq("active", true),
+    ]);
 
   return {
     ordersToday: todayOrders.count ?? 0,
@@ -64,6 +74,7 @@ async function loadStats(): Promise<DashboardStats> {
       (sum, row) => sum + Number(row.total_aed ?? 0),
       0,
     ),
+    actionableOrders: actionableOrders.count ?? 0,
     openOrders: openOrders.count ?? 0,
     catalogItems: catalogItems.count ?? 0,
     activePromos: promos.count ?? 0,
@@ -71,10 +82,28 @@ async function loadStats(): Promise<DashboardStats> {
   };
 }
 
-function StatCard({ label, value }: { label: string; value: string | number }) {
+function StatCard({
+  label,
+  value,
+  highlight,
+}: {
+  label: string;
+  value: string | number;
+  highlight?: boolean;
+}) {
   return (
-    <article className="rounded-md border border-border bg-card p-6">
-      <p className="font-display text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+    <article
+      className={`rounded-md border p-6 ${
+        highlight
+          ? "border-brand bg-brand/10"
+          : "border-border bg-card"
+      }`}
+    >
+      <p
+        className={`font-display text-[10px] uppercase tracking-[0.22em] ${
+          highlight ? "text-brand" : "text-muted-foreground"
+        }`}
+      >
         {label}
       </p>
       <p className="mt-3 font-display text-3xl tabular-nums">{value}</p>
@@ -138,7 +167,12 @@ export default async function AdminPage() {
           </div>
         ) : null}
 
-        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
+        <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-7">
+          <StatCard
+            label="To treat"
+            value={stats.actionableOrders}
+            highlight={stats.actionableOrders > 0}
+          />
           <StatCard label="Orders today" value={stats.ordersToday} />
           <StatCard label="Revenue today" value={`${stats.revenueToday.toFixed(2)} AED`} />
           <StatCard label="Open orders" value={stats.openOrders} />

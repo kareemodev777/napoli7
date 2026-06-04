@@ -22,14 +22,28 @@ function generateTimeSlots(): string[] {
   return ["ASAP", "+30 min", "+60 min", "+90 min", "+120 min"];
 }
 
+export interface CheckoutSavedAddress {
+  id: string;
+  label: string;
+  street: string;
+  area: string;
+  flat?: string;
+  notes?: string;
+  isDefault: boolean;
+}
+
+const NEW_ADDRESS = "__new__";
+
 export function CheckoutForm({
   zones,
   defaultFee,
   initialDetails = {},
+  savedAddresses = [],
 }: {
   zones: DeliveryZone[];
   defaultFee: number;
   initialDetails?: CheckoutInitialDetails;
+  savedAddresses?: CheckoutSavedAddress[];
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -57,6 +71,36 @@ export function CheckoutForm({
     }),
   );
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "card">("cod");
+
+  // Address fields are controlled so picking a saved address can fill them.
+  const [street, setStreet] = useState(
+    initialDetails.deliveryAddress?.street ?? "",
+  );
+  const [flat, setFlat] = useState(initialDetails.deliveryAddress?.flat ?? "");
+  const [addressNotes, setAddressNotes] = useState(
+    initialDetails.deliveryAddress?.notes ?? "",
+  );
+  const [selectedAddressId, setSelectedAddressId] = useState(
+    () => savedAddresses.find((a) => a.isDefault)?.id ?? NEW_ADDRESS,
+  );
+
+  function applySavedAddress(id: string) {
+    setSelectedAddressId(id);
+    if (id === NEW_ADDRESS) {
+      setStreet("");
+      setFlat("");
+      setAddressNotes("");
+      return;
+    }
+    const match = savedAddresses.find((a) => a.id === id);
+    if (!match) return;
+    setStreet(match.street);
+    setFlat(match.flat ?? "");
+    setAddressNotes(match.notes ?? "");
+    setArea(
+      chooseCheckoutArea({ zones, preferredArea: match.area }),
+    );
+  }
 
   const zoneFee = useMemo(() => {
     const match = zones.find((z) => z.area === area);
@@ -217,7 +261,26 @@ export function CheckoutForm({
           </div>
 
           {deliveryType === "delivery" ? (
-            <div className="grid sm:grid-cols-2 gap-5">
+            <div className="space-y-5">
+              {savedAddresses.length > 0 ? (
+                <Field id="savedAddress" label="Use a saved address">
+                  <select
+                    id="savedAddress"
+                    value={selectedAddressId}
+                    onChange={(e) => applySavedAddress(e.target.value)}
+                    className="w-full border border-border bg-background px-3 py-2.5 text-sm font-display tracking-[0.1em] uppercase focus:outline-none focus:border-brand"
+                  >
+                    {savedAddresses.map((a) => (
+                      <option key={a.id} value={a.id}>
+                        {a.label} — {a.street}
+                        {a.isDefault ? " (default)" : ""}
+                      </option>
+                    ))}
+                    <option value={NEW_ADDRESS}>New address</option>
+                  </select>
+                </Field>
+              ) : null}
+              <div className="grid sm:grid-cols-2 gap-5">
               <Field
                 id="area"
                 label="Area in Ajman"
@@ -245,7 +308,11 @@ export function CheckoutForm({
                   name="street"
                   required
                   placeholder="Sheikh Rashid bin Abdul Aziz St, Building 213"
-                  defaultValue={initialDetails.deliveryAddress?.street ?? ""}
+                  value={street}
+                  onChange={(e) => {
+                    setStreet(e.target.value);
+                    setSelectedAddressId(NEW_ADDRESS);
+                  }}
                   autoComplete="street-address"
                 />
               </Field>
@@ -253,16 +320,19 @@ export function CheckoutForm({
                 <Input
                   id="flat"
                   name="flat"
-                  defaultValue={initialDetails.deliveryAddress?.flat ?? ""}
+                  value={flat}
+                  onChange={(e) => setFlat(e.target.value)}
                 />
               </Field>
               <Field id="addressNotes" label="Delivery instructions">
                 <Input
                   id="addressNotes"
                   name="addressNotes"
-                  defaultValue={initialDetails.deliveryAddress?.notes ?? ""}
+                  value={addressNotes}
+                  onChange={(e) => setAddressNotes(e.target.value)}
                 />
               </Field>
+              </div>
             </div>
           ) : (
             <p className="text-sm text-muted-foreground">

@@ -41,7 +41,7 @@ export function Header() {
         </button>
         {/* Account icon — hidden on mobile (lives in drawer footer) */}
         <Link
-          href="/login"
+          href="/account"
           aria-label="Account"
           className="hidden lg:inline-flex hover:opacity-60"
         >

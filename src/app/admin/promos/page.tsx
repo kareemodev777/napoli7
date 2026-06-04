@@ -28,6 +28,29 @@ async function loadPromos(): Promise<PromoCodeRow[]> {
   return (data ?? []) as PromoCodeRow[];
 }
 
+/**
+ * Count orders that actually used each code. `times_used` tracks redemptions
+ * (now COD-immediate, card-on-payment); this is the number of orders carrying
+ * the code, which is the figure an operator wants to reconcile against.
+ */
+async function loadOrderCounts(
+  codes: string[],
+): Promise<Record<string, number>> {
+  if (!HAS_SUPABASE_SERVICE || codes.length === 0) return {};
+
+  const supabase = createServiceRoleClient();
+  const entries = await Promise.all(
+    codes.map(async (code) => {
+      const { count } = await supabase
+        .from("orders")
+        .select("id", { count: "exact", head: true })
+        .eq("promo_code", code);
+      return [code, count ?? 0] as const;
+    }),
+  );
+  return Object.fromEntries(entries);
+}
+
 function IconButton({
   label,
   children,
@@ -96,6 +119,7 @@ function windowLabel(promo: PromoCodeRow) {
 
 export default async function AdminPromosPage() {
   const promos = await loadPromos();
+  const orderCounts = await loadOrderCounts(promos.map((promo) => promo.code));
   const activeCount = promos.filter((promo) => promo.active).length;
   const cappedCount = promos.filter(
     (promo) => promo.max_uses != null && promo.times_used >= promo.max_uses,
@@ -160,7 +184,11 @@ export default async function AdminPromosPage() {
                       {money(promo.min_subtotal_aed)} AED
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
-                      {usageLabel(promo)}
+                      <div>{usageLabel(promo)}</div>
+                      <div className="text-xs text-muted-foreground/70">
+                        {orderCounts[promo.code] ?? 0} order
+                        {(orderCounts[promo.code] ?? 0) === 1 ? "" : "s"}
+                      </div>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground">
                       {windowLabel(promo)}
