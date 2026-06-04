@@ -1,7 +1,6 @@
 "use server";
 
 import { z } from "zod";
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { notifyKitchenEmail } from "@/lib/notifications/email";
@@ -199,7 +198,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   });
 
   revalidatePath("/account/orders");
-  redirect(`/order/${order.id}/confirmation`);
+  return { orderId: order.id, orderNumber: order.order_number };
 }
 
 async function runNotifications(args: {
