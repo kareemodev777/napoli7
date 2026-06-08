@@ -7,6 +7,7 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 import { notifyCustomerStatusEmail } from "@/lib/notifications/email";
 import { notifyCustomerStatusWhatsApp } from "@/lib/notifications/whatsapp";
 import { restorePromoForCancelledOrder } from "@/lib/promo";
+import { pushOrderStatusToPos } from "@/lib/pos/push";
 import type { OrderStatus } from "@/lib/notifications/status-updates";
 
 const updateStatusSchema = z.object({
@@ -84,6 +85,10 @@ export async function updateOrderStatus(
       console.error("[updateOrderStatus] customer whatsapp failed:", e);
     }
   }
+
+  // Keep the POS in sync with the site's status. Best-effort and DB-sourced;
+  // its failure never blocks the status change or the customer notifications.
+  await pushOrderStatusToPos(parsed.data.orderId, parsed.data.status);
 
   // Refresh every surface that renders this order's status. Track is rendered
   // per-request from search params (no cache tag), so it needs no revalidation.

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getStripe } from "@/lib/payments/stripe";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { sendKitchenNotificationsForOrder } from "@/lib/notifications/kitchen";
+import { pushOrderToPos } from "@/lib/pos/push";
 import { redeemPromo } from "@/lib/promo";
 import { HAS_STRIPE, HAS_SUPABASE_SERVICE } from "@/lib/env";
 
@@ -73,6 +74,12 @@ export async function POST(req: Request) {
         if (transitioned && transitioned.length > 0) {
           // Real pending -> paid transition: now (and only now) fulfill.
           await sendKitchenNotificationsForOrder(orderId);
+
+          // Push to the POS, guarded by the same atomic transition so it fires
+          // exactly once. Best-effort and never throws — it must NOT change this
+          // route's 200 response, or Stripe would retry the whole webhook on a
+          // brief POS outage (POS retry is handled internally + via pos_push_log).
+          await pushOrderToPos(orderId);
 
           // Redeem the promo now that the card payment is confirmed. Guarded by
           // the pending -> paid transition above, so Stripe retries never

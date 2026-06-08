@@ -9,6 +9,7 @@ import { validatePromo, redeemPromo } from "@/lib/promo";
 import { resolveDeliveryFee } from "@/lib/checkout";
 import { canonicalizeCheckoutCart } from "@/lib/checkout-pricing";
 import { planAddressSave, type AddressLike } from "@/lib/saved-address";
+import { pushOrderToPos } from "@/lib/pos/push";
 import { HAS_SUPABASE } from "@/lib/env";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -290,6 +291,11 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     orderNumber: order.order_number,
     total,
   });
+
+  // Push the confirmed order to the POS. After runNotifications so a slow POS
+  // never delays the kitchen alert; DB-sourced and best-effort (swallows its own
+  // failures and never throws), so a POS outage can't affect order placement.
+  await pushOrderToPos(order.id);
 
   revalidatePath("/account/orders");
   return { orderId: order.id, orderNumber: order.order_number };

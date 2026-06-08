@@ -26,3 +26,13 @@ export const HAS_WHATSAPP = Boolean(
 export const ORDER_EMAIL_TO = process.env["ORDER_EMAIL_TO"] ?? "info@napoli7.com";
 export const ORDER_EMAIL_FROM =
   process.env["ORDER_EMAIL_FROM"] ?? "orders@napoli7.com";
+
+// POS integration (xtbooks). Pushes confirmed website orders into the POS over
+// HTTP. Inert until BOTH a webhook URL is set AND POS_PUSH_ENABLED === "true",
+// mirroring the HAS_STRIPE / HAS_WHATSAPP gating so it stays off in dev/preview.
+export const HAS_POS = Boolean(
+  process.env["POS_WEBHOOK_URL"] && process.env["POS_PUSH_ENABLED"] === "true",
+);
+export const POS_WEBHOOK_URL = process.env["POS_WEBHOOK_URL"] ?? "";
+export const POS_PRODUCT_WEBHOOK_URL =
+  process.env["POS_PRODUCT_WEBHOOK_URL"] ?? "";
