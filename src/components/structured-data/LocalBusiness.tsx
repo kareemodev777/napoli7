@@ -6,7 +6,7 @@ const localBusinessData = {
   description:
     "Authentic Neapolitan pizza in Ajman. Caputo flour, San Marzano DOP, lievito madre, hand-stretched, wood-fired.",
   url: "https://napoli7.com",
-  image: "https://napoli7.com/images/hero-pizza.jpg",
+  image: "https://napoli7.com/images/hero-neapolitan-uae.jpg",
   telephone: "+97165345772",
   servesCuisine: ["Italian", "Neapolitan"],
   priceRange: "AED 15-69",

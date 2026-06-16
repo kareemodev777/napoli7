@@ -111,7 +111,7 @@ export default async function AboutPage() {
 
       <section className="border-t border-border px-6 md:px-10 py-16 md:py-24">
         <div className="max-w-[640px] mx-auto">
-          <div className="relative aspect-[779/483] w-full overflow-hidden rounded-md border border-border bg-muted">
+          <div className="relative aspect-[3/2] w-full overflow-hidden rounded-md border border-border bg-muted">
             <Image
               src={cultures.url}
               alt={cultures.alt}

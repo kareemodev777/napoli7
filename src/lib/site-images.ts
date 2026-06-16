@@ -21,23 +21,23 @@ export type SiteImageMap = Record<SiteImageKey, SiteImage>;
 /** Bundled defaults — used until an admin replaces an image (and as a fallback). */
 export const SITE_IMAGE_DEFAULTS: SiteImageMap = {
   home_hero: {
-    url: "/images/hero-pizza.jpg",
-    alt: "Hand-stretched Neapolitan pizza, fresh from a wood-fired oven",
+    url: "/images/hero-neapolitan-uae.jpg",
+    alt: "Authentic Neapolitan pizza in the UAE — quality ingredients, true Italian taste",
   },
   home_family: {
-    url: "/images/home-family.jpg",
+    url: "/images/home-family-v2.jpg",
     alt: "Sign in and get a free pizza — join the Napoli 7 family",
   },
   home_tradition: {
-    url: "/images/home-tradition.jpg",
-    alt: "Born of Neapolitan tradition — Caputo flour, San Marzano tomatoes, Neapolitan oven",
+    url: "/images/home-tradition-v2.jpg",
+    alt: "From Naples, fired at 450°C — Caputo flour, San Marzano tomatoes, Neapolitan oven",
   },
   home_philosophy: {
-    url: "/images/home-philosophy.jpg",
+    url: "/images/home-philosophy-v2.jpg",
     alt: "Rooted in Naples, inspired by the world — the Napoli 7 philosophy",
   },
   about_cultures: {
-    url: "/images/about-cultures.png",
+    url: "/images/about-cultures-v2.jpg",
     alt: "Where cultures meet — Napoli 7, rooted in Naples, inspired by the world",
   },
 };
@@ -77,7 +77,7 @@ export const SITE_IMAGE_FIELDS: Array<{
     key: "about_cultures",
     label: "About — Where cultures meet",
     description: "Banner on the About page.",
-    aspect: "779 / 483",
+    aspect: "3 / 2",
   },
 ];
 
