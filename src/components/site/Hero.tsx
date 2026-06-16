@@ -3,8 +3,10 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import type { SiteImage } from "@/lib/site-images";
+import { SITE_IMAGE_DEFAULTS } from "@/lib/site-images";
 
-export function Hero() {
+export function Hero({ image = SITE_IMAGE_DEFAULTS.home_hero }: { image?: SiteImage }) {
   const [mode, setMode] = useState<"deliver" | "pickup">("deliver");
   const [postcode, setPostcode] = useState("");
 
@@ -12,8 +14,8 @@ export function Hero() {
     <section className="relative mx-4 md:mx-6 h-[62svh] md:h-[68svh] min-h-[460px] max-h-[640px] overflow-hidden">
       <h1 className="sr-only">Napoli 7 — authentic Neapolitan pizza in Ajman</h1>
       <Image
-        src="/images/hero-pizza.jpg"
-        alt="Hand-stretched Neapolitan pizza, fresh from a wood-fired oven"
+        src={image.url}
+        alt={image.alt}
         fill
         priority
         fetchPriority="high"
@@ -71,7 +73,7 @@ export function Hero() {
           </Link>
 
           <p className="font-display text-[11px] text-muted-foreground mt-3 text-center">
-            Open daily 11:00 – 22:00
+            Tue – Sun 12:30 – 00:00 · Closed Mondays
           </p>
         </div>
       </div>

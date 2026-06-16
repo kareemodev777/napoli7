@@ -109,6 +109,64 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
     });
   }
 
+  // Split customizations so the choice is clear: removable items are ingredients
+  // already on the pizza (remove / add extra), while non-removable items are
+  // add-ons (extra toppings to add).
+  const sortedCustomizations = product.customizations
+    .slice()
+    .sort((a, b) => a.position - b.position);
+  const extras = sortedCustomizations.filter((c) => c.removable);
+  const addOns = sortedCustomizations.filter((c) => !c.removable);
+
+  function renderRow(c: Product["customizations"][number]) {
+    const value = choices[c.ingredient] ?? "default";
+    return (
+      <li
+        key={c.ingredient}
+        className="grid grid-cols-[1fr_auto] gap-3 items-center py-3 border-b border-border"
+      >
+        <div>
+          <p className="font-display text-sm font-medium">{c.ingredient}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {value === "default"
+              ? c.removable
+                ? "Included"
+                : c.extraPrice !== null
+                  ? `Add +${formatAed(c.extraPrice)}`
+                  : "Optional"
+              : value === "extra"
+                ? `Extra +${formatAed(c.extraPrice ?? 0)}`
+                : "Removed"}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          {c.removable ? (
+            <ToggleButton
+              active={value === "without"}
+              onClick={() => setChoice(c.ingredient, "without")}
+              ariaLabel={`Remove ${c.ingredient}`}
+            >
+              <Minus className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden />
+            </ToggleButton>
+          ) : null}
+          {c.extraPrice !== null ? (
+            <ToggleButton
+              active={value === "extra"}
+              onClick={() => setChoice(c.ingredient, "extra")}
+              ariaLabel={
+                c.removable
+                  ? `Add extra ${c.ingredient}`
+                  : `Add ${c.ingredient}`
+              }
+            >
+              <Plus className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden />
+            </ToggleButton>
+          ) : null}
+        </div>
+      </li>
+    );
+  }
+
   function handleAdd() {
     addItem({
       productId: product.id,
@@ -178,66 +236,34 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
               No customizations available for this item.
             </p>
           ) : (
-            <>
-              <p className="font-display text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-3">
-                Ingredients
-              </p>
-              <ul className="border-t border-border">
-                {product.customizations
-                  .slice()
-                  .sort((a, b) => a.position - b.position)
-                  .map((c) => {
-                    const value = choices[c.ingredient] ?? "default";
-                    return (
-                      <li
-                        key={c.ingredient}
-                        className="grid grid-cols-[1fr_auto] gap-3 items-center py-3 border-b border-border"
-                      >
-                        <div>
-                          <p className="font-display text-sm font-medium">
-                            {c.ingredient}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">
-                            {value === "default"
-                              ? "Included"
-                              : value === "extra"
-                                ? `Extra +${formatAed(c.extraPrice ?? 0)}`
-                                : "Removed"}
-                          </p>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {c.removable ? (
-                            <ToggleButton
-                              active={value === "without"}
-                              onClick={() => setChoice(c.ingredient, "without")}
-                              ariaLabel={`Remove ${c.ingredient}`}
-                            >
-                              <Minus
-                                className="h-3.5 w-3.5"
-                                strokeWidth={1.5}
-                                aria-hidden
-                              />
-                            </ToggleButton>
-                          ) : null}
-                          {c.extraPrice !== null ? (
-                            <ToggleButton
-                              active={value === "extra"}
-                              onClick={() => setChoice(c.ingredient, "extra")}
-                              ariaLabel={`Add extra ${c.ingredient}`}
-                            >
-                              <Plus
-                                className="h-3.5 w-3.5"
-                                strokeWidth={1.5}
-                                aria-hidden
-                              />
-                            </ToggleButton>
-                          ) : null}
-                        </div>
-                      </li>
-                    );
-                  })}
-              </ul>
-            </>
+            <div className="space-y-7">
+              {extras.length > 0 ? (
+                <div>
+                  <p className="font-display text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-1">
+                    Extra ingredients
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Included on this pizza — remove, or add extra.
+                  </p>
+                  <ul className="border-t border-border">
+                    {extras.map(renderRow)}
+                  </ul>
+                </div>
+              ) : null}
+              {addOns.length > 0 ? (
+                <div>
+                  <p className="font-display text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-1">
+                    Add-ons
+                  </p>
+                  <p className="text-xs text-muted-foreground mb-3">
+                    Extra toppings you can add to this pizza.
+                  </p>
+                  <ul className="border-t border-border">
+                    {addOns.map(renderRow)}
+                  </ul>
+                </div>
+              ) : null}
+            </div>
           )}
         </div>
 

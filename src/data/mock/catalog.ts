@@ -46,13 +46,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 43.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 29.0
       }
     ],
@@ -124,13 +124,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 38.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 25.0
       }
     ],
@@ -202,13 +202,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 45.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 31.0
       }
     ],
@@ -304,13 +304,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 45.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 32.0
       }
     ],
@@ -394,13 +394,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 43.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 29.0
       }
     ],
@@ -478,13 +478,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 43.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 28.0
       }
     ],
@@ -562,13 +562,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 43.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 29.0
       }
     ],
@@ -640,13 +640,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 39.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 25.0
       }
     ],
@@ -724,13 +724,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 36.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 24.0
       }
     ],
@@ -802,13 +802,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 43.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 29.0
       }
     ],
@@ -862,13 +862,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 43.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 29.0
       }
     ],
@@ -958,13 +958,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 38.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 25.0
       }
     ],
@@ -1030,13 +1030,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 49.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 35.0
       }
     ],
@@ -1108,13 +1108,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 28.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 19.0
       }
     ],
@@ -1186,13 +1186,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 43.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 29.0
       }
     ],
@@ -1282,13 +1282,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 41.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 27.0
       }
     ],
@@ -1372,13 +1372,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 44.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 30.0
       }
     ],
@@ -1444,13 +1444,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 44.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 29.0
       }
     ],
@@ -1522,13 +1522,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 46.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 31.0
       }
     ],
@@ -1600,13 +1600,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 49.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 34.0
       }
     ],
@@ -1690,13 +1690,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 49.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 34.0
       }
     ],
@@ -1762,13 +1762,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 52.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 36.0
       }
     ],
@@ -1840,13 +1840,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 58.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 39.0
       }
     ],
@@ -1918,13 +1918,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 48.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 35.0
       }
     ],
@@ -2002,13 +2002,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 42.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 29.0
       }
     ],
@@ -2080,13 +2080,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 46.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 32.0
       }
     ],
@@ -2152,13 +2152,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 19.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 13.0
       }
     ],
@@ -2206,13 +2206,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 19.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 13.0
       }
     ],
@@ -2248,13 +2248,13 @@ export const PRODUCTS: Product[] = [
       {
         "id": "regular",
         "label": "Medium",
-        "detail": "Medium pizza",
+        "detail": "30 cm",
         "price": 19.0
       },
       {
         "id": "small",
         "label": "Small",
-        "detail": "Small pizza",
+        "detail": "24 cm",
         "price": 13.0
       }
     ],

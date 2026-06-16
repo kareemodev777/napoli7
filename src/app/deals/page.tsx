@@ -3,7 +3,7 @@ import Link from "next/link";
 import { Check } from "lucide-react";
 import { SiteShell } from "@/components/site/SiteShell";
 import { PageHero } from "@/components/site/PageHero";
-import { WELCOME_OFFER, SECONDARY_DEALS } from "@/data/mock/deals";
+import { WELCOME_OFFER } from "@/data/mock/deals";
 
 export const revalidate = 86400;
 
@@ -63,43 +63,11 @@ export default function DealsPage() {
               Fine print
             </p>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Offers available for takeout and delivery orders only. The kitchen
-              reserves the right to substitute items in case of supply shortage.
-              One promotional code per order. Cannot be combined with other
-              offers unless stated.
+              The kitchen reserves the right to substitute items in case of
+              supply shortage. One promotional code per order. Cannot be combined
+              with other offers unless stated.
             </p>
           </aside>
-        </div>
-      </section>
-
-      <section className="border-t border-border px-6 md:px-10 py-16 md:py-24">
-        <div className="max-w-[1140px] mx-auto">
-          <h2 className="font-display text-2xl md:text-3xl uppercase tracking-[1.5px] mb-10">
-            More offers
-          </h2>
-          <div className="grid md:grid-cols-2 gap-px bg-border border border-border">
-            {SECONDARY_DEALS.map((d) => (
-              <article key={d.slug} className="bg-background p-8 md:p-10">
-                <h3 className="font-display text-xl font-medium leading-tight">
-                  {d.title}
-                </h3>
-                <p className="mt-4 text-base text-muted-foreground leading-relaxed">
-                  {d.description}
-                </p>
-                <ul className="mt-6 space-y-2 text-sm text-muted-foreground">
-                  {d.conditions.map((c) => (
-                    <li key={c}>— {c}</li>
-                  ))}
-                </ul>
-                <Link
-                  href={d.cta.href}
-                  className="mt-8 inline-flex items-center font-display text-xs tracking-[0.2em] uppercase border-b border-foreground pb-1 hover:border-brand hover:text-brand"
-                >
-                  {d.cta.label}
-                </Link>
-              </article>
-            ))}
-          </div>
         </div>
       </section>
     </SiteShell>

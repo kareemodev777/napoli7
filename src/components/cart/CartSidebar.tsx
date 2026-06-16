@@ -26,7 +26,7 @@ export function CartSidebar() {
   return (
     <aside
       aria-label="Shopping cart"
-      className="bg-background border border-border flex flex-col h-[calc(100vh-160px)] sticky top-6 max-w-full"
+      className="bg-background border border-border flex flex-col h-[calc(100svh-var(--header-h)-2rem)] sticky top-[calc(var(--header-h)+1rem)] max-w-full"
     >
       <header className="px-5 pt-5 pb-4 border-b border-border">
         <p className="font-display text-[10px] tracking-[0.25em] uppercase text-foreground">

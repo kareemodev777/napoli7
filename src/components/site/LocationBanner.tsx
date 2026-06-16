@@ -1,19 +1,14 @@
-import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { MapEmbed } from "./MapEmbed";
+import en from "@/i18n/en.json";
 
 export function LocationBanner() {
   return (
     <section className="bg-secondary">
       <div className="max-w-[1500px] mx-auto px-6 md:px-10 py-16 md:py-24 grid md:grid-cols-2 gap-10 items-center">
-        <div className="relative aspect-[4/3] md:aspect-square w-full max-w-md mx-auto md:max-w-none">
-          <Image
-            src="/images/location-block.jpg"
-            alt="Napoli 7 storefront, Al Jurf 2, Ajman"
-            fill
-            sizes="(min-width: 768px) 50vw, 90vw"
-            className="object-cover"
-          />
+        <div className="w-full">
+          <MapEmbed lat={en.brand.lat} lng={en.brand.lng} />
         </div>
         <div>
           <p className="font-display text-xs tracking-[0.2em] uppercase text-muted-foreground mb-4">
@@ -27,9 +22,9 @@ export function LocationBanner() {
             </span>
           </h2>
           <div className="space-y-2 text-base leading-relaxed mb-8">
-            <p>Shop 4, opposite Delta Supermarket</p>
-            <p>213 Sheikh Rashid bin Abdul Aziz St</p>
-            <p>Open daily, 11:00 – 22:00</p>
+            <p>Shop 4, Roof building, opposite Delta Center</p>
+            <p>213 Shaikh Rashid Bin Abdul Aziz Aaemi St – Al Jurf 2, Ajman</p>
+            <p>Open Tuesday to Sunday: 12:30 – 00:00 (closed Mondays)</p>
           </div>
           <Link
             href="/location"

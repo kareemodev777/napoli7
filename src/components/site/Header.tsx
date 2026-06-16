@@ -1,8 +1,8 @@
 import Link from "next/link";
-import { User } from "lucide-react";
 import { Logo } from "./Logo";
 import { CartIcon } from "@/components/cart/CartIcon";
 import { MobileNav } from "./MobileNav";
+import { AuthMenu } from "./AuthMenu";
 
 const navLinks = [
   { label: "Menu", href: "/menu" },
@@ -31,14 +31,8 @@ export function Header() {
         </nav>
       </div>
       <div className="flex items-center gap-3 md:gap-5 lg:gap-6 font-display text-sm">
-        {/* Account icon — hidden on mobile (lives in drawer footer) */}
-        <Link
-          href="/account"
-          aria-label="Account"
-          className="hidden lg:inline-flex hover:opacity-60"
-        >
-          <User className="h-5 w-5" strokeWidth={1.5} />
-        </Link>
+        {/* Account / Sign in — hidden on mobile (lives in drawer footer) */}
+        <AuthMenu />
         {/* Cart icon — desktop only; mobile cart lives in bottom bar */}
         <CartIcon />
         {/* Hamburger — mobile only */}

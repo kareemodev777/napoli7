@@ -2,10 +2,20 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Menu, X, ChevronRight, Phone, MessageCircle, User } from "lucide-react";
+import {
+  Menu,
+  X,
+  ChevronRight,
+  Phone,
+  MessageCircle,
+  User,
+  LogOut,
+} from "lucide-react";
 import { Logo } from "./Logo";
 import { useBodyScrollLock } from "@/lib/use-body-scroll-lock";
 import { useRouteChange } from "@/lib/use-route-change";
+import { useAuthState } from "./AuthMenu";
+import { signOut } from "@/app/login/actions";
 import en from "@/i18n/en.json";
 
 const navLinks = [
@@ -28,6 +38,7 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
+  const authState = useAuthState();
   const triggerRef = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -214,15 +225,45 @@ export function MobileNav() {
 
         {/* Drawer footer */}
         <div className="border-t border-border px-5 py-5 space-y-1">
-          {/* Login / Account */}
-          <Link
-            href="/account"
-            onClick={close}
-            className="flex items-center gap-3 h-11 font-display text-sm uppercase tracking-[1.5px] hover:opacity-60 transition-opacity"
-          >
-            <User className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden />
-            Login / Account
-          </Link>
+          {/* Sign in / Account + Sign out */}
+          {authState === "in" ? (
+            <>
+              <Link
+                href="/account"
+                onClick={close}
+                className="flex items-center gap-3 h-11 font-display text-sm uppercase tracking-[1.5px] hover:opacity-60 transition-opacity"
+              >
+                <User
+                  className="h-4 w-4 shrink-0"
+                  strokeWidth={1.5}
+                  aria-hidden
+                />
+                Account
+              </Link>
+              <form action={signOut}>
+                <button
+                  type="submit"
+                  className="flex w-full items-center gap-3 h-11 font-display text-sm uppercase tracking-[1.5px] hover:opacity-60 transition-opacity"
+                >
+                  <LogOut
+                    className="h-4 w-4 shrink-0"
+                    strokeWidth={1.5}
+                    aria-hidden
+                  />
+                  Sign out
+                </button>
+              </form>
+            </>
+          ) : (
+            <Link
+              href={authState === "out" ? "/login" : "/account"}
+              onClick={close}
+              className="flex items-center gap-3 h-11 font-display text-sm uppercase tracking-[1.5px] hover:opacity-60 transition-opacity"
+            >
+              <User className="h-4 w-4 shrink-0" strokeWidth={1.5} aria-hidden />
+              {authState === "out" ? "Sign in" : "Login / Account"}
+            </Link>
+          )}
 
           {/* Phone */}
           <a

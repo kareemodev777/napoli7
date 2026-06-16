@@ -38,15 +38,10 @@ export function Footer() {
       <div className="max-w-[1500px] mx-auto px-6 md:px-10 py-16 grid md:grid-cols-4 gap-10">
         <div>
           <Logo />
-          <p className="text-sm text-muted-foreground mt-6 max-w-xs leading-relaxed">
-            Authentic Neapolitan pizza. Caputo flour, San Marzano DOP,{" "}
-            <em className="italic">lievito madre</em>. Delivered hot in 30
-            minutes.
-          </p>
           <div className="mt-6 space-y-1 text-sm">
             <p>
               <a className="hover:underline" href="tel:+97165345772">
-                +971 6 534 5772
+                Landline: +971 6 534 5772
               </a>
             </p>
             <p>

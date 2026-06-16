@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Flame, Leaf, Clock, ShieldCheck } from "lucide-react";
 import { SiteShell } from "@/components/site/SiteShell";
 import { PageHero } from "@/components/site/PageHero";
 import { FeatureTiles } from "@/components/site/FeatureTiles";
+import { getSiteImages } from "@/lib/site-images";
 
 export const revalidate = 86400;
 
@@ -39,7 +41,7 @@ const tiles = [
   },
   {
     icon: ShieldCheck,
-    title: "Crafted in Ajman",
+    title: "Crafted in the UAE",
     description:
       "Italian tradition reimagined for the Emirates, bringing cultures and flavours together around the same table.",
   },
@@ -65,7 +67,9 @@ const storyParagraphs = [
   "Napoli 7 was inspired by a simple belief: great pizza can bring cultures, people, and traditions together around the same table.",
 ];
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  const images = await getSiteImages();
+  const cultures = images.about_cultures;
   return (
     <SiteShell>
       <PageHero
@@ -81,7 +85,7 @@ export default function AboutPage() {
               About Napoli 7
             </p>
             <h2 className="font-display text-3xl md:text-4xl uppercase tracking-[1.5px] leading-tight">
-              Authentic Neapolitan pizza, crafted in Ajman
+              Authentic Neapolitan pizza, crafted in the UAE
             </h2>
           </div>
           <div className="space-y-5 text-base md:text-lg text-muted-foreground leading-relaxed">
@@ -101,6 +105,20 @@ export default function AboutPage() {
                 Neapolitan tradition, reimagined for the Emirates.
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-border px-6 md:px-10 py-16 md:py-24">
+        <div className="max-w-[640px] mx-auto">
+          <div className="relative aspect-[779/483] w-full overflow-hidden rounded-md border border-border bg-muted">
+            <Image
+              src={cultures.url}
+              alt={cultures.alt}
+              fill
+              sizes="(min-width: 640px) 640px, 100vw"
+              className="object-contain"
+            />
           </div>
         </div>
       </section>

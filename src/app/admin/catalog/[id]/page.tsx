@@ -67,7 +67,11 @@ function AddPriceModal({
         <input type="hidden" name="product_id" value={productId} />
         <SizeSelect defaultValue="regular" />
         <Field label="Label" name="label" defaultValue="Regular" />
-        <Field label="Detail" name="detail" />
+        <Field
+          label="Detail"
+          name="detail"
+          hint={'Shown to customers, e.g. "30 cm" (medium) or "24 cm" (small).'}
+        />
         <Field
           label="Price"
           name="price_aed"

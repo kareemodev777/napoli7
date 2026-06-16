@@ -16,6 +16,17 @@ const magicSchema = z.object({
   email: z.string().email(),
 });
 
+// E.164: a leading + and 8–15 digits. Twilio (the Supabase SMS provider) expects
+// numbers in this format, e.g. +9715XXXXXXXX.
+const phoneSchema = z.object({
+  phone: z.string().regex(/^\+[1-9]\d{7,14}$/),
+});
+
+const verifyPhoneSchema = z.object({
+  phone: z.string().regex(/^\+[1-9]\d{7,14}$/),
+  token: z.string().regex(/^\d{4,10}$/),
+});
+
 const resetSchema = z.object({
   email: z.string().email(),
 });
@@ -78,6 +89,60 @@ export async function sendMagicLink(
     return { error: error.message };
   }
   return { message: "Check your inbox for a sign-in link." };
+}
+
+/**
+ * Step 1 of phone login: send a one-time SMS code. Supabase delivers it through
+ * the configured SMS provider (Twilio). Requires the Phone provider to be enabled
+ * in the Supabase dashboard with Twilio credentials.
+ */
+export async function sendPhoneOtp(phone: string): Promise<AuthResult> {
+  const parsed = phoneSchema.safeParse({ phone });
+  if (!parsed.success) {
+    return {
+      error: "Enter a valid mobile number with country code, e.g. +9715XXXXXXXX.",
+    };
+  }
+  if (!HAS_SUPABASE) {
+    return { error: "SMS login activates once Supabase + Twilio are configured." };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signInWithOtp({
+    phone: parsed.data.phone,
+  });
+  if (error) {
+    return { error: error.message };
+  }
+  return { message: "We sent a 6-digit code to your phone by SMS." };
+}
+
+/**
+ * Step 2 of phone login: verify the SMS code. On success Supabase sets the
+ * session cookies (this runs in a Server Action, so the cookie write succeeds).
+ */
+export async function verifyPhoneOtp(
+  phone: string,
+  token: string,
+): Promise<AuthResult> {
+  const parsed = verifyPhoneSchema.safeParse({ phone, token });
+  if (!parsed.success) {
+    return { error: "Enter the code we sent by SMS." };
+  }
+  if (!HAS_SUPABASE) {
+    return { error: "SMS login activates once Supabase + Twilio are configured." };
+  }
+  const supabase = await createClient();
+  const { error } = await supabase.auth.verifyOtp({
+    phone: parsed.data.phone,
+    token: parsed.data.token,
+    type: "sms",
+  });
+  if (error) {
+    return {
+      error: "That code didn't work. Request a new one and try again.",
+    };
+  }
+  return { message: "ok" };
 }
 
 export async function sendPasswordReset(

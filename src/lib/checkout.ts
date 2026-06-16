@@ -19,6 +19,13 @@ export interface DeliveryFeeResult {
  */
 export const DEFAULT_DELIVERY_FEE = 20;
 
+/**
+ * Minimum order subtotal (AED, before delivery fee) required for a delivery
+ * order. Pickup orders have no minimum. Enforced on both the checkout form and
+ * the server action so it can't be bypassed.
+ */
+export const DELIVERY_MIN_SUBTOTAL_AED = 28;
+
 // Mirrors the seed in 008. Used when Supabase service env vars are absent
 // (graceful fallback, matching the catalog mock pattern).
 const MOCK_ZONES: DeliveryZone[] = [

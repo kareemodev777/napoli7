@@ -123,6 +123,11 @@ const adminActions = [
     body: "Add categories, menu items, pricing, images, and customization options.",
   },
   {
+    href: "/admin/site-images",
+    title: "Site images",
+    body: "Replace the hero banner and marketing photos on the home and about pages.",
+  },
+  {
     href: "/admin/delivery-zones",
     title: "Control delivery zones",
     body: "Set visible Ajman areas, delivery fees, and checkout ordering.",

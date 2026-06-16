@@ -18,11 +18,12 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "Location",
   description:
-    "Visit Napoli 7 at Shop 4, opposite Delta Supermarket, 213 Sheikh Rashid bin Abdul Aziz Street, Al Jurf 2, Ajman. Open daily 11:00–22:00.",
+    "Visit Napoli 7 at Shop 4, Roof building, opposite Delta Center, 213 Shaikh Rashid Bin Abdul Aziz Aaemi St, Al Jurf 2, Ajman. Open Tuesday to Sunday 12:30–00:00, closed Mondays.",
   alternates: { canonical: "/location" },
   openGraph: {
     title: "Location · Napoli 7",
-    description: "Shop 4, Al Jurf 2, Ajman. Open daily 11:00–22:00.",
+    description:
+      "Shop 4, Al Jurf 2, Ajman. Open Tuesday to Sunday 12:30–00:00 (closed Mondays).",
   },
 };
 
@@ -54,7 +55,7 @@ export default function LocationPage() {
             <Block icon={Clock} title="Hours">
               <p>{en.brand.hours}</p>
               <p className="text-sm text-muted-foreground mt-1">
-                Including weekends and most public holidays.
+                Open every day except Monday.
               </p>
             </Block>
             <Block icon={Phone} title="Phone">

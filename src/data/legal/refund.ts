@@ -19,10 +19,6 @@ export const REFUND_POLICY = {
       body: "If an item arrives wrong, missing, or in unacceptable condition, call us within thirty minutes of delivery and keep the item available for a courier to collect. We will either replace the item or refund the line total. Photographs sent to our WhatsApp number speed up the resolution.",
     },
     {
-      heading: "Late delivery",
-      body: "If a delivery arrives more than sixty minutes after the estimate we displayed at checkout, you may either accept the order at the discounted price we offer at the time, or refuse delivery for a full refund. Weather and force majeure events are exceptions to this clause.",
-    },
-    {
       heading: "Refund processing time",
       body: "Card refunds may take up to five working days to appear depending on your bank. Cash refunds are paid immediately by the delivery driver where possible.",
     },

@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import type { DeliveryZone } from "@/lib/checkout";
+import { type DeliveryZone, DELIVERY_MIN_SUBTOTAL_AED } from "@/lib/checkout";
 import {
   chooseCheckoutArea,
   type CheckoutInitialDetails,
@@ -112,6 +112,10 @@ export function CheckoutForm({
   const zoneFee = matchedZone ? matchedZone.fee : defaultFee;
   const deliveryFee = deliveryType === "delivery" && matchedZone ? zoneFee : 0;
   const orderTotal = total + deliveryFee;
+  // Delivery orders require a minimum subtotal; pickup has no minimum.
+  const meetsDeliveryMin =
+    deliveryType !== "delivery" || subtotal >= DELIVERY_MIN_SUBTOTAL_AED;
+  const canSubmit = areaSupported && meetsDeliveryMin;
 
   if (!hydrated) {
     return <p className="text-sm text-muted-foreground">Loading checkout…</p>;
@@ -134,6 +138,12 @@ export function CheckoutForm({
     if (!areaSupported) {
       setError(
         "We don't deliver to that area yet. Choose a supported area or switch to pickup.",
+      );
+      return;
+    }
+    if (!meetsDeliveryMin) {
+      setError(
+        `Delivery orders have a minimum of ${formatAed(DELIVERY_MIN_SUBTOTAL_AED)} (before delivery fee). Add a little more, or switch to pickup.`,
       );
       return;
     }
@@ -429,7 +439,7 @@ export function CheckoutForm({
 
         <button
           type="submit"
-          disabled={pending || !areaSupported}
+          disabled={pending || !canSubmit}
           aria-busy={pending}
           className="w-full inline-flex items-center justify-center bg-brand text-primary-foreground py-4 font-display text-sm tracking-[0.2em] uppercase hover:bg-brand-hover disabled:opacity-50"
         >
@@ -437,7 +447,9 @@ export function CheckoutForm({
             ? "Placing order…"
             : !areaSupported
               ? "Delivery unavailable for this area"
-              : "Place order"}
+              : !meetsDeliveryMin
+                ? `Minimum ${formatAed(DELIVERY_MIN_SUBTOTAL_AED)} for delivery`
+                : "Place order"}
         </button>
       </div>
 
@@ -468,6 +480,13 @@ export function CheckoutForm({
             {deliveryType === "delivery" ? formatAed(deliveryFee) : "Free · pickup"}
           </Row>
         </dl>
+        {!meetsDeliveryMin ? (
+          <p className="mt-3 text-xs text-flag-red">
+            Minimum {formatAed(DELIVERY_MIN_SUBTOTAL_AED)} for delivery. Add{" "}
+            {formatAed(DELIVERY_MIN_SUBTOTAL_AED - subtotal)} more, or switch to
+            pickup.
+          </p>
+        ) : null}
         <div className="mt-4 border-t border-border pt-3 flex items-baseline justify-between">
           <span className="font-display text-xs tracking-[0.25em] uppercase">
             Total

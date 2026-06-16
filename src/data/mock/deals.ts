@@ -15,7 +15,7 @@ export const WELCOME_OFFER: Deal = {
     "One per person.",
     "Available for pickup only.",
     "Exclusively via napoli7.com signup.",
-    "Offers available for takeout and delivery orders only.",
+    "Available for the first 1,000 who sign up ONLY!",
   ],
   cta: { label: "Order Now", href: "/menu" },
 };

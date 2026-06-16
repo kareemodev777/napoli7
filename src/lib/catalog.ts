@@ -98,12 +98,21 @@ function imageKeyFromUrl(imageUrl: string): string | null {
 }
 
 function resolveProductImageUrl(row: ProductRow): string {
-  const key = imageKeyFromUrl(row.image_url);
+  const url = row.image_url?.trim() ?? "";
+
+  // Admin-uploaded images live in Supabase Storage and are authoritative — an
+  // owner who uploads a new photo must see it on the website. Never override an
+  // uploaded URL with a bundled local file (this was hiding updated images,
+  // e.g. the dessert pizzas, whose slugs collide with LOCAL_PRODUCT_IMAGES).
+  if (url.includes("/storage/v1/object/")) return url;
+
+  // Otherwise this is a seed/placeholder value — map it to a bundled image.
+  const key = imageKeyFromUrl(url);
   const filename =
     (key ? LOCAL_PRODUCT_IMAGES[key] : undefined) ??
     LOCAL_PRODUCT_IMAGES[row.slug];
 
-  return filename ? `/images/products/${filename}` : row.image_url;
+  return filename ? `/images/products/${filename}` : url;
 }
 
 function mapCategory(row: CategoryRow): Category {

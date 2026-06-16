@@ -8,6 +8,7 @@ const adminLinks = [
   { label: "Orders", href: "/admin/orders", description: "Kitchen queue" },
   { label: "Customers", href: "/admin/customers", description: "Order history" },
   { label: "Catalog", href: "/admin/catalog", description: "Menu, prices, images" },
+  { label: "Site images", href: "/admin/site-images", description: "Hero & page photos" },
   { label: "Delivery", href: "/admin/delivery-zones", description: "Areas and fees" },
   { label: "Promos", href: "/admin/promos", description: "Discount codes" },
 ];
