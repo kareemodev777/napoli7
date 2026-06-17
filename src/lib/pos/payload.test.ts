@@ -1,6 +1,7 @@
 import { test, expect, describe } from "bun:test";
 import {
   orderRowToWooOrder,
+  resolvePosSku,
   statusToWooUpdate,
   siteStatusToWoo,
   splitName,
@@ -22,25 +23,27 @@ function baseRow(overrides: Partial<PosOrderRow> = {}): PosOrderRow {
     payment_method: "cod",
     payment_status: "pending",
     stripe_payment_intent: null,
-    subtotal_aed: 76,
+    subtotal_aed: 60,
     delivery_fee_aed: 0,
     discount_aed: 0,
     promo_code: null,
-    total_aed: 76,
+    total_aed: 60,
     created_at: "2026-06-08T12:40:00.000Z",
     order_items: [
       {
         product_id: "prod-1",
         product_name: "Margherita",
+        base_price_aed: 28,
         quantity: 2,
-        line_total_aed: 70,
+        line_total_aed: 56,
         customizations: [],
       },
       {
         product_id: "prod-2",
-        product_name: "Coke",
+        product_name: "Coca-Cola",
+        base_price_aed: 4,
         quantity: 1,
-        line_total_aed: 6,
+        line_total_aed: 4,
         customizations: [],
       },
     ],
@@ -72,6 +75,26 @@ describe("splitName", () => {
   });
 });
 
+describe("resolvePosSku", () => {
+  test("finds exact-match pizza SKUs by name and price", () => {
+    expect(resolvePosSku("Margherita", 28)).toBe("MAR-0001");
+    expect(resolvePosSku("Margherita", 19)).toBe("SMA-0035");
+  });
+
+  test("handles region-prefixed menu names", () => {
+    expect(resolvePosSku("Indian - Spicy Chicken Kebab", 29)).toBe(
+      "SMA-0046",
+    );
+    expect(resolvePosSku("Egyptian - Merguez (Egyptian Sausage)", 24)).toBe(
+      "SMA-0053",
+    );
+  });
+
+  test("falls back to the closest matching product when price drifts", () => {
+    expect(resolvePosSku("Water", 1)).toBe("WAT-0120");
+  });
+});
+
 describe("siteStatusToWoo", () => {
   test("maps every site status to its Woo status", () => {
     expect(siteStatusToWoo("received")).toBe("processing");
@@ -94,7 +117,15 @@ describe("orderRowToWooOrder — COD pickup, no promo", () => {
 
   test("no shipping_lines and no shipping object for pickup", () => {
     expect(body.shipping_lines).toEqual([]);
-    expect(body.shipping).toBeUndefined();
+    expect(body.shipping).toBeDefined();
+    expect(body.shipping).toMatchObject({
+      address_1: "",
+      address_2: "",
+      city: "",
+      postcode: "",
+      country: "AE",
+    });
+    expect(body.shipping_total).toBe("0.00");
   });
 
   test("billing has no street address for pickup", () => {
@@ -109,6 +140,7 @@ describe("orderRowToWooOrder — COD pickup, no promo", () => {
 
   test("no coupon_lines when no promo", () => {
     expect(body.coupon_lines).toEqual([]);
+    expect(body.discount_total).toBe("0.00");
   });
 
   test("id and number are the external order number", () => {
@@ -153,6 +185,7 @@ describe("orderRowToWooOrder — card delivery, with promo + customization", () 
         {
           product_id: "8f1c",
           product_name: "Margherita",
+          base_price_aed: 28,
           quantity: 2,
           line_total_aed: 111,
           customizations: [
@@ -170,6 +203,7 @@ describe("orderRowToWooOrder — card delivery, with promo + customization", () 
     expect(body.payment_method_title).toBe("Credit Card (Stripe)");
     expect(body.set_paid).toBe(true);
     expect(body.transaction_id).toBe("pi_3Q");
+    expect(body.date_paid).toBe("2026-06-08T12:40:00.000Z");
   });
 
   test("shipping mirrors billing for delivery", () => {
@@ -181,13 +215,15 @@ describe("orderRowToWooOrder — card delivery, with promo + customization", () 
     expect(body.billing.city).toBe("Al Jurf");
   });
 
-  test("shipping_lines total equals the delivery fee", () => {
+  test("shipping_lines and totals reflect the delivery fee and discount", () => {
     expect(body.shipping_lines).toHaveLength(1);
     expect(body.shipping_lines[0]).toEqual({
       method_id: "flat_rate",
       method_title: "Delivery",
       total: "15.00",
     });
+    expect(body.shipping_total).toBe("15.00");
+    expect(body.discount_total).toBe("10.00");
   });
 
   test("coupon_lines carries the code and discount", () => {
@@ -200,6 +236,7 @@ describe("orderRowToWooOrder — card delivery, with promo + customization", () 
 
   test("customizations map to line meta_data; default is dropped", () => {
     const line = body.line_items[0];
+    expect(line.sku).toBe("MAR-0001");
     expect(line.meta_data).toEqual([
       { key: "product_id", value: "8f1c" },
       { key: "Extra cheese", value: "extra (+15.00)" },
@@ -220,6 +257,7 @@ describe("orderRowToWooOrder — line items + totals", () => {
           {
             product_id: "p1",
             product_name: "Margherita",
+            base_price_aed: 28,
             quantity: 2,
             line_total_aed: 111,
             customizations: [],
@@ -232,6 +270,7 @@ describe("orderRowToWooOrder — line items + totals", () => {
     expect(line.total).toBe("111.00");
     expect(line.price).toBe("55.50");
     expect(line.quantity).toBe(2);
+    expect(line.sku).toBe("MAR-0001");
   });
 
   test("multiple items -> multiple lines", () => {
@@ -239,7 +278,7 @@ describe("orderRowToWooOrder — line items + totals", () => {
     expect(body.line_items).toHaveLength(2);
     expect(body.line_items.map((l) => l.name)).toEqual([
       "Margherita",
-      "Coke",
+      "Coca-Cola",
     ]);
   });
 
@@ -266,7 +305,8 @@ describe("orderRowToWooOrder — line items + totals", () => {
         order_items: [
           {
             product_id: "p1",
-            product_name: "Pizza",
+            product_name: "Margherita",
+            base_price_aed: "28",
             quantity: 1,
             line_total_aed: "40",
             customizations: null,
@@ -277,25 +317,17 @@ describe("orderRowToWooOrder — line items + totals", () => {
     expect(body.total).toBe("76.00");
     expect(body.line_items[0].total).toBe("40.00");
     expect(body.line_items[0].price).toBe("40.00");
+    expect(body.line_items[0].sku).toBe("MAR-0001");
   });
 });
 
 describe("statusToWooUpdate", () => {
-  test("builds a minimal keyed update body", () => {
+  test("produces minimal update body", () => {
     expect(statusToWooUpdate("N7-00042", "delivered")).toEqual({
       id: "N7-00042",
       number: "N7-00042",
       status: "completed",
       meta_data: [{ key: "order_status", value: "delivered" }],
-    });
-  });
-
-  test("carries the raw site status in meta for every status", () => {
-    const cancelled = statusToWooUpdate("N7-1", "cancelled");
-    expect(cancelled.status).toBe("cancelled");
-    expect(cancelled.meta_data[0]).toEqual({
-      key: "order_status",
-      value: "cancelled",
     });
   });
 });

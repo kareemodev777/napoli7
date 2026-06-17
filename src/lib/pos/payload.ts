@@ -5,6 +5,9 @@
 // its exact schema and allowed status values (see spec §12) — kept isolated here
 // precisely so that tweak is trivial and covered by tests.
 
+import { resolvePosSku } from "./sku-map";
+export { resolvePosSku } from "./sku-map";
+
 export type SiteOrderStatus =
   | "received"
   | "preparing"
@@ -21,6 +24,7 @@ export interface PosCustomization {
 export interface PosOrderItemRow {
   product_id: string | null;
   product_name: string;
+  base_price_aed: number | string;
   quantity: number;
   line_total_aed: number | string;
   customizations: PosCustomization[] | null;
@@ -67,6 +71,7 @@ export interface WooLineItem {
   price: string;
   subtotal: string;
   total: string;
+  sku: string;
   meta_data: WooMetaData[];
 }
 
@@ -75,10 +80,12 @@ export interface WooAddress {
   last_name: string;
   email?: string;
   phone?: string;
+  company: string;
   address_1: string;
   address_2: string;
   city: string;
   state: string;
+  postcode: string;
   country: string;
 }
 
@@ -99,18 +106,39 @@ export interface WooOrderBody {
   status: string;
   currency: "AED";
   date_created: string;
+  date_modified: string;
   total: string;
+  discount_total: string;
+  discount_tax: string;
+  shipping_total: string;
+  shipping_tax: string;
+  cart_tax: string;
+  total_tax: string;
+  prices_include_tax: boolean;
+  customer_id: number;
+  customer_ip_address: string;
+  customer_user_agent: string;
   payment_method: string;
   payment_method_title: string;
   set_paid: boolean;
   transaction_id?: string;
   customer_note: string;
   billing: WooAddress;
-  shipping?: WooAddress;
+  shipping: WooAddress;
   line_items: WooLineItem[];
+  tax_lines: unknown[];
   shipping_lines: WooShippingLine[];
+  fee_lines: unknown[];
   coupon_lines: WooCouponLine[];
+  refunds: unknown[];
+  cart_hash: string;
   meta_data: WooMetaData[];
+  parent_id: number;
+  order_key: string;
+  created_via: string;
+  version: string;
+  date_paid: string | null;
+  date_completed: string | null;
 }
 
 export interface WooOrderUpdateBody {
@@ -184,12 +212,14 @@ function lineItem(row: PosOrderItemRow): WooLineItem {
     meta.push({ key: "product_id", value: row.product_id });
   }
   meta.push(...customizationMeta(row.customizations));
+  const sku = resolvePosSku(row.product_name, row.base_price_aed) ?? "";
   return {
     name: row.product_name,
     quantity: row.quantity,
     price: money(lineTotal / qty),
     subtotal: money(lineTotal),
     total: money(lineTotal),
+    sku,
     meta_data: meta,
   };
 }
@@ -210,10 +240,12 @@ export function orderRowToWooOrder(order: PosOrderRow): WooOrderBody {
     last_name: name.last_name,
     email: order.customer_email,
     phone: order.customer_phone,
+    company: "",
     address_1: isDelivery ? addr.street ?? "" : "",
     address_2: isDelivery ? addr.flat ?? "" : "",
     city: isDelivery ? addr.area ?? "" : "",
     state: "Ajman",
+    postcode: "",
     country: "AE",
   };
 
@@ -225,7 +257,18 @@ export function orderRowToWooOrder(order: PosOrderRow): WooOrderBody {
     status: siteStatusToWoo(order.status),
     currency: "AED",
     date_created: order.created_at,
+    date_modified: order.created_at,
     total: money(order.total_aed),
+    discount_total: money(order.discount_aed),
+    discount_tax: "0.00",
+    shipping_total: money(order.delivery_fee_aed),
+    shipping_tax: "0.00",
+    cart_tax: "0.00",
+    total_tax: "0.00",
+    prices_include_tax: false,
+    customer_id: 0,
+    customer_ip_address: "",
+    customer_user_agent: "Napoli7 website",
     payment_method: isCard ? "stripe" : "cod",
     payment_method_title: isCard
       ? "Credit Card (Stripe)"
@@ -233,33 +276,53 @@ export function orderRowToWooOrder(order: PosOrderRow): WooOrderBody {
     set_paid: order.payment_status === "paid",
     customer_note: order.order_notes ?? "",
     billing,
+    shipping: isDelivery
+      ? {
+          first_name: name.first_name,
+          last_name: name.last_name,
+          company: "",
+          address_1: addr.street ?? "",
+          address_2: addr.flat ?? "",
+          city: addr.area ?? "",
+          state: "Ajman",
+          postcode: "",
+          country: "AE",
+        }
+      : {
+          first_name: name.first_name,
+          last_name: name.last_name,
+          company: "",
+          address_1: "",
+          address_2: "",
+          city: "",
+          state: "Ajman",
+          postcode: "",
+          country: "AE",
+        },
     line_items: (order.order_items ?? []).map(lineItem),
+    tax_lines: [],
     shipping_lines: [],
+    fee_lines: [],
     coupon_lines: [],
+    refunds: [],
+    cart_hash: "",
     meta_data: [
       { key: "order_number", value: order.order_number },
       { key: "order_id", value: order.id },
       { key: "delivery_type", value: order.delivery_type },
       { key: "delivery_slot", value: order.delivery_slot },
     ],
+    parent_id: 0,
+    order_key: order.order_number,
+    created_via: "napoli7_website",
+    version: "9.0.0",
+    date_paid: order.payment_status === "paid" ? order.created_at : null,
+    date_completed: null,
   };
 
   // transaction_id: card only.
   if (isCard && order.stripe_payment_intent) {
     body.transaction_id = order.stripe_payment_intent;
-  }
-
-  // shipping mirrors billing for delivery; omitted entirely for pickup.
-  if (isDelivery) {
-    body.shipping = {
-      first_name: name.first_name,
-      last_name: name.last_name,
-      address_1: addr.street ?? "",
-      address_2: addr.flat ?? "",
-      city: addr.area ?? "",
-      state: "Ajman",
-      country: "AE",
-    };
   }
 
   // One flat_rate shipping line when a delivery fee was charged.
