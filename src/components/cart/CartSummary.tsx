@@ -59,7 +59,7 @@ export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
             <span>−{formatAed(discount)}</span>
           </Row>
         ) : null}
-        <Row label="Delivery fee">Calculated at checkout</Row>
+        <Row label="Delivery fee · 12 AED">At checkout</Row>
       </dl>
 
       {promo ? (

@@ -81,11 +81,8 @@ export default async function AboutPage() {
       <section className="border-t border-border px-6 md:px-10 py-16 md:py-24">
         <div className="max-w-[1140px] mx-auto grid md:grid-cols-[0.85fr_1.15fr] gap-12 md:gap-20 items-start">
           <div>
-            <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep mb-4">
-              About Napoli 7
-            </p>
             <h2 className="font-display text-3xl md:text-4xl uppercase tracking-[1.5px] leading-tight">
-              Authentic Neapolitan pizza, crafted in the UAE
+              ABOUT NAPOLI7
             </h2>
           </div>
           <div className="space-y-5 text-base md:text-lg text-muted-foreground leading-relaxed">

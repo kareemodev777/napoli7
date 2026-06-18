@@ -13,7 +13,7 @@ export function CartIcon() {
   return (
     <Link
       href="/cart"
-      className="hidden lg:inline-flex relative items-center gap-2 hover:opacity-60"
+      className="hidden lg:inline-flex relative flex-col items-center justify-center gap-1 hover:opacity-60 min-w-[48px]"
       aria-label={`Cart, ${count} item${count === 1 ? "" : "s"}`}
     >
       <ShoppingBag className="h-5 w-5" strokeWidth={1.5} />
@@ -22,7 +22,9 @@ export function CartIcon() {
           {count}
         </span>
       ) : null}
-      <span className="hidden sm:inline">order</span>
+      <span className="text-[10px] tracking-[0.2em] uppercase leading-none">
+        Cart
+      </span>
     </Link>
   );
 }

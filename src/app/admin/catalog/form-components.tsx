@@ -220,6 +220,14 @@ export function ProductForm({
           Spicy
         </label>
         <label className="inline-flex h-11 items-center gap-2 rounded-md border border-border px-3">
+          <input
+            name="is_temporarily_unavailable"
+            type="checkbox"
+            defaultChecked={product?.is_temporarily_unavailable ?? false}
+          />
+          Pizza not available
+        </label>
+        <label className="inline-flex h-11 items-center gap-2 rounded-md border border-border px-3">
           <input name="is_active" type="checkbox" defaultChecked={product?.is_active ?? true} />
           Show on menu
         </label>

@@ -17,7 +17,7 @@ export interface DeliveryFeeResult {
  * Placeholder fee used purely for client-side display fallback. It is NEVER
  * charged for an unknown area — unsupported areas are blocked, not billed.
  */
-export const DEFAULT_DELIVERY_FEE = 20;
+export const DEFAULT_DELIVERY_FEE = 12;
 
 /**
  * Minimum order subtotal (AED, before delivery fee) required for a delivery

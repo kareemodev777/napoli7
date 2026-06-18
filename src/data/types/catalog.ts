@@ -46,6 +46,7 @@ export interface Product {
   isVeg: boolean;
   isSpicy: boolean;
   isActive: boolean;
+  isTemporarilyUnavailable?: boolean;
   position: number;
   imageUrl: string;
   customizations: ProductCustomization[];

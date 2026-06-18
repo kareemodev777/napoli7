@@ -64,16 +64,24 @@ export function Hero({ image = SITE_IMAGE_DEFAULTS.home_hero }: { image?: SiteIm
             </button>
           </div>
 
-          <Link
-            href="/menu"
-            className="arrow-btn mt-4"
-            aria-label="Start your order"
-          >
-            order
-          </Link>
+          <div className="mt-4 space-y-2">
+            <Link
+              href="/register"
+              className="arrow-btn"
+              aria-label="Order now"
+            >
+              order now
+            </Link>
+            <Link
+              href="/about"
+              className="inline-flex text-[11px] font-display underline-offset-4 hover:underline text-muted-foreground"
+            >
+              About Napoli 7
+            </Link>
+          </div>
 
           <p className="font-display text-[11px] text-muted-foreground mt-3 text-center">
-            Tue – Sun 12:30 – 00:00 · Closed Mondays
+            Tue – Sun 12:30 – 00:00
           </p>
         </div>
       </div>

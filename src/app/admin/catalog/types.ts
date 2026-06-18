@@ -39,6 +39,7 @@ export type ProductRow = {
   is_veg: boolean;
   is_spicy: boolean;
   is_active: boolean;
+  is_temporarily_unavailable?: boolean;
   product_sizes: ProductSizeRow[];
   product_customizations: CustomizationRow[];
 };

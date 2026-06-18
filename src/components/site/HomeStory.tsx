@@ -24,7 +24,7 @@ const blocks: Block[] = [
       "Create your Napoli 7 account and become part of our community.",
       "The first 1,000 members receive a free Margherita pizza on us. Prefer another pizza? We'll deduct the value of your free Margherita from any pizza on our menu — so don't miss out.",
     ],
-    cta: { label: "Create your account", href: "/register" },
+    cta: { label: "Create your account", href: "/deals" },
   },
   {
     imageKey: "home_tradition",

@@ -34,6 +34,7 @@ type ProductRow = {
   is_veg: boolean;
   is_spicy: boolean;
   is_active: boolean;
+  is_temporarily_unavailable?: boolean;
   position: number;
   image_url: string;
   product_customizations?: CustomizationRow[];
@@ -171,6 +172,7 @@ function mapProduct(row: ProductRow): Product {
     isVeg: row.is_veg,
     isSpicy: row.is_spicy,
     isActive: row.is_active,
+    isTemporarilyUnavailable: row.is_temporarily_unavailable ?? false,
     position: row.position,
     imageUrl: resolveProductImageUrl(row),
     customizations,
@@ -204,7 +206,7 @@ async function loadSupabaseCatalog() {
     );
     const products = ((data ?? []) as ProductRow[]).map(mapProduct);
 
-    if (categories.length === 0 || products.length === 0) return null;
+    if (categories.length === 0) return null;
     return { categories, products };
   } catch (error) {
     console.error("[catalog] Supabase catalog load failed", error);

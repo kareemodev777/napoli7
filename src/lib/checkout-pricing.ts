@@ -20,6 +20,7 @@ export interface CatalogProductForCheckout {
   name: string;
   priceAed: number;
   isActive: boolean;
+  isTemporarilyUnavailable?: boolean;
   sizes: Array<{
     sizeId: string;
     label: string;
@@ -62,10 +63,10 @@ export function canonicalizeCheckoutCart(
 
   for (const item of cartItems) {
     const product = byId.get(item.productId);
-    if (!product || !product.isActive) {
+    if (!product || !product.isActive || product.isTemporarilyUnavailable) {
       return {
         ok: false,
-        error: `${item.productName || "This item"} is no longer available. Remove it from the cart and try again.`,
+        error: `${item.productName || "This item"} is momentarily unavailable. Remove it from the cart and try again.`,
       };
     }
 

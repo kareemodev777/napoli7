@@ -25,6 +25,7 @@ const productSchema = z.object({
   is_veg: z.coerce.boolean().default(false),
   is_spicy: z.coerce.boolean().default(false),
   is_active: z.coerce.boolean().default(false),
+  is_temporarily_unavailable: z.coerce.boolean().default(false),
 });
 
 const sizeSchema = z.object({
@@ -103,6 +104,10 @@ export async function upsertProduct(formData: FormData) {
     is_veg: boolFromForm(formData, "is_veg"),
     is_spicy: boolFromForm(formData, "is_spicy"),
     is_active: boolFromForm(formData, "is_active"),
+    is_temporarily_unavailable: boolFromForm(
+      formData,
+      "is_temporarily_unavailable",
+    ),
   };
   const parsed = productSchema.safeParse(input);
   if (!parsed.success) {

@@ -38,6 +38,7 @@ export function ProductDetail({ product, categoryLabel }: ProductDetailProps) {
 
   const selectedSize =
     product.sizes.find((s) => s.id === sizeId) ?? product.sizes[0];
+  const unavailable = Boolean(product.isTemporarilyUnavailable);
 
   const cartCustomizations = useMemo<CartCustomization[]>(() => {
     return product.customizations
@@ -164,15 +165,26 @@ export function ProductDetail({ product, categoryLabel }: ProductDetailProps) {
               </div>
             ) : null}
 
+            {unavailable ? (
+              <p className="mt-8 inline-flex items-center px-3 py-2 border border-border bg-muted text-xs font-display tracking-[0.2em] uppercase">
+                Momentarily unavailable
+              </p>
+            ) : null}
+
             <div className="mt-10 grid sm:grid-cols-[auto_1fr] items-center gap-4">
               <QuantityStepper value={qty} onChange={setQty} size="lg" />
               <button
                 type="button"
                 onClick={handleAdd}
                 aria-live="polite"
-                className="w-full inline-flex items-center justify-center bg-brand text-primary-foreground py-4 font-display text-sm tracking-[0.2em] uppercase hover:bg-brand-hover"
+                disabled={unavailable}
+                className="w-full inline-flex items-center justify-center bg-brand text-primary-foreground py-4 font-display text-sm tracking-[0.2em] uppercase hover:bg-brand-hover disabled:opacity-50 disabled:hover:bg-brand"
               >
-                {added ? "Added" : `Add to cart · ${formatAed(lineTotal)}`}
+                {unavailable
+                  ? "Unavailable"
+                  : added
+                    ? "Added"
+                    : `Add to cart · ${formatAed(lineTotal)}`}
               </button>
             </div>
           </div>

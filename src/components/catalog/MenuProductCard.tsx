@@ -26,6 +26,7 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
   const selectedSize =
     product.sizes.find((s) => s.id === sizeId) ?? product.sizes[0];
   const hasCustomizations = product.customizations.length > 0;
+  const unavailable = Boolean(product.isTemporarilyUnavailable);
 
   function handleQuickAdd() {
     addItem({
@@ -47,7 +48,12 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
   }
 
   return (
-    <article className="group flex flex-col bg-background border border-border hover:border-foreground transition-colors">
+    <article
+      className={
+        "group flex flex-col bg-background border border-border transition-colors " +
+        (unavailable ? "opacity-85" : "hover:border-foreground")
+      }
+    >
       <div className="relative aspect-[1/1] overflow-hidden bg-muted sm:aspect-[4/3]">
         <SmartImage
           src={product.imageUrl}
@@ -62,6 +68,11 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
             {product.isSpicy ? <SpicyDot /> : null}
           </div>
         )}
+        {unavailable ? (
+          <div className="absolute inset-x-0 bottom-0 bg-black/70 text-white text-center px-3 py-2 font-display text-[10px] tracking-[0.2em] uppercase">
+            Momentarily unavailable
+          </div>
+        ) : null}
       </div>
 
       <div className="flex flex-col flex-1 p-5 gap-3">
@@ -114,7 +125,8 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
               type="button"
               onClick={handleQuickAdd}
               aria-label={`Add ${product.name} to cart`}
-              className="h-10 w-10 inline-flex items-center justify-center bg-brand text-primary-foreground hover:bg-brand-hover relative"
+              disabled={unavailable}
+              className="h-10 w-10 inline-flex items-center justify-center bg-brand text-primary-foreground hover:bg-brand-hover relative disabled:opacity-50 disabled:hover:bg-brand"
             >
               <ShoppingBag className="h-4 w-4" strokeWidth={1.5} aria-hidden />
               {justAdded ? (

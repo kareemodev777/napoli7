@@ -7,7 +7,8 @@ import { useCart, type CartItem } from "@/store/cart";
 import { useMounted } from "@/lib/use-mounted";
 import { formatAed } from "@/components/catalog/PriceBadge";
 
-const FREE_DELIVERY_TARGET = 100;
+const DELIVERY_MIN_SUBTOTAL = 28;
+const DELIVERY_FEE = 12;
 
 export function CartSidebar() {
   const items = useCart((s) => s.items);
@@ -19,9 +20,9 @@ export function CartSidebar() {
 
   const hasItems = mounted && items.length > 0;
   const progress = mounted
-    ? Math.min(100, (subtotal / FREE_DELIVERY_TARGET) * 100)
+    ? Math.min(100, (subtotal / DELIVERY_MIN_SUBTOTAL) * 100)
     : 0;
-  const remaining = Math.max(0, FREE_DELIVERY_TARGET - subtotal);
+  const remaining = Math.max(0, DELIVERY_MIN_SUBTOTAL - subtotal);
 
   return (
     <aside
@@ -66,11 +67,11 @@ export function CartSidebar() {
             <div className="flex items-baseline justify-between text-xs">
               <span className="text-muted-foreground">
                 {remaining > 0
-                  ? `Add ${formatAed(remaining)} for free delivery`
-                  : "Free delivery unlocked"}
+                  ? `Add ${formatAed(remaining)} more for delivery`
+                  : "Delivery minimum reached"}
               </span>
               <span className="font-display tabular-nums">
-                {formatAed(subtotal)} / {formatAed(FREE_DELIVERY_TARGET)}
+                {formatAed(subtotal)} / {formatAed(DELIVERY_MIN_SUBTOTAL)}
               </span>
             </div>
             <div className="mt-2 h-1 bg-border overflow-hidden">
@@ -88,7 +89,9 @@ export function CartSidebar() {
           >
             {formatAed(subtotal)}
           </Row>
-          <Row label="Delivery fee">Calculated at checkout</Row>
+          <Row label={`Delivery fee · ${formatAed(DELIVERY_FEE)}`}>
+            At checkout
+          </Row>
         </dl>
 
         <Link
