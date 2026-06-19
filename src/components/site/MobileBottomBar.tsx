@@ -41,14 +41,15 @@ export function MobileBottomBar() {
       className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-background border-t border-border flex"
       style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom))" }}
     >
-      {/* Order CTA — arrow-btn variant at 52px height */}
+      {/* Primary CTA — "order" (browse the menu) until the cart has items, then
+          it flips to "checkout" so a customer with a full cart can pay in one tap. */}
       <Link
-        href="/menu"
+        href={qty > 0 ? "/checkout" : "/menu"}
         className="arrow-btn flex-1"
         style={{ height: "52px", fontSize: "1.125rem" }}
-        aria-label="Go to menu to order"
+        aria-label={qty > 0 ? "Proceed to checkout" : "Go to menu to order"}
       >
-        order
+        {qty > 0 ? "checkout" : "order"}
       </Link>
 
       {/* Cart pill — min-w so it grows to fit large subtotals up to max-w */}
