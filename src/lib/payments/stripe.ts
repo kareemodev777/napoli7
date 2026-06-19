@@ -80,6 +80,11 @@ export async function createCheckoutSession(input: CreateSessionInput) {
       line_items,
       discounts,
       metadata: { orderId: input.orderId },
+      // Propagate the order id onto the PaymentIntent too. The session metadata
+      // is NOT copied to the PI automatically, and `payment_intent.payment_failed`
+      // fires with no session attached — without this the failed handler has no
+      // way to find the order (Bug 1).
+      payment_intent_data: { metadata: { orderId: input.orderId } },
       success_url: `${SITE_URL}/order/${input.orderId}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${SITE_URL}/checkout?canceled=1`,
     },

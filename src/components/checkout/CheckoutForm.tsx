@@ -56,6 +56,12 @@ export function CheckoutForm({
 
   const hydrated = useMounted();
   const [pending, startTransition] = useTransition();
+  // Card checkout redirects to Stripe via /api/checkout/create-session, which
+  // calls the Stripe API before issuing a 303. That round-trip can take a couple
+  // of seconds, during which `pending` (from useTransition) has already cleared
+  // because the async action returned. This dedicated flag stays true through
+  // the full-page navigation so the button + overlay keep showing progress.
+  const [redirecting, setRedirecting] = useState(false);
   const [error, setError] = useState<string | null>(
     searchParams.get("canceled") === "1"
       ? "Your payment was canceled. Try again or choose Cash on Delivery."
@@ -192,7 +198,10 @@ export function CheckoutForm({
           return;
         }
         if (result.paymentUrl) {
-          // Card payment path — redirect to Stripe session creation route
+          // Card payment path — redirect to Stripe session creation route. Hold
+          // the loading state (button + overlay) until the browser leaves this
+          // page, so the slow Stripe round-trip never looks frozen.
+          setRedirecting(true);
           window.location.href = result.paymentUrl;
           return;
         }
@@ -214,6 +223,22 @@ export function CheckoutForm({
       onSubmit={onSubmit}
       className="grid lg:grid-cols-[1.4fr_1fr] gap-10 items-start"
     >
+      {redirecting ? (
+        <div
+          role="status"
+          aria-live="assertive"
+          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-background/90 backdrop-blur-sm px-6 text-center"
+        >
+          <Spinner className="h-8 w-8" />
+          <p className="font-display text-sm tracking-[0.2em] uppercase text-foreground">
+            Taking you to secure payment…
+          </p>
+          <p className="text-sm text-muted-foreground max-w-xs">
+            Hang on — we’re opening the Stripe checkout. Don’t refresh or go back.
+          </p>
+        </div>
+      ) : null}
+
       <div className="space-y-10">
         <Section title="Contact details">
           <div className="grid sm:grid-cols-2 gap-5">
@@ -407,8 +432,12 @@ export function CheckoutForm({
             <PaymentOption
               active={paymentMethod === "cod"}
               onClick={() => setPaymentMethod("cod")}
-              title="Cash on delivery"
-              note="Pay cash to the driver."
+              title={deliveryType === "pickup" ? "Cash at pickup" : "Cash on delivery"}
+              note={
+                deliveryType === "pickup"
+                  ? "Pay cash when you collect."
+                  : "Pay cash to the driver."
+              }
             />
             <PaymentOption
               active={paymentMethod === "card"}
@@ -424,8 +453,9 @@ export function CheckoutForm({
             </p>
           ) : (
             <p className="mt-4 text-xs text-muted-foreground">
-              Pay cash to the driver on arrival. Please have exact change if you
-              can.
+              {deliveryType === "pickup"
+                ? "Pay cash at the counter when you collect your order. Please have exact change if you can."
+                : "Pay cash to the driver on arrival. Please have exact change if you can."}
             </p>
           )}
         </Section>
@@ -439,17 +469,31 @@ export function CheckoutForm({
 
         <button
           type="submit"
-          disabled={pending || !canSubmit}
-          aria-busy={pending}
-          className="w-full inline-flex items-center justify-center bg-brand text-primary-foreground py-4 font-display text-sm tracking-[0.2em] uppercase hover:bg-brand-hover disabled:opacity-50"
+          disabled={pending || redirecting || !canSubmit}
+          aria-busy={pending || redirecting}
+          className="w-full inline-flex items-center justify-center gap-3 bg-brand text-primary-foreground py-4 font-display text-sm tracking-[0.2em] uppercase hover:bg-brand-hover disabled:opacity-50"
         >
-          {pending
-            ? "Placing order…"
-            : !areaSupported
-              ? "Delivery unavailable for this area"
-              : !meetsDeliveryMin
-                ? `Minimum ${formatAed(DELIVERY_MIN_SUBTOTAL_AED)} for delivery`
-                : "Place order"}
+          {redirecting ? (
+            <>
+              <Spinner />
+              Redirecting to secure payment…
+            </>
+          ) : pending ? (
+            <>
+              <Spinner />
+              {paymentMethod === "card"
+                ? "Preparing secure payment…"
+                : "Placing order…"}
+            </>
+          ) : !areaSupported ? (
+            "Delivery unavailable for this area"
+          ) : !meetsDeliveryMin ? (
+            `Minimum ${formatAed(DELIVERY_MIN_SUBTOTAL_AED)} for delivery`
+          ) : paymentMethod === "card" ? (
+            "Continue to secure payment"
+          ) : (
+            "Place order"
+          )}
         </button>
       </div>
 
@@ -623,5 +667,30 @@ function Row({
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="tabular-nums">{children}</dd>
     </div>
+  );
+}
+
+function Spinner({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg
+      className={`animate-spin ${className}`}
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+    >
+      <circle
+        className="opacity-25"
+        cx="12"
+        cy="12"
+        r="10"
+        stroke="currentColor"
+        strokeWidth="3"
+      />
+      <path
+        className="opacity-90"
+        fill="currentColor"
+        d="M12 2a10 10 0 0 1 10 10h-3a7 7 0 0 0-7-7V2z"
+      />
+    </svg>
   );
 }

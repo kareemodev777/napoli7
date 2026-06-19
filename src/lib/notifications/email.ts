@@ -229,6 +229,41 @@ export async function notifyCustomerStatusEmail(
   });
 }
 
+export async function notifyStaffAlertEmail(input: {
+  subject: string;
+  heading: string;
+  intro: string;
+  details: Array<[string, string]>;
+}) {
+  const body = [
+    input.intro,
+    "",
+    ...input.details.map(([label, value]) => `${label}: ${value}`),
+  ].join("\n");
+  const html = brandEmailHtml({
+    eyebrow: "Action needed",
+    heading: input.heading,
+    intro: input.intro,
+    children: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+      ${input.details.map(([label, value]) => detailRow(label, value)).join("")}
+    </table>`,
+  });
+  if (!HAS_RESEND) {
+    console.warn(
+      `[notifyStaffAlertEmail] Resend disabled. ${input.subject}\n${body}`,
+    );
+    return;
+  }
+  const resend = new Resend(process.env.RESEND_API_KEY!);
+  await resend.emails.send({
+    from: `Napoli 7 Alerts <${ORDER_EMAIL_FROM}>`,
+    to: [ORDER_EMAIL_TO],
+    subject: input.subject,
+    text: body,
+    html,
+  });
+}
+
 export async function notifyContactMessageEmail(input: {
   name: string;
   phone: string;
