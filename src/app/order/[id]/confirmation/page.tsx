@@ -143,6 +143,26 @@ function deriveView(order: OrderForConfirmation): PaymentView {
         poll: false,
         showRetry: false,
       };
+    case "partially_refunded":
+      return {
+        eyebrow: "Partially refunded",
+        heading: "Part of this order was refunded.",
+        message:
+          "We’ve issued a partial refund to your card — it takes a few business days to appear. For a breakdown, call us on +971 6 534 5772.",
+        showOrder: true,
+        poll: false,
+        showRetry: false,
+      };
+    case "disputed":
+      return {
+        eyebrow: "Payment under review",
+        heading: "This payment is under review.",
+        message:
+          "Your card payment is being reviewed with your bank. We’ll be in touch — if you have questions, call us on +971 6 534 5772.",
+        showOrder: true,
+        poll: false,
+        showRetry: false,
+      };
     case "pending":
     default:
       return {
@@ -173,10 +193,15 @@ export default async function OrderConfirmationPage({
           {order && view ? (
             <>
               {view.poll ? <PaymentStatusPoller /> : null}
-              {view.showOrder &&
-              (order.paymentMethod !== "card" || order.paymentStatus === "paid") ? (
-                <CartClearer />
-              ) : null}
+              {/* Empty the cart as soon as the confirmation page renders. Reaching
+                  this page means checkout completed: COD is placed, and a card
+                  order only lands here via Stripe's success_url (a cancel/abandon
+                  goes to /checkout). `showOrder` is false only for a failed card
+                  payment — there we keep the cart so the retry CTA still works,
+                  so we must NOT clear. Gating on `showOrder` clears immediately
+                  for paid AND still-pending card orders, instead of waiting on the
+                  webhook + poller to flip the status. */}
+              {view.showOrder ? <CartClearer /> : null}
               <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep mb-4">
                 {view.eyebrow}
               </p>

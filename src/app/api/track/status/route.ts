@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { HAS_SUPABASE } from "@/lib/env";
+import { isUuid } from "@/lib/order-lookup";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -35,14 +36,15 @@ export async function GET(request: Request) {
   }
 
   const supabase = await createClient();
-  const { data: order } = await supabase
+  const lookup = parsed.data.orderId;
+  let query = supabase
     .from("orders")
     .select("order_number, status")
-    .or(
-      `id.eq.${parsed.data.orderId},order_number.ilike.${parsed.data.orderId}`,
-    )
-    .eq("customer_phone", parsed.data.phone)
-    .maybeSingle();
+    .eq("customer_phone", parsed.data.phone);
+  query = isUuid(lookup)
+    ? query.or(`id.eq.${lookup},order_number.ilike.${lookup}`)
+    : query.ilike("order_number", lookup);
+  const { data: order } = await query.maybeSingle();
 
   if (!order) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });

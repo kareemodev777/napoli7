@@ -3,6 +3,7 @@
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { HAS_SUPABASE } from "@/lib/env";
+import { isUuid } from "@/lib/order-lookup";
 
 const trackSchema = z.object({
   orderId: z.string().min(4),
@@ -52,16 +53,23 @@ export async function trackOrder(
   }
 
   const supabase = await createClient();
-  const { data: order } = await supabase
+  const lookup = parsed.data.orderId;
+  let query = supabase
     .from("orders")
     .select(
       "id, order_number, status, created_at, delivery_slot, delivery_type, customer_phone",
     )
-    .or(
-      `id.eq.${parsed.data.orderId},order_number.ilike.${parsed.data.orderId}`,
-    )
-    .eq("customer_phone", parsed.data.phone)
-    .maybeSingle();
+    .eq("customer_phone", parsed.data.phone);
+  // Only match the uuid `id` column when the input is actually a uuid; otherwise
+  // an order-number lookup (the normal case) would crash the query. See isUuid.
+  query = isUuid(lookup)
+    ? query.or(`id.eq.${lookup},order_number.ilike.${lookup}`)
+    : query.ilike("order_number", lookup);
+  const { data: order, error } = await query.maybeSingle();
+
+  if (error) {
+    console.error("[trackOrder] lookup failed:", error);
+  }
 
   if (!order) {
     return {
