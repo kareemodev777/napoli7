@@ -103,7 +103,9 @@ export function CheckoutForm({
     let tries = 0;
 
     const syncStreetFromDom = () => {
-      const domStreet = streetInputRef.current?.value.trim() ?? "";
+      const streetInput =
+        document.getElementById("street") as HTMLInputElement | null;
+      const domStreet = streetInput?.value.trim() ?? "";
       if (domStreet && domStreet !== lastSeen) {
         lastSeen = domStreet;
         setStreet(domStreet);
