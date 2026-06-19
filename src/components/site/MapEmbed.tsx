@@ -1,7 +1,4 @@
-import {
-  buildGoogleMapsEmbedUrl,
-  buildGoogleMapsSearchUrl,
-} from "@/lib/delivery-map";
+import { buildGoogleMapsEmbedUrl } from "@/lib/delivery-map";
 
 interface MapEmbedProps {
   lat?: number;
@@ -21,7 +18,6 @@ export function MapEmbed({
     : lat !== undefined && lng !== undefined
       ? `https://maps.google.com/maps?q=${lat},${lng}&z=16&output=embed`
       : "";
-  const searchUrl = query ? buildGoogleMapsSearchUrl(query) : null;
   if (!src) {
     return (
       <div className="grid w-full h-[280px] md:h-[400px] place-items-center border border-border bg-card text-sm text-muted-foreground">
@@ -40,16 +36,6 @@ export function MapEmbed({
         className="w-full h-[280px] md:h-[400px] block border border-border bg-card"
         allowFullScreen
       />
-      {searchUrl ? (
-        <a
-          href={searchUrl}
-          target="_blank"
-          rel="noreferrer"
-          className="inline-flex text-xs uppercase tracking-[0.18em] text-muted-foreground underline-offset-4 hover:underline"
-        >
-          Open exact pin in Maps
-        </a>
-      ) : null}
     </div>
   );
 }

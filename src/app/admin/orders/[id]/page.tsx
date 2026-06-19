@@ -2,12 +2,14 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { StatusBadge } from "@/components/account/StatusBadge";
+import { MapEmbed } from "@/components/site/MapEmbed";
+import { buildDeliveryMapQuery } from "@/lib/delivery-map";
+import { HAS_SUPABASE_SERVICE } from "@/lib/env";
 import {
   OrderEditForm,
   type EditOrderItem,
   type EditOrderProduct,
 } from "@/components/admin/OrderEditForm";
-import { HAS_SUPABASE_SERVICE } from "@/lib/env";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { labelForHandling, type PaymentHandling } from "@/lib/admin/order-edit";
 
@@ -34,7 +36,7 @@ async function loadOrder(id: string) {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, order_number, customer_name, customer_phone, status, payment_method, payment_status, subtotal_aed, delivery_fee_aed, discount_aed, total_aed, order_notes, admin_notes, order_items(id, product_name, quantity, line_total_aed)",
+      "id, order_number, customer_name, customer_phone, status, payment_method, payment_status, delivery_type, delivery_address, pizza_cut, subtotal_aed, delivery_fee_aed, discount_aed, total_aed, order_notes, admin_notes, order_items(id, product_name, quantity, line_total_aed)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -76,6 +78,17 @@ export default async function AdminOrderEditPage({
   if (!loaded) notFound();
   const { order, edits, products } = loaded;
 
+  const deliveryAddress = order.delivery_address as
+    | {
+        street?: string;
+        area?: string;
+        flat?: string;
+        notes?: string;
+        mapQuery?: string;
+      }
+    | null;
+  const deliveryMapQuery = deliveryAddress?.mapQuery ?? buildDeliveryMapQuery(deliveryAddress);
+
   const items: EditOrderItem[] = (order.order_items ?? []).map(
     (it: {
       id: string;
@@ -112,6 +125,36 @@ export default async function AdminOrderEditPage({
         <p className="mt-2 text-sm text-muted-foreground">
           {order.customer_name} · {order.customer_phone}
         </p>
+
+        {order.delivery_type === "delivery" && deliveryAddress ? (
+          <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_minmax(0,420px)]">
+            <div className="rounded-md border border-border bg-card p-5 text-sm space-y-2">
+              <p className="font-display text-xs tracking-[0.25em] uppercase text-muted-foreground">
+                Delivery details
+              </p>
+              <p>{deliveryAddress.street ?? ""}</p>
+              <p>
+                {[deliveryAddress.flat ? `Flat ${deliveryAddress.flat}` : null, deliveryAddress.area]
+                  .filter(Boolean)
+                  .join(", ")}
+              </p>
+              {deliveryAddress.notes ? (
+                <p className="text-muted-foreground">Notes: {deliveryAddress.notes}</p>
+              ) : null}
+              <p className="pt-2 font-medium">
+                Pizza cut: {order.pizza_cut ? "Yes" : "No"}
+              </p>
+              {deliveryMapQuery ? (
+                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                  Pin: {deliveryMapQuery}
+                </p>
+              ) : null}
+            </div>
+            {deliveryMapQuery ? (
+              <MapEmbed query={deliveryMapQuery} title={`Delivery pin for ${order.order_number}`} />
+            ) : null}
+          </div>
+        ) : null}
 
         <div className="mt-8">
           <OrderEditForm

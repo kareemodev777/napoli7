@@ -4,10 +4,7 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type DeliveryZone } from "@/lib/checkout";
 import { chooseCheckoutArea, type CheckoutInitialDetails } from "@/lib/checkout-prefill";
-import {
-  buildDeliveryMapQuery,
-  buildGoogleMapsSearchUrl,
-} from "@/lib/delivery-map";
+import { buildDeliveryMapQuery } from "@/lib/delivery-map";
 import { MapEmbed } from "@/components/site/MapEmbed";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -73,7 +70,7 @@ export function CheckoutForm({
   const [redirecting, setRedirecting] = useState(false);
   const [error, setError] = useState<string | null>(
     searchParams.get("canceled") === "1"
-      ? "Your payment was canceled. Try again or choose Cash on Delivery."
+      ? "Your payment was canceled. Try again."
       : null,
   );
   const [deliveryType, setDeliveryType] = useState<"delivery" | "pickup">(
@@ -85,7 +82,8 @@ export function CheckoutForm({
       preferredArea: preferredArea ?? initialDetails.deliveryAddress?.area,
     }),
   );
-  const [paymentMethod, setPaymentMethod] = useState<"cod" | "card">("cod");
+  const paymentMethod = "card" as const;
+  const [pizzaCut, setPizzaCut] = useState(false);
 
   // Address fields are controlled so picking a saved address can fill them.
   const [street, setStreet] = useState(
@@ -204,6 +202,7 @@ export function CheckoutForm({
       deliveryAddress: rawAddress,
       deliverySlot: String(formData.get("deliverySlot") ?? "ASAP"),
       orderNotes: String(formData.get("orderNotes") ?? "") || undefined,
+      pizzaCut,
       paymentMethod,
       promoCode: promo?.code,
       items: items.map((it) => ({
@@ -427,16 +426,6 @@ export function CheckoutForm({
                       Check the pin before you place the order.
                     </p>
                   </div>
-                  {deliveryMapQuery ? (
-                    <a
-                      href={buildGoogleMapsSearchUrl(deliveryMapQuery)}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="text-xs uppercase tracking-[0.18em] text-muted-foreground underline-offset-4 hover:underline"
-                    >
-                      Open pin
-                    </a>
-                  ) : null}
                 </div>
                 {deliveryMapQuery ? (
                   <MapEmbed
@@ -484,39 +473,34 @@ export function CheckoutForm({
             placeholder="Anything the kitchen should know — well-baked, light cheese, etc."
             className="resize-none"
           />
+          <label className="mt-4 flex items-start gap-3 text-sm text-foreground">
+            <input
+              type="checkbox"
+              checked={pizzaCut}
+              onChange={(e) => setPizzaCut(e.target.checked)}
+              className="mt-1 h-4 w-4 border-border text-brand focus:ring-brand"
+            />
+            <span>
+              Cut the pizza for me
+              <span className="block text-xs text-muted-foreground">
+                We’ll slice it before it leaves the kitchen.
+              </span>
+            </span>
+          </label>
         </Section>
 
         <Section title="Payment">
-          <div className="grid sm:grid-cols-2 gap-px bg-border border border-border max-w-md">
-            <PaymentOption
-              active={paymentMethod === "cod"}
-              onClick={() => setPaymentMethod("cod")}
-              title={deliveryType === "pickup" ? "Cash at pickup" : "Cash on delivery"}
-              note={
-                deliveryType === "pickup"
-                  ? "Pay cash when you collect."
-                  : "Pay cash to the driver."
-              }
-            />
-            <PaymentOption
-              active={paymentMethod === "card"}
-              onClick={() => setPaymentMethod("card")}
-              title="Pay by card"
-              note="Card · Apple Pay · Google Pay."
-            />
+          <div className="max-w-md border border-border bg-brand/10 p-4">
+            <p className="font-display text-sm tracking-[0.1em] uppercase">
+              Card payment only
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              We accept cards, Apple Pay, and Google Pay. No cash on delivery.
+            </p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Test mode: card <code className="font-mono">4242 4242 4242 4242</code>.
+            </p>
           </div>
-          {paymentMethod === "card" ? (
-            <p className="mt-4 text-xs text-muted-foreground">
-              Card payments redirect to a secure hosted page. Test mode: card{" "}
-              <code className="font-mono">4242 4242 4242 4242</code>.
-            </p>
-          ) : (
-            <p className="mt-4 text-xs text-muted-foreground">
-              {deliveryType === "pickup"
-                ? "Pay cash at the counter when you collect your order. Please have exact change if you can."
-                : "Pay cash to the driver on arrival. Please have exact change if you can."}
-            </p>
-          )}
         </Section>
 
         {error ? (
@@ -540,18 +524,14 @@ export function CheckoutForm({
           ) : pending ? (
             <>
               <Spinner />
-              {paymentMethod === "card"
-                ? "Preparing secure payment…"
-                : "Placing order…"}
+              Preparing secure payment…
             </>
           ) : !areaSupported ? (
             "Delivery unavailable for this area"
           ) : !meetsDeliveryMin ? (
             `Minimum ${formatAed(deliveryMinSubtotalAed)} total for delivery`
-          ) : paymentMethod === "card" ? (
-            "Continue to secure payment"
           ) : (
-            "Place order"
+            "Continue to secure payment"
           )}
         </button>
       </div>
@@ -674,42 +654,6 @@ function Toggle({
       }
     >
       {children}
-    </button>
-  );
-}
-
-function PaymentOption({
-  active,
-  onClick,
-  title,
-  note,
-}: {
-  active: boolean;
-  onClick: () => void;
-  title: string;
-  note: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-pressed={active}
-      className={
-        "p-4 text-left " +
-        (active
-          ? "bg-brand text-primary-foreground"
-          : "bg-background hover:bg-muted")
-      }
-    >
-      <p className="font-display text-sm tracking-[0.1em] uppercase">{title}</p>
-      <p
-        className={
-          "text-xs mt-1 " +
-          (active ? "text-primary-foreground/85" : "text-muted-foreground")
-        }
-      >
-        {note}
-      </p>
     </button>
   );
 }

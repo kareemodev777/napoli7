@@ -95,18 +95,20 @@ export async function notifyKitchenWhatsApp(input: KitchenNotificationInput) {
     input.deliveryType === "delivery" && input.deliveryAddress
       ? `${input.deliveryAddress.street}, ${input.deliveryAddress.area}${input.deliveryAddress.flat ? `, Flat ${input.deliveryAddress.flat}` : ""}${input.deliveryAddress.notes ? `\nNotes: ${input.deliveryAddress.notes}` : ""}`
       : "Pickup at shop";
-  const mapLink = input.deliveryAddress?.mapQuery
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(input.deliveryAddress.mapQuery)}`
+  const pinText = input.deliveryAddress?.mapQuery
+    ? `Pin: ${input.deliveryAddress.mapQuery}`
     : null;
+  const pizzaCutLine = input.pizzaCut ? "Pizza cut: yes" : "Pizza cut: no";
 
   const messageBody = [
     `New order ${input.orderNumber}`,
     `Total ${input.totalAed.toFixed(2)} AED · ${input.paymentMethod.toUpperCase()}`,
     `${input.customerName} · ${input.customerPhone}`,
-    `${input.deliveryType.toUpperCase()} · ${input.deliverySlot}`,
+    `Type: ${input.deliveryType.toUpperCase()} · ${input.deliverySlot}`,
+    pizzaCutLine,
     `Address:\n${address}`,
-    mapLink ? `Map pin:\n${mapLink}` : null,
-    "",
+    pinText,
+
     ...input.items.map((it) => `${it.quantity}× ${it.name}`),
   ]
     .filter(Boolean)

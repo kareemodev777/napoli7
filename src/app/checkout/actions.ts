@@ -3,8 +3,6 @@
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { notifyKitchenEmail } from "@/lib/notifications/email";
-import { notifyKitchenWhatsApp } from "@/lib/notifications/whatsapp";
 import { validatePromo, redeemPromo } from "@/lib/promo";
 import { resolveDeliveryFee } from "@/lib/checkout";
 import {
@@ -57,7 +55,8 @@ const placeOrderSchema = z.object({
   deliveryAddress: deliveryAddressSchema.optional(),
   deliverySlot: z.string().min(1),
   orderNotes: z.string().max(500).optional(),
-  paymentMethod: z.enum(["cod", "card"]),
+  pizzaCut: z.boolean().optional(),
+  paymentMethod: z.literal("card"),
   promoCode: z.string().max(40).optional(),
   items: z.array(itemSchema).min(1),
 });
@@ -209,23 +208,10 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   });
 
   if (!HAS_SUPABASE) {
-    const orderId = crypto.randomUUID();
-    const orderNumber = `N7-DEMO-${Date.now().toString().slice(-5)}`;
-    console.info(
-      `[placeOrder] Supabase disabled. Demo order ${orderNumber} (${total.toFixed(2)} AED) for ${data.firstName} ${data.lastName}`,
-    );
-    if (data.paymentMethod === "card") {
-      // No kitchen notification here — card orders are only fulfilled after the
-      // Stripe webhook confirms payment. (Demo mode can't reach that path.)
-      return {
-        orderId,
-        orderNumber,
-        error:
-          "Card payment requires Stripe + Supabase env vars. Choose Cash on Delivery for now.",
-      };
-    }
-    await runNotifications({ data, orderId, orderNumber, total });
-    return { orderId, orderNumber };
+    return {
+      error:
+        "Card payment requires Stripe + Supabase env vars. Please try again in the live environment.",
+    };
   }
 
   const supabase = await createClient();
@@ -244,6 +230,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
         data.deliveryType === "delivery" ? data.deliveryAddress : null,
       delivery_slot: data.deliverySlot,
       order_notes: data.orderNotes ?? null,
+      pizza_cut: data.pizzaCut ?? false,
       payment_method: data.paymentMethod,
       payment_status: "pending",
       promo_code: appliedPromo ?? null,
@@ -285,10 +272,9 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     await persistDeliveryAddress(supabase, user.id, data.deliveryAddress);
   }
 
-  // Redeem the promo only for cash on delivery, which is confirmed the moment
-  // it's placed. Card orders defer redemption to the Stripe webhook so a code is
-  // never consumed by a checkout the customer abandons before paying.
-  if (appliedPromo && data.paymentMethod === "cod") {
+  // Redeem the promo right away. Card-only checkout means there is no delayed
+  // cash branch anymore, and the Stripe webhook handles the paid path.
+  if (appliedPromo) {
     try {
       const redeemed = await redeemPromo(appliedPromo);
       if (!redeemed) {
@@ -301,33 +287,16 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     }
   }
 
-  if (data.paymentMethod === "card") {
-    // Defer fulfillment to the Stripe webhook: the kitchen is notified only
-    // after `checkout.session.completed` confirms the card was actually charged.
-    // Notifying here would alert the kitchen for checkouts the customer abandons.
-    // The promo (if any) is redeemed there too, for the same reason.
-    return {
-      orderId: order.id,
-      orderNumber: order.order_number,
-      paymentUrl: `/api/checkout/create-session?orderId=${order.id}`,
-    };
-  }
-
-  // Cash on delivery: there's no payment step, so notify the kitchen now.
-  await runNotifications({
-    data,
+  // Defer fulfillment to the Stripe webhook: the kitchen is notified only
+  // after `checkout.session.completed` confirms the card was actually charged.
+  // Notifying here would alert the kitchen for checkouts the customer abandons.
+  // The promo (if any) is redeemed there too, for the same reason.
+  return {
     orderId: order.id,
     orderNumber: order.order_number,
-    total,
-  });
+    paymentUrl: `/api/checkout/create-session?orderId=${order.id}`,
+  };
 
-  // Push the confirmed order to the POS. After runNotifications so a slow POS
-  // never delays the kitchen alert; DB-sourced and best-effort (swallows its own
-  // failures and never throws), so a POS outage can't affect order placement.
-  await pushOrderToPos(order.id);
-
-  revalidatePath("/account/orders");
-  return { orderId: order.id, orderNumber: order.order_number };
 }
 
 async function persistDeliveryAddress(
@@ -369,39 +338,3 @@ async function persistDeliveryAddress(
   }
 }
 
-async function runNotifications(args: {
-  data: PlaceOrderInput;
-  orderId: string;
-  orderNumber: string;
-  total: number;
-}) {
-  const { data, orderId, orderNumber, total } = args;
-  const payload = {
-    orderId,
-    orderNumber,
-    customerName: `${data.firstName} ${data.lastName}`,
-    customerPhone: data.phone,
-    customerEmail: data.email,
-    deliveryType: data.deliveryType,
-    deliveryAddress: data.deliveryAddress,
-    deliverySlot: data.deliverySlot,
-    paymentMethod: data.paymentMethod,
-    totalAed: total,
-    items: data.items.map((it) => ({
-      name: it.productName,
-      quantity: it.quantity,
-      customizations: it.customizations,
-      lineTotalAed: it.lineTotalAed,
-    })),
-  };
-  try {
-    await notifyKitchenEmail(payload);
-  } catch (e) {
-    console.error("[placeOrder] kitchen email failed:", e);
-  }
-  try {
-    await notifyKitchenWhatsApp(payload);
-  } catch (e) {
-    console.error("[placeOrder] kitchen whatsapp failed:", e);
-  }
-}

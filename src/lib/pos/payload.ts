@@ -48,6 +48,7 @@ export interface PosOrderRow {
   delivery_address: PosDeliveryAddress | null;
   delivery_slot: string;
   order_notes: string | null;
+  pizza_cut: boolean | null;
   payment_method: "cod" | "card";
   payment_status: "pending" | "paid" | "failed" | "refunded";
   stripe_payment_intent: string | null;
@@ -274,7 +275,11 @@ export function orderRowToWooOrder(order: PosOrderRow): WooOrderBody {
       ? "Credit Card (Stripe)"
       : "Cash on Delivery",
     set_paid: order.payment_status === "paid",
-    customer_note: order.order_notes ?? "",
+    customer_note: order.order_notes
+      ? `${order.order_notes}${order.pizza_cut ? "\nPizza cut: yes" : ""}`
+      : order.pizza_cut
+        ? "Pizza cut: yes"
+        : "",
     billing,
     shipping: isDelivery
       ? {
@@ -311,6 +316,7 @@ export function orderRowToWooOrder(order: PosOrderRow): WooOrderBody {
       { key: "order_id", value: order.id },
       { key: "delivery_type", value: order.delivery_type },
       { key: "delivery_slot", value: order.delivery_slot },
+      { key: "pizza_cut", value: order.pizza_cut ? "yes" : "no" },
     ],
     parent_id: 0,
     order_key: order.order_number,

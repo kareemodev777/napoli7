@@ -23,7 +23,8 @@ export interface KitchenNotificationInput {
     mapQuery?: string;
   };
   deliverySlot: string;
-  paymentMethod: "cod" | "card";
+  pizzaCut: boolean;
+  paymentMethod: "card";
   totalAed: number;
   items: OrderItemSummary[];
 }
@@ -130,9 +131,10 @@ export async function notifyKitchenEmail(input: KitchenNotificationInput) {
     input.deliveryType === "delivery" && input.deliveryAddress
       ? `${input.deliveryAddress.street}, ${input.deliveryAddress.area}${input.deliveryAddress.flat ? `, Flat ${input.deliveryAddress.flat}` : ""}${input.deliveryAddress.notes ? `\nNotes: ${input.deliveryAddress.notes}` : ""}`
       : "Pickup at shop";
-  const mapLink = input.deliveryAddress?.mapQuery
-    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(input.deliveryAddress.mapQuery)}`
+  const pinText = input.deliveryAddress?.mapQuery
+    ? `Pin: ${input.deliveryAddress.mapQuery}`
     : null;
+  const pizzaCutLine = input.pizzaCut ? "Pizza cut: yes" : "Pizza cut: no";
   const body = `New order received
 
 Order:    ${input.orderNumber}
@@ -141,6 +143,7 @@ Phone:    ${input.customerPhone}
 Email:    ${input.customerEmail}
 Type:     ${input.deliveryType.toUpperCase()}
 Slot:     ${input.deliverySlot}
+Pizza:    ${pizzaCutLine}
 Payment:  ${input.paymentMethod.toUpperCase()}
 
 Items:
@@ -149,7 +152,9 @@ ${formatItems(input.items)}
 Total:    ${input.totalAed.toFixed(2)} AED
 
 Address:
-${address}`;
+${address}
+${pinText ? `${pinText}
+` : ""}`;
   const html = brandEmailHtml({
     eyebrow: "Kitchen order",
     heading: `Order ${input.orderNumber}`,
@@ -159,8 +164,9 @@ ${address}`;
       ${detailRow("Phone", input.customerPhone)}
       ${detailRow("Email", input.customerEmail)}
       ${detailRow("Slot", input.deliverySlot)}
+      ${detailRow("Pizza", pizzaCutLine)}
       ${detailRow("Address", address.replaceAll("\n", " · "))}
-      ${mapLink ? detailRow("Map pin", mapLink) : ""}
+      ${pinText ? detailRow("Pin", pinText) : ""}
     </table>
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0">${formatItemsHtml(input.items)}</table>
     <div style="margin-top:18px;text-align:right;color:#fff7ed;font-size:18px;font-weight:700;">Total ${input.totalAed.toFixed(2)} AED</div>`,

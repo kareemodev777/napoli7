@@ -27,7 +27,7 @@ export async function sendKitchenNotificationsForOrder(
   const { data: order, error } = await supabase
     .from("orders")
     .select(
-      "id, order_number, customer_name, customer_phone, customer_email, delivery_type, delivery_address, delivery_slot, payment_method, total_aed, order_items(product_name, quantity, customizations, line_total_aed)",
+      "id, order_number, customer_name, customer_phone, customer_email, delivery_type, delivery_address, delivery_slot, pizza_cut, payment_method, total_aed, order_items(product_name, quantity, customizations, line_total_aed)",
     )
     .eq("id", orderId)
     .maybeSingle();
@@ -50,7 +50,8 @@ export async function sendKitchenNotificationsForOrder(
     deliveryType: order.delivery_type as "delivery" | "pickup",
     deliveryAddress: order.delivery_address ?? undefined,
     deliverySlot: order.delivery_slot,
-    paymentMethod: order.payment_method as "cod" | "card",
+    pizzaCut: Boolean(order.pizza_cut),
+    paymentMethod: "card",
     totalAed: Number(order.total_aed),
     items: (order.order_items ?? []).map((it: OrderItemRow) => ({
       name: it.product_name,

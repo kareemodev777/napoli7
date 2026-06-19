@@ -20,6 +20,7 @@ function baseRow(overrides: Partial<PosOrderRow> = {}): PosOrderRow {
     delivery_address: null,
     delivery_slot: "ASAP",
     order_notes: null,
+    pizza_cut: false,
     payment_method: "cod",
     payment_status: "pending",
     stripe_payment_intent: null,
@@ -158,6 +159,7 @@ describe("orderRowToWooOrder — COD pickup, no promo", () => {
       { key: "order_id", value: "uuid-1" },
       { key: "delivery_type", value: "pickup" },
       { key: "delivery_slot", value: "ASAP" },
+      { key: "pizza_cut", value: "no" },
     ]);
   });
 });

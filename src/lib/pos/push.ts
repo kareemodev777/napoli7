@@ -20,7 +20,7 @@ import {
 } from "./payload";
 
 const ORDER_SELECT =
-  "id, order_number, status, customer_name, customer_phone, customer_email, delivery_type, delivery_address, delivery_slot, order_notes, payment_method, payment_status, stripe_payment_intent, subtotal_aed, delivery_fee_aed, discount_aed, promo_code, total_aed, created_at, order_items(product_id, product_name, base_price_aed, quantity, line_total_aed, customizations)";
+  "id, order_number, status, customer_name, customer_phone, customer_email, delivery_type, delivery_address, delivery_slot, order_notes, pizza_cut, payment_method, payment_status, stripe_payment_intent, subtotal_aed, delivery_fee_aed, discount_aed, promo_code, total_aed, created_at, order_items(product_id, product_name, base_price_aed, quantity, line_total_aed, customizations)";
 
 /** Persist the attempt outcome. Logging the push must itself never throw. */
 async function recordPush(args: {
