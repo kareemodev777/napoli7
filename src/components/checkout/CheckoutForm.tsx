@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type DeliveryZone } from "@/lib/checkout";
 import { chooseCheckoutArea, type CheckoutInitialDetails } from "@/lib/checkout-prefill";
@@ -93,9 +93,30 @@ export function CheckoutForm({
   const [addressNotes, setAddressNotes] = useState(
     initialDetails.deliveryAddress?.notes ?? "",
   );
+  const streetInputRef = useRef<HTMLInputElement | null>(null);
   const [selectedAddressId, setSelectedAddressId] = useState(
     () => savedAddresses.find((a) => a.isDefault)?.id ?? NEW_ADDRESS,
   );
+
+  useEffect(() => {
+    const syncStreetFromDom = () => {
+      const domStreet = streetInputRef.current?.value.trim();
+      if (domStreet && domStreet !== street) {
+        setStreet(domStreet);
+      }
+    };
+
+    syncStreetFromDom();
+    const timers = [
+      window.setTimeout(syncStreetFromDom, 0),
+      window.setTimeout(syncStreetFromDom, 250),
+      window.setTimeout(syncStreetFromDom, 1000),
+    ];
+
+    return () => {
+      timers.forEach((timer) => window.clearTimeout(timer));
+    };
+  }, []);
 
   function applySavedAddress(id: string) {
     setSelectedAddressId(id);
@@ -392,6 +413,7 @@ export function CheckoutForm({
                     required
                     placeholder="Sheikh Rashid bin Abdul Aziz St, Building 213"
                     value={street}
+                    ref={streetInputRef}
                     onChange={(e) => {
                       setStreet(e.target.value);
                       setSelectedAddressId(NEW_ADDRESS);
