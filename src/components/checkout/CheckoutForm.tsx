@@ -17,6 +17,10 @@ import { useCart } from "@/store/cart";
 import { useMounted } from "@/lib/use-mounted";
 import { placeOrder, type PlaceOrderInput } from "@/app/checkout/actions";
 import { formatAed } from "@/components/catalog/PriceBadge";
+import {
+  getDeliveryOrderTotalAed,
+  meetsDeliveryMinimumAed,
+} from "@/lib/delivery-settings";
 
 const TIME_SLOTS = generateTimeSlots();
 
@@ -57,7 +61,6 @@ export function CheckoutForm({
   const subtotal = useCart((s) => s.subtotal());
   const promo = useCart((s) => s.promo);
   const discount = useCart((s) => s.discount());
-  const total = useCart((s) => s.total());
   const clearCart = useCart((s) => s.clear);
 
   const hydrated = useMounted();
@@ -123,7 +126,11 @@ export function CheckoutForm({
   const areaSupported = deliveryType !== "delivery" || matchedZone !== null;
   const zoneFee = matchedZone ? matchedZone.fee : defaultFee;
   const deliveryFee = deliveryType === "delivery" && matchedZone ? zoneFee : 0;
-  const orderTotal = total + deliveryFee;
+  const orderTotal = getDeliveryOrderTotalAed({
+    subtotalAed: subtotal,
+    deliveryFeeAed: deliveryFee,
+    discountAed: discount,
+  });
   const deliveryMapQuery = useMemo(
     () =>
       deliveryType === "delivery"
@@ -131,9 +138,15 @@ export function CheckoutForm({
         : "",
     [area, deliveryType, flat, street],
   );
-  // Delivery orders require a minimum subtotal; pickup has no minimum.
+  // Delivery orders require a minimum total, including delivery fee; pickup has no minimum.
   const meetsDeliveryMin =
-    deliveryType !== "delivery" || subtotal >= deliveryMinSubtotalAed;
+    deliveryType !== "delivery" ||
+    meetsDeliveryMinimumAed({
+      subtotalAed: subtotal,
+      deliveryFeeAed: deliveryFee,
+      discountAed: discount,
+      minimumAed: deliveryMinSubtotalAed,
+    });
   const canSubmit = areaSupported && meetsDeliveryMin;
 
   if (!hydrated) {
@@ -162,7 +175,7 @@ export function CheckoutForm({
     }
     if (!meetsDeliveryMin) {
       setError(
-        `Delivery orders have a minimum of ${formatAed(deliveryMinSubtotalAed)} (before delivery fee). Add a little more, or switch to pickup.`,
+        `Delivery orders need a minimum total of ${formatAed(deliveryMinSubtotalAed)} including delivery. Add a little more, or switch to pickup.`,
       );
       return;
     }
@@ -534,7 +547,7 @@ export function CheckoutForm({
           ) : !areaSupported ? (
             "Delivery unavailable for this area"
           ) : !meetsDeliveryMin ? (
-            `Minimum ${formatAed(deliveryMinSubtotalAed)} for delivery`
+            `Minimum ${formatAed(deliveryMinSubtotalAed)} total for delivery`
           ) : paymentMethod === "card" ? (
             "Continue to secure payment"
           ) : (
@@ -572,8 +585,8 @@ export function CheckoutForm({
         </dl>
         {!meetsDeliveryMin ? (
           <p className="mt-3 text-xs text-flag-red">
-            Minimum {formatAed(deliveryMinSubtotalAed)} for delivery. Add{" "}
-            {formatAed(deliveryMinSubtotalAed - subtotal)} more, or switch to
+            Minimum {formatAed(deliveryMinSubtotalAed)} total for delivery. Add{" "}
+            {formatAed(Math.max(0, deliveryMinSubtotalAed - orderTotal))} more, or switch to
             pickup.
           </p>
         ) : null}

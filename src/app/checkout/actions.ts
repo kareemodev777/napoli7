@@ -7,7 +7,11 @@ import { notifyKitchenEmail } from "@/lib/notifications/email";
 import { notifyKitchenWhatsApp } from "@/lib/notifications/whatsapp";
 import { validatePromo, redeemPromo } from "@/lib/promo";
 import { resolveDeliveryFee } from "@/lib/checkout";
-import { getDeliveryMinimumSubtotalAed } from "@/lib/delivery-settings";
+import {
+  getDeliveryOrderTotalAed,
+  getDeliveryMinimumSubtotalAed,
+  meetsDeliveryMinimumAed,
+} from "@/lib/delivery-settings";
 import { canonicalizeCheckoutCart } from "@/lib/checkout-pricing";
 import { planAddressSave, type AddressLike } from "@/lib/saved-address";
 import { pushOrderToPos } from "@/lib/pos/push";
@@ -179,11 +183,6 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   // never charged a default fee — mirroring the client-side guard (UC-45).
   let deliveryFee = 0;
   if (data.deliveryType === "delivery" && data.deliveryAddress) {
-    if (subtotal < deliveryMinSubtotalAed) {
-      return {
-        error: `Delivery orders have a minimum of ${deliveryMinSubtotalAed} AED (before delivery fee). Add a little more, or switch to pickup.`,
-      };
-    }
     const zone = await resolveDeliveryFee(data.deliveryAddress.area);
     if (!zone.supported) {
       return {
@@ -192,8 +191,22 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
       };
     }
     deliveryFee = zone.fee;
+    if (!meetsDeliveryMinimumAed({
+      subtotalAed: subtotal,
+      deliveryFeeAed: deliveryFee,
+      discountAed: discount,
+      minimumAed: deliveryMinSubtotalAed,
+    })) {
+      return {
+        error: `Delivery orders need a minimum total of ${deliveryMinSubtotalAed} AED including delivery. Add a little more, or switch to pickup.`,
+      };
+    }
   }
-  const total = Math.max(0, subtotal - discount) + deliveryFee;
+  const total = getDeliveryOrderTotalAed({
+    subtotalAed: subtotal,
+    deliveryFeeAed: deliveryFee,
+    discountAed: discount,
+  });
 
   if (!HAS_SUPABASE) {
     const orderId = crypto.randomUUID();

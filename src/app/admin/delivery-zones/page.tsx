@@ -107,10 +107,10 @@ export default async function AdminDeliveryZonesPage() {
           <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
             <div>
               <h2 className="font-display text-xl uppercase tracking-[0.14em]">
-                Minimum delivery subtotal
+                Minimum delivery total
               </h2>
               <p className="mt-2 text-sm text-muted-foreground">
-                Delivery orders must meet this amount before the delivery fee is added.
+                Delivery orders must meet this amount including the delivery fee.
               </p>
             </div>
             <Badge tone="active">Current {formatAed(deliveryMinSubtotalAed)}</Badge>
@@ -123,7 +123,7 @@ export default async function AdminDeliveryZonesPage() {
             >
               <label className="grid gap-2 sm:min-w-[260px]">
                 <span className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
-                  Minimum subtotal (AED)
+                  Minimum total (AED)
                 </span>
                 <input
                   name="deliveryMinSubtotalAed"

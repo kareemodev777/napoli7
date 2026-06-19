@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import {
   DEFAULT_DELIVERY_MIN_SUBTOTAL_AED,
+  getDeliveryOrderTotalAed,
+  meetsDeliveryMinimumAed,
   normalizeDeliveryMinimumSubtotalAed,
 } from "./delivery-settings";
 
@@ -17,3 +19,32 @@ describe("normalizeDeliveryMinimumSubtotalAed", () => {
     );
   });
 });
+
+describe("delivery minimum total helpers", () => {
+  test("treats delivery fee as part of the order total", () => {
+    expect(
+      getDeliveryOrderTotalAed({ subtotalAed: 20, deliveryFeeAed: 12 }),
+    ).toBe(32);
+  });
+
+  test("allows delivery when subtotal plus fee reaches the minimum", () => {
+    expect(
+      meetsDeliveryMinimumAed({
+        subtotalAed: 20,
+        deliveryFeeAed: 12,
+        minimumAed: 28,
+      }),
+    ).toBe(true);
+  });
+
+  test("blocks delivery when the final total stays below the minimum", () => {
+    expect(
+      meetsDeliveryMinimumAed({
+        subtotalAed: 20,
+        deliveryFeeAed: 7,
+        minimumAed: 28,
+      }),
+    ).toBe(false);
+  });
+});
+

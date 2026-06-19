@@ -24,6 +24,32 @@ export function normalizeDeliveryMinimumSubtotalAed(value: number): number {
   return Math.max(0, Math.round(value * 100) / 100);
 }
 
+export function getDeliveryOrderTotalAed({
+  subtotalAed,
+  deliveryFeeAed,
+  discountAed = 0,
+}: {
+  subtotalAed: number;
+  deliveryFeeAed: number;
+  discountAed?: number;
+}): number {
+  return Math.max(0, subtotalAed - discountAed) + deliveryFeeAed;
+}
+
+export function meetsDeliveryMinimumAed({
+  subtotalAed,
+  deliveryFeeAed,
+  discountAed = 0,
+  minimumAed,
+}: {
+  subtotalAed: number;
+  deliveryFeeAed: number;
+  discountAed?: number;
+  minimumAed: number;
+}): boolean {
+  return getDeliveryOrderTotalAed({ subtotalAed, deliveryFeeAed, discountAed }) >= minimumAed;
+}
+
 export async function getDeliveryMinimumSubtotalAed(): Promise<number> {
   if (!HAS_SUPABASE) return DEFAULT_DELIVERY_MIN_SUBTOTAL_AED;
 
