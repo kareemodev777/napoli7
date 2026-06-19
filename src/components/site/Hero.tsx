@@ -24,8 +24,10 @@ export function Hero({ image = SITE_IMAGE_DEFAULTS.home_hero }: { image?: SiteIm
       />
       <div className="absolute inset-0 bg-black/10" aria-hidden />
 
-      {/* Centered ordering widget */}
-      <div className="relative z-10 h-full flex items-center justify-center px-4">
+      {/* Centered ordering widget — hidden below lg, where MobileBottomBar
+          (lg:hidden) already provides a persistent order + cart CTA, so this
+          card would be redundant on mobile/tablet. */}
+      <div className="relative z-10 h-full hidden lg:flex items-center justify-center px-4">
         <div className="bg-background w-full max-w-sm p-6 md:p-7 shadow-2xl">
           <p className="font-display text-sm mb-3">Hello</p>
 
