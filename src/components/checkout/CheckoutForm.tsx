@@ -99,22 +99,26 @@ export function CheckoutForm({
   );
 
   useEffect(() => {
+    let lastSeen = "";
+    let tries = 0;
+
     const syncStreetFromDom = () => {
-      const domStreet = streetInputRef.current?.value.trim();
-      if (domStreet && domStreet !== street) {
+      const domStreet = streetInputRef.current?.value.trim() ?? "";
+      if (domStreet && domStreet !== lastSeen) {
+        lastSeen = domStreet;
         setStreet(domStreet);
+      }
+      tries += 1;
+      if (tries >= 80) {
+        window.clearInterval(timer);
       }
     };
 
     syncStreetFromDom();
-    const timers = [
-      window.setTimeout(syncStreetFromDom, 0),
-      window.setTimeout(syncStreetFromDom, 250),
-      window.setTimeout(syncStreetFromDom, 1000),
-    ];
+    const timer = window.setInterval(syncStreetFromDom, 100);
 
     return () => {
-      timers.forEach((timer) => window.clearTimeout(timer));
+      window.clearInterval(timer);
     };
   }, []);
 
