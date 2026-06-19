@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { HAS_SUPABASE, SITE_URL } from "@/lib/env";
 import { getUserRole, isAdminPath } from "@/lib/auth/roles";
+import { buildPasswordResetRedirect } from "@/lib/auth/password-reset";
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -158,7 +159,7 @@ export async function sendPasswordReset(
   const { error } = await supabase.auth.resetPasswordForEmail(
     parsed.data.email,
     {
-      redirectTo: `${SITE_URL}/login`,
+      redirectTo: buildPasswordResetRedirect(SITE_URL),
     },
   );
   if (error) {

@@ -22,6 +22,7 @@ export function LoginForm() {
   const params = useSearchParams();
   const next = params.get("next") ?? "/account";
   const confirmed = params.get("confirmed") === "true";
+  const passwordReset = params.get("password-reset") === "true";
 
   const [mode, setMode] = useState<"password" | "magic" | "reset" | "phone">(
     "password",
@@ -47,6 +48,14 @@ export function LoginForm() {
         <Alert>
           <AlertDescription>
             Email confirmed. You can now log in.
+          </AlertDescription>
+        </Alert>
+      ) : null}
+
+      {passwordReset ? (
+        <Alert>
+          <AlertDescription>
+            Password updated. You can log in with your new password.
           </AlertDescription>
         </Alert>
       ) : null}
