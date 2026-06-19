@@ -5,6 +5,7 @@ import { SiteShell } from "@/components/site/SiteShell";
 import { PageHero } from "@/components/site/PageHero";
 import { CheckoutForm } from "@/components/checkout/CheckoutForm";
 import { getDeliveryZones, DEFAULT_DELIVERY_FEE } from "@/lib/checkout";
+import { getDeliveryMinimumSubtotalAed } from "@/lib/delivery-settings";
 import { HAS_SUPABASE } from "@/lib/env";
 import { createClient } from "@/lib/supabase/server";
 import {
@@ -77,11 +78,18 @@ export default async function CheckoutPage({
 }: {
   searchParams: Promise<{ area?: string }>;
 }) {
-  const [{ area }, zones, accountData, orderingAvailability] = await Promise.all([
+  const [
+    { area },
+    zones,
+    accountData,
+    orderingAvailability,
+    deliveryMinSubtotalAed,
+  ] = await Promise.all([
     searchParams,
     getDeliveryZones(),
     loadCheckoutAccountData(),
     getOrderingAvailability(),
+    getDeliveryMinimumSubtotalAed(),
   ]);
   const { initialDetails, savedAddresses } = accountData;
   const preferredArea = area?.trim() || undefined;
@@ -127,6 +135,7 @@ export default async function CheckoutPage({
               <CheckoutForm
                 zones={zones}
                 defaultFee={DEFAULT_DELIVERY_FEE}
+                deliveryMinSubtotalAed={deliveryMinSubtotalAed}
                 initialDetails={initialDetails}
                 savedAddresses={savedAddresses}
                 preferredArea={preferredArea}

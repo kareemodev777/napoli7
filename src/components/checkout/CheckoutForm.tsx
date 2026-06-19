@@ -2,11 +2,8 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { type DeliveryZone, DELIVERY_MIN_SUBTOTAL_AED } from "@/lib/checkout";
-import {
-  chooseCheckoutArea,
-  type CheckoutInitialDetails,
-} from "@/lib/checkout-prefill";
+import { type DeliveryZone } from "@/lib/checkout";
+import { chooseCheckoutArea, type CheckoutInitialDetails } from "@/lib/checkout-prefill";
 import {
   buildDeliveryMapQuery,
   buildGoogleMapsSearchUrl,
@@ -42,12 +39,14 @@ const NEW_ADDRESS = "__new__";
 export function CheckoutForm({
   zones,
   defaultFee,
+  deliveryMinSubtotalAed,
   initialDetails = {},
   savedAddresses = [],
   preferredArea,
 }: {
   zones: DeliveryZone[];
   defaultFee: number;
+  deliveryMinSubtotalAed: number;
   initialDetails?: CheckoutInitialDetails;
   savedAddresses?: CheckoutSavedAddress[];
   preferredArea?: string;
@@ -134,7 +133,7 @@ export function CheckoutForm({
   );
   // Delivery orders require a minimum subtotal; pickup has no minimum.
   const meetsDeliveryMin =
-    deliveryType !== "delivery" || subtotal >= DELIVERY_MIN_SUBTOTAL_AED;
+    deliveryType !== "delivery" || subtotal >= deliveryMinSubtotalAed;
   const canSubmit = areaSupported && meetsDeliveryMin;
 
   if (!hydrated) {
@@ -163,7 +162,7 @@ export function CheckoutForm({
     }
     if (!meetsDeliveryMin) {
       setError(
-        `Delivery orders have a minimum of ${formatAed(DELIVERY_MIN_SUBTOTAL_AED)} (before delivery fee). Add a little more, or switch to pickup.`,
+        `Delivery orders have a minimum of ${formatAed(deliveryMinSubtotalAed)} (before delivery fee). Add a little more, or switch to pickup.`,
       );
       return;
     }
@@ -535,7 +534,7 @@ export function CheckoutForm({
           ) : !areaSupported ? (
             "Delivery unavailable for this area"
           ) : !meetsDeliveryMin ? (
-            `Minimum ${formatAed(DELIVERY_MIN_SUBTOTAL_AED)} for delivery`
+            `Minimum ${formatAed(deliveryMinSubtotalAed)} for delivery`
           ) : paymentMethod === "card" ? (
             "Continue to secure payment"
           ) : (
@@ -573,8 +572,8 @@ export function CheckoutForm({
         </dl>
         {!meetsDeliveryMin ? (
           <p className="mt-3 text-xs text-flag-red">
-            Minimum {formatAed(DELIVERY_MIN_SUBTOTAL_AED)} for delivery. Add{" "}
-            {formatAed(DELIVERY_MIN_SUBTOTAL_AED - subtotal)} more, or switch to
+            Minimum {formatAed(deliveryMinSubtotalAed)} for delivery. Add{" "}
+            {formatAed(deliveryMinSubtotalAed - subtotal)} more, or switch to
             pickup.
           </p>
         ) : null}

@@ -6,7 +6,8 @@ import { createClient } from "@/lib/supabase/server";
 import { notifyKitchenEmail } from "@/lib/notifications/email";
 import { notifyKitchenWhatsApp } from "@/lib/notifications/whatsapp";
 import { validatePromo, redeemPromo } from "@/lib/promo";
-import { resolveDeliveryFee, DELIVERY_MIN_SUBTOTAL_AED } from "@/lib/checkout";
+import { resolveDeliveryFee } from "@/lib/checkout";
+import { getDeliveryMinimumSubtotalAed } from "@/lib/delivery-settings";
 import { canonicalizeCheckoutCart } from "@/lib/checkout-pricing";
 import { planAddressSave, type AddressLike } from "@/lib/saved-address";
 import { pushOrderToPos } from "@/lib/pos/push";
@@ -172,13 +173,15 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     // the cart UI already validated, so this only catches edge races.
   }
 
+  const deliveryMinSubtotalAed = await getDeliveryMinimumSubtotalAed();
+
   // Authoritative delivery-zone check. An unsupported area is blocked outright —
   // never charged a default fee — mirroring the client-side guard (UC-45).
   let deliveryFee = 0;
   if (data.deliveryType === "delivery" && data.deliveryAddress) {
-    if (subtotal < DELIVERY_MIN_SUBTOTAL_AED) {
+    if (subtotal < deliveryMinSubtotalAed) {
       return {
-        error: `Delivery orders have a minimum of ${DELIVERY_MIN_SUBTOTAL_AED} AED (before delivery fee). Add a little more, or switch to pickup.`,
+        error: `Delivery orders have a minimum of ${deliveryMinSubtotalAed} AED (before delivery fee). Add a little more, or switch to pickup.`,
       };
     }
     const zone = await resolveDeliveryFee(data.deliveryAddress.area);

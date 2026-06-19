@@ -4,6 +4,7 @@ import { refresh, revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { createServiceRoleClient } from "@/lib/supabase/service";
+import { normalizeDeliveryMinimumSubtotalAed } from "@/lib/delivery-settings";
 
 const zoneSchema = z.object({
   // original area name for renaming the PK; empty = insert
@@ -18,7 +19,7 @@ function boolFromForm(formData: FormData, key: string) {
   return formData.get(key) === "on";
 }
 
-function revalidateDeliveryZones() {
+function revalidateDeliverySettings() {
   revalidatePath("/admin/delivery-zones");
   revalidatePath("/checkout");
   refresh();
@@ -55,7 +56,30 @@ export async function upsertZone(formData: FormData) {
     return;
   }
 
-  revalidateDeliveryZones();
+  revalidateDeliverySettings();
+}
+
+export async function updateDeliveryMinimumSubtotal(formData: FormData) {
+  await requireAdmin();
+  const raw = formData.get("deliveryMinSubtotalAed");
+  const parsedValue = Number(raw);
+  if (!Number.isFinite(parsedValue)) {
+    logActionError("updateDeliveryMinimumSubtotal", new Error("Invalid minimum subtotal"));
+    return;
+  }
+
+  const deliveryMinSubtotalAed = normalizeDeliveryMinimumSubtotalAed(parsedValue);
+  const supabase = createServiceRoleClient();
+  const { error } = await supabase.from("delivery_settings").upsert({
+    key: "delivery_min_subtotal_aed",
+    value: deliveryMinSubtotalAed,
+  });
+  if (error) {
+    logActionError("updateDeliveryMinimumSubtotal", error);
+    return;
+  }
+
+  revalidateDeliverySettings();
 }
 
 export async function deleteZone(formData: FormData) {
@@ -73,5 +97,5 @@ export async function deleteZone(formData: FormData) {
     return;
   }
 
-  revalidateDeliveryZones();
+  revalidateDeliverySettings();
 }

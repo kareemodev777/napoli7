@@ -3,10 +3,15 @@ import type { ReactNode } from "react";
 import { Pencil, Plus } from "lucide-react";
 import { DeleteZoneButton } from "./DeleteZoneButton";
 import { Badge, ZoneForm, money } from "./form-components";
+import {
+  updateDeliveryMinimumSubtotal,
+} from "./actions";
 import type { DeliveryZoneRow } from "./types";
 import { AdminModal } from "@/components/admin/AdminModal";
 import { HAS_SUPABASE_SERVICE } from "@/lib/env";
 import { createServiceRoleClient } from "@/lib/supabase/service";
+import { getDeliveryMinimumSubtotalAed } from "@/lib/delivery-settings";
+import { formatAed } from "@/components/catalog/PriceBadge";
 
 export const metadata: Metadata = {
   title: "Delivery Zones · Admin",
@@ -73,7 +78,10 @@ function EditZoneModal({ zone }: { zone: DeliveryZoneRow }) {
 }
 
 export default async function AdminDeliveryZonesPage() {
-  const zones = await loadZones();
+  const [zones, deliveryMinSubtotalAed] = await Promise.all([
+    loadZones(),
+    getDeliveryMinimumSubtotalAed(),
+  ]);
   const activeCount = zones.filter((zone) => zone.active).length;
 
   return (
@@ -93,6 +101,51 @@ export default async function AdminDeliveryZonesPage() {
             <Badge>{activeCount} active</Badge>
             <AddZoneModal />
           </div>
+        </div>
+
+        <div className="mt-8 rounded-md border border-border bg-card p-6">
+          <div className="flex flex-col gap-2 md:flex-row md:items-end md:justify-between">
+            <div>
+              <h2 className="font-display text-xl uppercase tracking-[0.14em]">
+                Minimum delivery subtotal
+              </h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Delivery orders must meet this amount before the delivery fee is added.
+              </p>
+            </div>
+            <Badge tone="active">Current {formatAed(deliveryMinSubtotalAed)}</Badge>
+          </div>
+
+          {HAS_SUPABASE_SERVICE ? (
+            <form
+              action={updateDeliveryMinimumSubtotal}
+              className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end"
+            >
+              <label className="grid gap-2 sm:min-w-[260px]">
+                <span className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+                  Minimum subtotal (AED)
+                </span>
+                <input
+                  name="deliveryMinSubtotalAed"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  defaultValue={deliveryMinSubtotalAed}
+                  className="h-11 rounded-md border border-border bg-background px-3 text-sm outline-none transition focus:border-brand"
+                />
+              </label>
+              <button
+                type="submit"
+                className="inline-flex h-11 items-center justify-center rounded-md bg-brand px-4 text-xs font-display uppercase tracking-[0.14em] text-primary-foreground hover:bg-brand-hover"
+              >
+                Save minimum
+              </button>
+            </form>
+          ) : (
+            <p className="mt-5 text-sm text-muted-foreground">
+              Supabase service environment is required to edit this value.
+            </p>
+          )}
         </div>
 
         {!HAS_SUPABASE_SERVICE ? (
