@@ -7,7 +7,7 @@ import { useCart, type CartItem } from "@/store/cart";
 import { useMounted } from "@/lib/use-mounted";
 import { formatAed } from "@/components/catalog/PriceBadge";
 
-const DELIVERY_MIN_SUBTOTAL = 28;
+const DELIVERY_MIN_SUBTOTAL = 13;
 const DELIVERY_FEE = 12;
 
 export function CartSidebar() {

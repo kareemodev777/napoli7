@@ -1,8 +1,12 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import { HAS_SUPABASE } from "@/lib/env";
 
-export const DEFAULT_DELIVERY_MIN_SUBTOTAL_AED = 28;
+export const DEFAULT_DELIVERY_MIN_SUBTOTAL_AED = 13;
 const DELIVERY_SETTINGS_KEY = "delivery_min_subtotal_aed";
+
+// Temporary cap until the admin edit flow is working again. We want the live
+// checkout minimum to stay at 13 AED even if an older 28 AED row is still
+// present in Supabase.
 
 type DeliverySettingRow = {
   key: string;
@@ -72,9 +76,10 @@ export async function getDeliveryMinimumSubtotalAed(): Promise<number> {
 
     const row = data as DeliverySettingRow;
     const value = Number(row.value);
-    return normalizeDeliveryMinimumSubtotalAed(
-      Number.isFinite(value) ? value : DEFAULT_DELIVERY_MIN_SUBTOTAL_AED,
-    );
+    const effectiveValue = Number.isFinite(value)
+      ? Math.min(value, DEFAULT_DELIVERY_MIN_SUBTOTAL_AED)
+      : DEFAULT_DELIVERY_MIN_SUBTOTAL_AED;
+    return normalizeDeliveryMinimumSubtotalAed(effectiveValue);
   } catch (error) {
     console.error("[delivery-settings] load failed", error);
     return DEFAULT_DELIVERY_MIN_SUBTOTAL_AED;

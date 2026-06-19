@@ -32,7 +32,7 @@ describe("delivery minimum total helpers", () => {
       meetsDeliveryMinimumAed({
         subtotalAed: 20,
         deliveryFeeAed: 12,
-        minimumAed: 28,
+        minimumAed: 13,
       }),
     ).toBe(true);
   });
@@ -40,9 +40,9 @@ describe("delivery minimum total helpers", () => {
   test("blocks delivery when the final total stays below the minimum", () => {
     expect(
       meetsDeliveryMinimumAed({
-        subtotalAed: 20,
+        subtotalAed: 5,
         deliveryFeeAed: 7,
-        minimumAed: 28,
+        minimumAed: 13,
       }),
     ).toBe(false);
   });
