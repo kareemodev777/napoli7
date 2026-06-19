@@ -11,6 +11,7 @@ import { canonicalizeCheckoutCart } from "@/lib/checkout-pricing";
 import { planAddressSave, type AddressLike } from "@/lib/saved-address";
 import { pushOrderToPos } from "@/lib/pos/push";
 import { HAS_SUPABASE } from "@/lib/env";
+import { getOrderingAvailability } from "@/lib/ordering-hours";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 const customizationSchema = z.object({
@@ -34,6 +35,7 @@ const deliveryAddressSchema = z.object({
   area: z.string().min(2),
   flat: z.string().optional(),
   notes: z.string().max(200).optional(),
+  mapQuery: z.string().max(300).optional(),
 });
 
 const placeOrderSchema = z.object({
@@ -76,6 +78,16 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   const data = parsed.data;
   if (data.deliveryType === "delivery" && !data.deliveryAddress) {
     return { error: "Add a delivery address or switch to pickup." };
+  }
+
+  const orderingAvailability = await getOrderingAvailability();
+  if (!orderingAvailability.isOpen) {
+    return {
+      error:
+        orderingAvailability.nextOpenLabel
+          ? `We’re closed right now. Ordering opens again at ${orderingAvailability.nextOpenLabel}.`
+          : "We’re closed right now. Please check back when we reopen.",
+    };
   }
 
   let canonicalItems = data.items.map((item) => ({
@@ -253,11 +265,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
 
   // Save the delivery address to the customer's profile so future checkouts
   // prefill it. First saved address becomes their default automatically.
-  if (
-    user &&
-    data.deliveryType === "delivery" &&
-    data.deliveryAddress
-  ) {
+  if (user && data.deliveryType === "delivery" && data.deliveryAddress) {
     await persistDeliveryAddress(supabase, user.id, data.deliveryAddress);
   }
 

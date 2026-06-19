@@ -20,6 +20,7 @@ export interface KitchenNotificationInput {
     area: string;
     flat?: string;
     notes?: string;
+    mapQuery?: string;
   };
   deliverySlot: string;
   paymentMethod: "cod" | "card";
@@ -129,6 +130,9 @@ export async function notifyKitchenEmail(input: KitchenNotificationInput) {
     input.deliveryType === "delivery" && input.deliveryAddress
       ? `${input.deliveryAddress.street}, ${input.deliveryAddress.area}${input.deliveryAddress.flat ? `, Flat ${input.deliveryAddress.flat}` : ""}${input.deliveryAddress.notes ? `\nNotes: ${input.deliveryAddress.notes}` : ""}`
       : "Pickup at shop";
+  const mapLink = input.deliveryAddress?.mapQuery
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(input.deliveryAddress.mapQuery)}`
+    : null;
   const body = `New order received
 
 Order:    ${input.orderNumber}
@@ -156,6 +160,7 @@ ${address}`;
       ${detailRow("Email", input.customerEmail)}
       ${detailRow("Slot", input.deliverySlot)}
       ${detailRow("Address", address.replaceAll("\n", " · "))}
+      ${mapLink ? detailRow("Map pin", mapLink) : ""}
     </table>
     <table role="presentation" width="100%" cellspacing="0" cellpadding="0">${formatItemsHtml(input.items)}</table>
     <div style="margin-top:18px;text-align:right;color:#fff7ed;font-size:18px;font-weight:700;">Total ${input.totalAed.toFixed(2)} AED</div>`,

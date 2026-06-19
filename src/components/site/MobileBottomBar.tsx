@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { useCart } from "@/store/cart";
 import { useMounted } from "@/lib/use-mounted";
 import { formatAed } from "@/components/catalog/PriceBadge";
+import { useOrderingAvailability } from "@/lib/use-ordering-availability";
 
 const SUPPRESSED_PREFIXES = [
   "/cart",
@@ -28,6 +29,8 @@ export function MobileBottomBar() {
   const totalQty = useCart((s) => s.totalQuantity());
   const subtotal = useCart((s) => s.subtotal());
   const mounted = useMounted();
+  const { availability } = useOrderingAvailability();
+  const orderingOpen = availability?.isOpen ?? true;
 
   if (isSuppressed(pathname)) return null;
 
@@ -43,14 +46,25 @@ export function MobileBottomBar() {
     >
       {/* Primary CTA — "order" (browse the menu) until the cart has items, then
           it flips to "checkout" so a customer with a full cart can pay in one tap. */}
-      <Link
-        href={qty > 0 ? "/checkout" : "/menu"}
-        className="arrow-btn flex-1"
-        style={{ height: "52px", fontSize: "1.125rem" }}
-        aria-label={qty > 0 ? "Proceed to checkout" : "Go to menu to order"}
-      >
-        {qty > 0 ? "checkout" : "order"}
-      </Link>
+      {orderingOpen ? (
+        <Link
+          href={qty > 0 ? "/checkout" : "/menu"}
+          className="arrow-btn flex-1"
+          style={{ height: "52px", fontSize: "1.125rem" }}
+          aria-label={qty > 0 ? "Proceed to checkout" : "Go to menu to order"}
+        >
+          {qty > 0 ? "checkout" : "order"}
+        </Link>
+      ) : (
+        <Link
+          href="/location"
+          className="arrow-btn flex-1"
+          style={{ height: "52px", fontSize: "1.125rem" }}
+          aria-label="See opening hours"
+        >
+          closed
+        </Link>
+      )}
 
       {/* Cart pill — min-w so it grows to fit large subtotals up to max-w */}
       <Link

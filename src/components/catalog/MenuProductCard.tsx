@@ -10,6 +10,7 @@ import { SpicyDot } from "./SpicyDot";
 import { SizeSelector } from "./SizeSelector";
 import { CustomizeModal } from "./CustomizeModal";
 import { formatAed } from "./PriceBadge";
+import { useOrderingAvailability } from "@/lib/use-ordering-availability";
 
 interface MenuProductCardProps {
   product: Product;
@@ -17,6 +18,8 @@ interface MenuProductCardProps {
 
 export function MenuProductCard({ product }: MenuProductCardProps) {
   const addItem = useCart((s) => s.addItem);
+  const { availability } = useOrderingAvailability();
+  const orderingOpen = availability?.isOpen ?? true;
   const [sizeId, setSizeId] = useState<SizeId>(
     product.sizes[0]?.id ?? "regular",
   );
@@ -26,7 +29,7 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
   const selectedSize =
     product.sizes.find((s) => s.id === sizeId) ?? product.sizes[0];
   const hasCustomizations = product.customizations.length > 0;
-  const unavailable = Boolean(product.isTemporarilyUnavailable);
+  const unavailable = Boolean(product.isTemporarilyUnavailable) || !orderingOpen;
 
   function handleQuickAdd() {
     addItem({
@@ -110,7 +113,8 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
               <button
                 type="button"
                 onClick={() => setModalOpen(true)}
-                className="inline-flex items-center gap-1.5 border border-border h-10 px-3 font-display text-[11px] tracking-[0.2em] uppercase hover:border-foreground hover:bg-muted"
+                disabled={unavailable}
+                className="inline-flex items-center gap-1.5 border border-border h-10 px-3 font-display text-[11px] tracking-[0.2em] uppercase hover:border-foreground hover:bg-muted disabled:opacity-50 disabled:hover:border-border disabled:hover:bg-transparent"
                 aria-label={`Customize ${product.name}`}
               >
                 <Sliders

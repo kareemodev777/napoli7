@@ -5,6 +5,7 @@ import { useState, useTransition } from "react";
 import { useCart } from "@/store/cart";
 import { formatAed } from "@/components/catalog/PriceBadge";
 import { validatePromoCode } from "@/app/cart/actions";
+import { useOrderingAvailability } from "@/lib/use-ordering-availability";
 
 export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
   const subtotal = useCart((s) => s.subtotal());
@@ -14,6 +15,9 @@ export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
   const total = useCart((s) => s.total());
   const setPromo = useCart((s) => s.setPromo);
   const clearPromo = useCart((s) => s.clearPromo);
+
+  const { availability } = useOrderingAvailability();
+  const orderingOpen = availability?.isOpen ?? true;
 
   const [code, setCode] = useState("");
   const [promoError, setPromoError] = useState<string | null>(null);
@@ -119,12 +123,26 @@ export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
           {formatAed(total)}
         </span>
       </div>
-      <Link
-        href={ctaHref}
-        className="mt-6 inline-flex w-full items-center justify-center bg-brand text-primary-foreground py-4 font-display text-sm tracking-[0.2em] uppercase hover:bg-brand-hover"
-      >
-        Proceed to checkout
-      </Link>
+      {orderingOpen ? (
+        <Link
+          href={ctaHref}
+          className="mt-6 inline-flex w-full items-center justify-center bg-brand text-primary-foreground py-4 font-display text-sm tracking-[0.2em] uppercase hover:bg-brand-hover"
+        >
+          Proceed to checkout
+        </Link>
+      ) : (
+        <div className="mt-6 space-y-3">
+          <div className="border border-border bg-muted px-4 py-3 text-sm text-muted-foreground">
+            Ordering is paused right now. Check back when we reopen.
+          </div>
+          <Link
+            href="/location"
+            className="inline-flex w-full items-center justify-center border border-foreground py-4 font-display text-sm tracking-[0.2em] uppercase hover:bg-foreground hover:text-background"
+          >
+            See opening hours
+          </Link>
+        </div>
+      )}
     </aside>
   );
 }

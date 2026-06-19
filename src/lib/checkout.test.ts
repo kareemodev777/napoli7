@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  filterDeliveryZones,
   matchDeliveryZone,
   resolveDeliveryFeeFromZones,
   type DeliveryZone,
@@ -13,6 +14,10 @@ const zones: DeliveryZone[] = [
 describe("delivery zone matching", () => {
   test("matches supported areas case-insensitively", () => {
     expect(matchDeliveryZone(zones, " al jurf 2 ")).toEqual(zones[0]);
+  });
+
+  test("returns fuzzy matches in a useful order", () => {
+    expect(filterDeliveryZones(zones, "ajman")).toEqual([zones[1]]);
   });
 
   test("returns unsupported instead of charging a default fee", () => {

@@ -7,6 +7,11 @@ import {
   chooseCheckoutArea,
   type CheckoutInitialDetails,
 } from "@/lib/checkout-prefill";
+import {
+  buildDeliveryMapQuery,
+  buildGoogleMapsSearchUrl,
+} from "@/lib/delivery-map";
+import { MapEmbed } from "@/components/site/MapEmbed";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -39,11 +44,13 @@ export function CheckoutForm({
   defaultFee,
   initialDetails = {},
   savedAddresses = [],
+  preferredArea,
 }: {
   zones: DeliveryZone[];
   defaultFee: number;
   initialDetails?: CheckoutInitialDetails;
   savedAddresses?: CheckoutSavedAddress[];
+  preferredArea?: string;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -73,7 +80,7 @@ export function CheckoutForm({
   const [area, setArea] = useState(() =>
     chooseCheckoutArea({
       zones,
-      preferredArea: initialDetails.deliveryAddress?.area,
+      preferredArea: preferredArea ?? initialDetails.deliveryAddress?.area,
     }),
   );
   const [paymentMethod, setPaymentMethod] = useState<"cod" | "card">("cod");
@@ -118,6 +125,13 @@ export function CheckoutForm({
   const zoneFee = matchedZone ? matchedZone.fee : defaultFee;
   const deliveryFee = deliveryType === "delivery" && matchedZone ? zoneFee : 0;
   const orderTotal = total + deliveryFee;
+  const deliveryMapQuery = useMemo(
+    () =>
+      deliveryType === "delivery"
+        ? buildDeliveryMapQuery({ street, area, flat })
+        : "",
+    [area, deliveryType, flat, street],
+  );
   // Delivery orders require a minimum subtotal; pickup has no minimum.
   const meetsDeliveryMin =
     deliveryType !== "delivery" || subtotal >= DELIVERY_MIN_SUBTOTAL_AED;
@@ -163,6 +177,7 @@ export function CheckoutForm({
             area: String(formData.get("area") ?? ""),
             flat: String(formData.get("flat") ?? "") || undefined,
             notes: String(formData.get("addressNotes") ?? "") || undefined,
+            mapQuery: deliveryMapQuery || undefined,
           }
         : undefined;
 
@@ -327,68 +342,100 @@ export function CheckoutForm({
                 </Field>
               ) : null}
               <div className="grid sm:grid-cols-2 gap-5">
-              <Field
-                id="area"
-                label="Area in Ajman"
-                required
-                hint={
-                  areaSupported
-                    ? `Delivery fee: ${formatAed(zoneFee)}`
-                    : "We don't deliver to that area yet — switch to pickup."
-                }
-              >
-                <select
+                <Field
                   id="area"
-                  name="area"
+                  label="Area in Ajman"
                   required
-                  value={area}
-                  onChange={(e) => setArea(e.target.value)}
-                  aria-invalid={!areaSupported}
-                  className={
-                    "w-full border bg-background px-3 py-2.5 text-sm font-display tracking-[0.1em] uppercase focus:outline-none focus:border-brand " +
-                    (areaSupported ? "border-border" : "border-flag-red")
+                  hint={
+                    areaSupported
+                      ? `Delivery fee: ${formatAed(zoneFee)}`
+                      : "We don't deliver to that area yet — switch to pickup."
                   }
                 >
-                  {zones.length === 0 ? (
-                    <option value="">No delivery areas available</option>
+                  <select
+                    id="area"
+                    name="area"
+                    required
+                    value={area}
+                    onChange={(e) => setArea(e.target.value)}
+                    aria-invalid={!areaSupported}
+                    className={
+                      "w-full border bg-background px-3 py-2.5 text-sm font-display tracking-[0.1em] uppercase focus:outline-none focus:border-brand " +
+                      (areaSupported ? "border-border" : "border-flag-red")
+                    }
+                  >
+                    {zones.length === 0 ? (
+                      <option value="">No delivery areas available</option>
+                    ) : null}
+                    {zones.map((z) => (
+                      <option key={z.area} value={z.area}>
+                        {z.area}
+                      </option>
+                    ))}
+                  </select>
+                </Field>
+                <Field id="street" label="Street + building" required>
+                  <Input
+                    id="street"
+                    name="street"
+                    required
+                    placeholder="Sheikh Rashid bin Abdul Aziz St, Building 213"
+                    value={street}
+                    onChange={(e) => {
+                      setStreet(e.target.value);
+                      setSelectedAddressId(NEW_ADDRESS);
+                    }}
+                    autoComplete="street-address"
+                  />
+                </Field>
+                <Field id="flat" label="Flat / apartment">
+                  <Input
+                    id="flat"
+                    name="flat"
+                    value={flat}
+                    onChange={(e) => setFlat(e.target.value)}
+                  />
+                </Field>
+                <Field id="addressNotes" label="Delivery instructions">
+                  <Input
+                    id="addressNotes"
+                    name="addressNotes"
+                    value={addressNotes}
+                    onChange={(e) => setAddressNotes(e.target.value)}
+                  />
+                </Field>
+              </div>
+              <div className="border border-border bg-card p-4 space-y-3">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep">
+                      Map pin preview
+                    </p>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Check the pin before you place the order.
+                    </p>
+                  </div>
+                  {deliveryMapQuery ? (
+                    <a
+                      href={buildGoogleMapsSearchUrl(deliveryMapQuery)}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="text-xs uppercase tracking-[0.18em] text-muted-foreground underline-offset-4 hover:underline"
+                    >
+                      Open pin
+                    </a>
                   ) : null}
-                  {zones.map((z) => (
-                    <option key={z.area} value={z.area}>
-                      {z.area}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-              <Field id="street" label="Street + building" required>
-                <Input
-                  id="street"
-                  name="street"
-                  required
-                  placeholder="Sheikh Rashid bin Abdul Aziz St, Building 213"
-                  value={street}
-                  onChange={(e) => {
-                    setStreet(e.target.value);
-                    setSelectedAddressId(NEW_ADDRESS);
-                  }}
-                  autoComplete="street-address"
-                />
-              </Field>
-              <Field id="flat" label="Flat / apartment">
-                <Input
-                  id="flat"
-                  name="flat"
-                  value={flat}
-                  onChange={(e) => setFlat(e.target.value)}
-                />
-              </Field>
-              <Field id="addressNotes" label="Delivery instructions">
-                <Input
-                  id="addressNotes"
-                  name="addressNotes"
-                  value={addressNotes}
-                  onChange={(e) => setAddressNotes(e.target.value)}
-                />
-              </Field>
+                </div>
+                {deliveryMapQuery ? (
+                  <MapEmbed
+                    query={deliveryMapQuery}
+                    title={`Delivery pin for ${deliveryMapQuery}`}
+                  />
+                ) : (
+                  <div className="grid w-full h-[280px] md:h-[400px] place-items-center border border-border bg-background text-sm text-muted-foreground">
+                    Type your street to preview the pin.
+                  </div>
+                )}
               </div>
             </div>
           ) : (

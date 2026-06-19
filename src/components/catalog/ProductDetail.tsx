@@ -16,6 +16,7 @@ import { SizeSelector } from "./SizeSelector";
 import { PriceBadge, formatAed } from "./PriceBadge";
 import { VegDot } from "./VegDot";
 import { SpicyDot } from "./SpicyDot";
+import { useOrderingAvailability } from "@/lib/use-ordering-availability";
 
 interface ProductDetailProps {
   product: Product;
@@ -24,6 +25,8 @@ interface ProductDetailProps {
 
 export function ProductDetail({ product, categoryLabel }: ProductDetailProps) {
   const addItem = useCart((s) => s.addItem);
+  const { availability } = useOrderingAvailability();
+  const orderingOpen = availability?.isOpen ?? true;
 
   const [sizeId, setSizeId] = useState<SizeId>(
     product.sizes[0]?.id ?? "regular",
@@ -38,7 +41,7 @@ export function ProductDetail({ product, categoryLabel }: ProductDetailProps) {
 
   const selectedSize =
     product.sizes.find((s) => s.id === sizeId) ?? product.sizes[0];
-  const unavailable = Boolean(product.isTemporarilyUnavailable);
+  const unavailable = Boolean(product.isTemporarilyUnavailable) || !orderingOpen;
 
   const cartCustomizations = useMemo<CartCustomization[]>(() => {
     return product.customizations

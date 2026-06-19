@@ -42,7 +42,7 @@ const MOCK_ZONES: DeliveryZone[] = [
 ];
 
 function normalizeArea(area: string): string {
-  return area.trim().toLowerCase();
+  return area.trim().toLowerCase().replace(/\s+/g, " ");
 }
 
 /**
@@ -55,6 +55,34 @@ export function matchDeliveryZone(
 ): DeliveryZone | null {
   if (!area.trim()) return null;
   return zones.find((z) => normalizeArea(z.area) === normalizeArea(area)) ?? null;
+}
+
+export function filterDeliveryZones(
+  zones: DeliveryZone[],
+  query: string,
+  limit = 6,
+): DeliveryZone[] {
+  const needle = normalizeArea(query);
+  if (!needle) return [];
+
+  return zones
+    .map((zone, index) => ({
+      zone,
+      index,
+      area: normalizeArea(zone.area),
+    }))
+    .filter(({ area }) => area.includes(needle))
+    .sort((a, b) => {
+      const aStarts = a.area.startsWith(needle) ? 0 : 1;
+      const bStarts = b.area.startsWith(needle) ? 0 : 1;
+      if (aStarts !== bStarts) return aStarts - bStarts;
+      const aExact = a.area === needle ? 0 : 1;
+      const bExact = b.area === needle ? 0 : 1;
+      if (aExact !== bExact) return aExact - bExact;
+      return a.index - b.index;
+    })
+    .slice(0, limit)
+    .map(({ zone }) => zone);
 }
 
 /** Pure: resolve the fee/supported result for an area against a zone list. */

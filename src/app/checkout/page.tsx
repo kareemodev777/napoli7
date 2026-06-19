@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { Suspense } from "react";
 import { SiteShell } from "@/components/site/SiteShell";
 import { PageHero } from "@/components/site/PageHero";
@@ -11,6 +12,7 @@ import {
   type CheckoutInitialDetails,
 } from "@/lib/checkout-prefill";
 import type { CheckoutSavedAddress } from "@/components/checkout/CheckoutForm";
+import { getOrderingAvailability } from "@/lib/ordering-hours";
 
 export const metadata: Metadata = {
   title: "Checkout",
@@ -70,12 +72,19 @@ async function loadCheckoutAccountData(): Promise<CheckoutAccountData> {
   };
 }
 
-export default async function CheckoutPage() {
-  const [zones, accountData] = await Promise.all([
+export default async function CheckoutPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ area?: string }>;
+}) {
+  const [{ area }, zones, accountData, orderingAvailability] = await Promise.all([
+    searchParams,
     getDeliveryZones(),
     loadCheckoutAccountData(),
+    getOrderingAvailability(),
   ]);
   const { initialDetails, savedAddresses } = accountData;
+  const preferredArea = area?.trim() || undefined;
 
   return (
     <SiteShell>
@@ -86,16 +95,44 @@ export default async function CheckoutPage() {
       />
       <section className="px-6 md:px-10 py-12">
         <div className="max-w-[1140px] mx-auto">
-          <Suspense
-            fallback={<p className="text-sm text-muted-foreground">Loading…</p>}
-          >
-            <CheckoutForm
-              zones={zones}
-              defaultFee={DEFAULT_DELIVERY_FEE}
-              initialDetails={initialDetails}
-              savedAddresses={savedAddresses}
-            />
-          </Suspense>
+          {!orderingAvailability.isOpen ? (
+            <div className="border border-border bg-muted p-6 md:p-8 space-y-4">
+              <p className="font-display text-sm tracking-[0.25em] uppercase text-foreground">
+                We’re closed right now
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {orderingAvailability.nextOpenLabel
+                  ? `Orders open again at ${orderingAvailability.nextOpenLabel}.`
+                  : "Please check back when we reopen."}
+              </p>
+              <div className="flex flex-wrap gap-3">
+                <Link
+                  href="/location"
+                  className="inline-flex items-center justify-center border border-foreground px-4 py-3 font-display text-xs tracking-[0.2em] uppercase hover:bg-foreground hover:text-background"
+                >
+                  See opening hours
+                </Link>
+                <Link
+                  href="/menu"
+                  className="inline-flex items-center justify-center bg-brand text-primary-foreground px-4 py-3 font-display text-xs tracking-[0.2em] uppercase hover:bg-brand-hover"
+                >
+                  Browse the menu
+                </Link>
+              </div>
+            </div>
+          ) : (
+            <Suspense
+              fallback={<p className="text-sm text-muted-foreground">Loading…</p>}
+            >
+              <CheckoutForm
+                zones={zones}
+                defaultFee={DEFAULT_DELIVERY_FEE}
+                initialDetails={initialDetails}
+                savedAddresses={savedAddresses}
+                preferredArea={preferredArea}
+              />
+            </Suspense>
+          )}
         </div>
       </section>
     </SiteShell>
