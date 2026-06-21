@@ -3,7 +3,30 @@ import {
   buildDeliveryMapQuery,
   buildGoogleMapsEmbedUrl,
   buildGoogleMapsSearchUrl,
+  buildGpsMapsUrl,
+  isWithinAjmanDeliveryArea,
 } from "./delivery-map";
+
+describe("Ajman delivery bounds", () => {
+  test("accepts a pin inside Ajman (the shop)", () => {
+    expect(isWithinAjmanDeliveryArea(25.4002327, 55.5033167)).toBe(true);
+  });
+
+  test("rejects a pin in Sharjah (south of the box)", () => {
+    // Ajmal Makan / Sharjah Waterfront sits south of Ajman.
+    expect(isWithinAjmanDeliveryArea(25.3, 55.45)).toBe(false);
+  });
+
+  test("rejects non-finite coordinates", () => {
+    expect(isWithinAjmanDeliveryArea(Number.NaN, 55.5)).toBe(false);
+  });
+
+  test("builds a driver GPS maps link", () => {
+    expect(buildGpsMapsUrl(25.4, 55.5)).toBe(
+      "https://www.google.com/maps/search/?api=1&query=25.4,55.5",
+    );
+  });
+});
 
 describe("delivery map helpers", () => {
   test("builds a readable query from address parts", () => {

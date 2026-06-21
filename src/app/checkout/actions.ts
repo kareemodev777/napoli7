@@ -1,7 +1,6 @@
 "use server";
 
 import { z } from "zod";
-import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { validatePromo, redeemPromo } from "@/lib/promo";
 import { resolveDeliveryFee } from "@/lib/checkout";
@@ -11,6 +10,7 @@ import {
   meetsDeliveryMinimumAed,
 } from "@/lib/delivery-settings";
 import { canonicalizeCheckoutCart } from "@/lib/checkout-pricing";
+import { isWithinAjmanDeliveryArea } from "@/lib/delivery-map";
 import { planAddressSave, type AddressLike } from "@/lib/saved-address";
 import { sendKitchenNotificationsForOrder } from "@/lib/notifications/kitchen";
 import { pushOrderToPos } from "@/lib/pos/push";
@@ -40,6 +40,8 @@ const deliveryAddressSchema = z.object({
   flat: z.string().optional(),
   notes: z.string().max(200).optional(),
   mapQuery: z.string().max(300).optional(),
+  lat: z.number().optional(),
+  lng: z.number().optional(),
 });
 
 const placeOrderSchema = z.object({
@@ -186,6 +188,22 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   // never charged a default fee — mirroring the client-side guard (UC-45).
   let deliveryFee = 0;
   if (data.deliveryType === "delivery" && data.deliveryAddress) {
+    // The customer must drop a GPS pin, and it must fall inside Ajman. This is
+    // the authoritative out-of-zone guard: the area dropdown alone can be paired
+    // with a Sharjah street, but the pin can't be faked past the bounding box.
+    const { lat, lng } = data.deliveryAddress;
+    if (lat == null || lng == null) {
+      return {
+        error:
+          "Drop a pin on the map so the driver can find your exact location.",
+      };
+    }
+    if (!isWithinAjmanDeliveryArea(lat, lng)) {
+      return {
+        error:
+          "Your delivery pin is outside our Ajman delivery area. Move it inside Ajman, or switch to pickup.",
+      };
+    }
     const zone = await resolveDeliveryFee(data.deliveryAddress.area);
     if (!zone.supported) {
       return {

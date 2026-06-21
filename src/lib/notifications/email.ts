@@ -1,5 +1,6 @@
 import { Resend } from "resend";
 import { HAS_RESEND, ORDER_EMAIL_FROM, ORDER_EMAIL_TO } from "@/lib/env";
+import { buildGpsMapsUrl } from "@/lib/delivery-map";
 
 interface OrderItemSummary {
   name: string;
@@ -21,6 +22,8 @@ export interface KitchenNotificationInput {
     flat?: string;
     notes?: string;
     mapQuery?: string;
+    lat?: number;
+    lng?: number;
   };
   deliverySlot: string;
   pizzaCut: boolean;
@@ -131,9 +134,15 @@ export async function notifyKitchenEmail(input: KitchenNotificationInput) {
     input.deliveryType === "delivery" && input.deliveryAddress
       ? `${input.deliveryAddress.street}, ${input.deliveryAddress.area}${input.deliveryAddress.flat ? `, Flat ${input.deliveryAddress.flat}` : ""}${input.deliveryAddress.notes ? `\nNotes: ${input.deliveryAddress.notes}` : ""}`
       : "Pickup at shop";
-  const pinText = input.deliveryAddress?.mapQuery
-    ? `Pin: ${input.deliveryAddress.mapQuery}`
-    : null;
+  const gpsUrl =
+    input.deliveryAddress?.lat != null && input.deliveryAddress?.lng != null
+      ? buildGpsMapsUrl(input.deliveryAddress.lat, input.deliveryAddress.lng)
+      : null;
+  const pinText = gpsUrl
+    ? `Pin (GPS): ${gpsUrl}`
+    : input.deliveryAddress?.mapQuery
+      ? `Pin: ${input.deliveryAddress.mapQuery}`
+      : null;
   const pizzaCutLine = input.pizzaCut ? "Pizza cut: yes" : "Pizza cut: no";
   const body = `New order received
 

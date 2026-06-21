@@ -1,11 +1,25 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type DeliveryZone } from "@/lib/checkout";
 import { chooseCheckoutArea, type CheckoutInitialDetails } from "@/lib/checkout-prefill";
-import { buildDeliveryMapQuery } from "@/lib/delivery-map";
-import { MapEmbed } from "@/components/site/MapEmbed";
+import { buildDeliveryMapQuery, isWithinAjmanDeliveryArea } from "@/lib/delivery-map";
+import type { PickedLocation } from "@/components/checkout/DeliveryMapPicker";
+
+// Leaflet touches `window`, so load the picker client-side only.
+const DeliveryMapPicker = dynamic(
+  () => import("@/components/checkout/DeliveryMapPicker"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="grid h-[280px] md:h-[360px] w-full place-items-center border border-border bg-background text-sm text-muted-foreground">
+        Loading map…
+      </div>
+    ),
+  },
+);
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -76,11 +90,6 @@ export function CheckoutForm({
   const [deliveryType, setDeliveryType] = useState<"delivery" | "pickup">(
     "delivery",
   );
-  useEffect(() => {
-    if (deliveryType === "delivery") {
-      setPaymentMethod("card");
-    }
-  }, [deliveryType]);
   const [area, setArea] = useState(() =>
     chooseCheckoutArea({
       zones,
@@ -89,6 +98,14 @@ export function CheckoutForm({
   );
   const [paymentMethod, setPaymentMethod] = useState<"card" | "cod">("card");
   const [pizzaCut, setPizzaCut] = useState(false);
+  // Cash on delivery is pickup-only: for delivery the effective method is always
+  // card, regardless of the last pickup selection. Derived (not stored) so we
+  // never call setState from an effect.
+  const effectivePaymentMethod: "card" | "cod" =
+    deliveryType === "delivery" ? "card" : paymentMethod;
+  // GPS pin the customer drops on the map — sent to the driver and used to block
+  // out-of-Ajman deliveries.
+  const [coords, setCoords] = useState<PickedLocation | null>(null);
 
   // Address fields are controlled so picking a saved address can fill them.
   const [street, setStreet] = useState(
@@ -147,6 +164,16 @@ export function CheckoutForm({
     );
   }
 
+  function handlePinChange(loc: PickedLocation, address?: string) {
+    setCoords(loc);
+    // Fill the street from the reverse-geocoded address only when the field is
+    // empty, so we never clobber what the customer typed themselves.
+    if (address && !street.trim()) {
+      setStreet(address);
+      setSelectedAddressId(NEW_ADDRESS);
+    }
+  }
+
   const matchedZone = useMemo(
     () => zones.find((z) => z.area === area) ?? null,
     [zones, area],
@@ -178,7 +205,12 @@ export function CheckoutForm({
       discountAed: discount,
       minimumAed: deliveryMinSubtotalAed,
     });
-  const canSubmit = areaSupported && meetsDeliveryMin;
+  // Delivery requires a pin, and that pin must sit inside Ajman's delivery area.
+  const hasPin = deliveryType !== "delivery" || coords !== null;
+  const pinInAjman =
+    deliveryType !== "delivery" ||
+    (coords !== null && isWithinAjmanDeliveryArea(coords.lat, coords.lng));
+  const canSubmit = areaSupported && meetsDeliveryMin && hasPin && pinInAjman;
 
   if (!hydrated) {
     return <p className="text-sm text-muted-foreground">Loading checkout…</p>;
@@ -210,6 +242,22 @@ export function CheckoutForm({
       );
       return;
     }
+    if (deliveryType === "delivery" && !coords) {
+      setError(
+        "Drop a pin on the map so the driver can find your exact location.",
+      );
+      return;
+    }
+    if (
+      deliveryType === "delivery" &&
+      coords &&
+      !isWithinAjmanDeliveryArea(coords.lat, coords.lng)
+    ) {
+      setError(
+        "Your map pin is outside our Ajman delivery area. Move it inside Ajman, or switch to pickup.",
+      );
+      return;
+    }
     const form = e.currentTarget;
     const formData = new FormData(form);
 
@@ -221,6 +269,8 @@ export function CheckoutForm({
             flat: String(formData.get("flat") ?? "") || undefined,
             notes: String(formData.get("addressNotes") ?? "") || undefined,
             mapQuery: deliveryMapQuery || undefined,
+            lat: coords?.lat,
+            lng: coords?.lng,
           }
         : undefined;
 
@@ -236,7 +286,7 @@ export function CheckoutForm({
       deliverySlot: String(formData.get("deliverySlot") ?? "ASAP"),
       orderNotes: String(formData.get("orderNotes") ?? "") || undefined,
       pizzaCut,
-      paymentMethod,
+      paymentMethod: effectivePaymentMethod,
       promoCode: promo?.code,
       items: items.map((it) => ({
         productId: it.productId,
@@ -454,22 +504,30 @@ export function CheckoutForm({
                 <div className="flex items-center justify-between gap-4">
                   <div>
                     <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep">
-                      Map pin preview
+                      Drop your delivery pin
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Check the pin before you place the order.
+                      Tap the map to set your exact spot — the driver gets this GPS
+                      point. Drag the pin to fine-tune it.
                     </p>
                   </div>
                 </div>
-                {deliveryMapQuery ? (
-                  <MapEmbed
-                    query={deliveryMapQuery}
-                    title={`Delivery pin for ${deliveryMapQuery}`}
-                  />
+                <DeliveryMapPicker value={coords} onChange={handlePinChange} />
+                {coords ? (
+                  isWithinAjmanDeliveryArea(coords.lat, coords.lng) ? (
+                    <p className="text-xs text-muted-foreground">
+                      Pin set at {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}.
+                    </p>
+                  ) : (
+                    <p className="text-xs text-flag-red">
+                      That pin is outside our Ajman delivery area. Move it inside
+                      Ajman, or switch to pickup.
+                    </p>
+                  )
                 ) : (
-                  <div className="grid w-full h-[280px] md:h-[400px] place-items-center border border-border bg-background text-sm text-muted-foreground">
-                    Type your street to preview the pin.
-                  </div>
+                  <p className="text-xs text-flag-red">
+                    Tap the map to drop your delivery pin before placing the order.
+                  </p>
                 )}
               </div>
             </div>
@@ -593,6 +651,10 @@ export function CheckoutForm({
             "Delivery unavailable for this area"
           ) : !meetsDeliveryMin ? (
             `Minimum ${formatAed(deliveryMinSubtotalAed)} in items for delivery`
+          ) : !hasPin ? (
+            "Drop your delivery pin on the map"
+          ) : !pinInAjman ? (
+            "Move your pin inside Ajman"
           ) : (
             paymentMethod === "cod" && deliveryType === "pickup"
               ? "Place pickup order"

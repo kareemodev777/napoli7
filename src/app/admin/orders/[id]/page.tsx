@@ -3,7 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { StatusBadge } from "@/components/account/StatusBadge";
 import { MapEmbed } from "@/components/site/MapEmbed";
-import { buildDeliveryMapQuery } from "@/lib/delivery-map";
+import { buildDeliveryMapQuery, buildGpsMapsUrl } from "@/lib/delivery-map";
 import { HAS_SUPABASE, HAS_SUPABASE_SERVICE } from "@/lib/env";
 import {
   OrderEditForm,
@@ -91,9 +91,12 @@ export default async function AdminOrderEditPage({
         flat?: string;
         notes?: string;
         mapQuery?: string;
+        lat?: number;
+        lng?: number;
       }
     | null;
   const deliveryMapQuery = deliveryAddress?.mapQuery ?? buildDeliveryMapQuery(deliveryAddress);
+  const hasGps = deliveryAddress?.lat != null && deliveryAddress?.lng != null;
 
   const items: EditOrderItem[] = (order.order_items ?? []).map(
     (it: {
@@ -150,13 +153,29 @@ export default async function AdminOrderEditPage({
               <p className="pt-2 font-medium">
                 Pizza cut: {order.pizza_cut ? "Yes" : "No"}
               </p>
-              {deliveryMapQuery ? (
+              {hasGps ? (
+                <a
+                  href={buildGpsMapsUrl(deliveryAddress!.lat!, deliveryAddress!.lng!)}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-block text-xs uppercase tracking-[0.18em] text-azure-deep underline underline-offset-2"
+                >
+                  Open GPS pin: {deliveryAddress!.lat!.toFixed(5)},{" "}
+                  {deliveryAddress!.lng!.toFixed(5)}
+                </a>
+              ) : deliveryMapQuery ? (
                 <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
                   Pin: {deliveryMapQuery}
                 </p>
               ) : null}
             </div>
-            {deliveryMapQuery ? (
+            {hasGps ? (
+              <MapEmbed
+                lat={deliveryAddress!.lat!}
+                lng={deliveryAddress!.lng!}
+                title={`Delivery pin for ${order.order_number}`}
+              />
+            ) : deliveryMapQuery ? (
               <MapEmbed query={deliveryMapQuery} title={`Delivery pin for ${order.order_number}`} />
             ) : null}
           </div>

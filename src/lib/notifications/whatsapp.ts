@@ -1,4 +1,5 @@
 import { HAS_WHATSAPP } from "@/lib/env";
+import { buildGpsMapsUrl } from "@/lib/delivery-map";
 import type {
   CustomerNotificationInput,
   KitchenNotificationInput,
@@ -95,9 +96,15 @@ export async function notifyKitchenWhatsApp(input: KitchenNotificationInput) {
     input.deliveryType === "delivery" && input.deliveryAddress
       ? `${input.deliveryAddress.street}, ${input.deliveryAddress.area}${input.deliveryAddress.flat ? `, Flat ${input.deliveryAddress.flat}` : ""}${input.deliveryAddress.notes ? `\nNotes: ${input.deliveryAddress.notes}` : ""}`
       : "Pickup at shop";
-  const pinText = input.deliveryAddress?.mapQuery
-    ? `Pin: ${input.deliveryAddress.mapQuery}`
-    : null;
+  const gpsUrl =
+    input.deliveryAddress?.lat != null && input.deliveryAddress?.lng != null
+      ? buildGpsMapsUrl(input.deliveryAddress.lat, input.deliveryAddress.lng)
+      : null;
+  const pinText = gpsUrl
+    ? `Pin (GPS): ${gpsUrl}`
+    : input.deliveryAddress?.mapQuery
+      ? `Pin: ${input.deliveryAddress.mapQuery}`
+      : null;
   const pizzaCutLine = input.pizzaCut ? "Pizza cut: yes" : "Pizza cut: no";
 
   const messageBody = [
