@@ -80,10 +80,19 @@ export default async function AboutPage() {
 
       <section className="border-t border-border px-6 md:px-10 py-16 md:py-24">
         <div className="max-w-[1140px] mx-auto grid md:grid-cols-[0.85fr_1.15fr] gap-12 md:gap-20 items-start">
-          <div>
+          <div className="md:sticky md:top-24">
             <h2 className="font-display text-3xl md:text-4xl uppercase tracking-[1.5px] leading-tight">
               ABOUT NAPOLI7
             </h2>
+            <div className="relative mt-8 aspect-[3/2] w-full overflow-hidden rounded-md border border-border bg-muted">
+              <Image
+                src={cultures.url}
+                alt={cultures.alt}
+                fill
+                sizes="(min-width: 768px) 42vw, 100vw"
+                className="object-contain"
+              />
+            </div>
           </div>
           <div className="space-y-5 text-base md:text-lg text-muted-foreground leading-relaxed">
             {aboutParagraphs.map((paragraph) => (
@@ -102,20 +111,6 @@ export default async function AboutPage() {
                 Neapolitan tradition, reimagined for the Emirates.
               </p>
             </div>
-          </div>
-        </div>
-      </section>
-
-      <section className="border-t border-border px-6 md:px-10 py-16 md:py-24">
-        <div className="max-w-[640px] mx-auto">
-          <div className="relative aspect-[3/2] w-full overflow-hidden rounded-md border border-border bg-muted">
-            <Image
-              src={cultures.url}
-              alt={cultures.alt}
-              fill
-              sizes="(min-width: 640px) 640px, 100vw"
-              className="object-contain"
-            />
           </div>
         </div>
       </section>
