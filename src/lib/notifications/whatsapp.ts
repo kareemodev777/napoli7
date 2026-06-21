@@ -1,5 +1,9 @@
 import { HAS_WHATSAPP } from "@/lib/env";
-import { buildGpsMapsUrl } from "@/lib/delivery-map";
+import {
+  buildDeliveryMapQuery,
+  buildGoogleMapsSearchUrl,
+  buildGpsMapsUrl,
+} from "@/lib/delivery-map";
 import type {
   CustomerNotificationInput,
   KitchenNotificationInput,
@@ -144,4 +148,128 @@ export async function notifyKitchenWhatsApp(input: KitchenNotificationInput) {
       await res.text(),
     );
   }
+}
+
+export interface RiderAssignmentInput {
+  riderName: string;
+  riderPhone: string;
+  orderNumber: string;
+  customerName: string;
+  customerPhone: string;
+  deliveryType: "delivery" | "pickup";
+  deliveryAddress?: {
+    street?: string;
+    area?: string;
+    flat?: string;
+    notes?: string;
+    mapQuery?: string;
+    lat?: number;
+    lng?: number;
+  } | null;
+  deliverySlot: string;
+  paymentMethod: string;
+  paymentStatus: string;
+  totalAed: number;
+  items: { name: string; quantity: number }[];
+}
+
+/**
+ * The brief a rider receives on assignment: who/where to deliver, what to
+ * collect, and a single tappable maps link (GPS pin when present, otherwise a
+ * Google Maps search for the typed address). Pure so it can be unit tested.
+ */
+export function riderAssignmentMessage(input: RiderAssignmentInput): string {
+  const addr = input.deliveryAddress;
+  const address =
+    input.deliveryType === "delivery" && addr
+      ? [
+          addr.street,
+          [addr.flat ? `Flat ${addr.flat}` : null, addr.area]
+            .filter(Boolean)
+            .join(", "),
+          addr.notes ? `Notes: ${addr.notes}` : null,
+        ]
+          .filter(Boolean)
+          .join("\n")
+      : "Pickup at shop";
+
+  const mapsUrl =
+    addr?.lat != null && addr?.lng != null
+      ? buildGpsMapsUrl(addr.lat, addr.lng)
+      : addr?.mapQuery
+        ? buildGoogleMapsSearchUrl(addr.mapQuery)
+        : buildDeliveryMapQuery(addr ?? null)
+          ? buildGoogleMapsSearchUrl(buildDeliveryMapQuery(addr ?? null))
+          : null;
+
+  // COD orders need the driver to collect cash; prepaid orders should not.
+  const payment =
+    input.paymentMethod === "cod" || input.paymentStatus !== "paid"
+      ? `Collect on delivery: ${input.totalAed.toFixed(2)} AED (${input.paymentMethod.toUpperCase()})`
+      : `Paid online — collect nothing (${input.totalAed.toFixed(2)} AED)`;
+
+  return [
+    `Delivery assigned to you, ${input.riderName} 🛵`,
+    `Order ${input.orderNumber} · ${input.deliverySlot}`,
+    `${input.customerName} · ${input.customerPhone}`,
+    payment,
+    `Address:\n${address}`,
+    mapsUrl ? `Map: ${mapsUrl}` : null,
+    ...input.items.map((it) => `${it.quantity}× ${it.name}`),
+  ]
+    .filter(Boolean)
+    .join("\n");
+}
+
+/**
+ * Send the delivery brief to the assigned rider over WhatsApp. Best-effort like
+ * the other channels — never throws — but returns whether the message was sent
+ * so the admin UI can surface "WhatsApp not delivered" instead of silently
+ * implying the rider was notified.
+ */
+export async function notifyRiderAssignmentWhatsApp(
+  input: RiderAssignmentInput,
+): Promise<{ sent: boolean; reason?: string }> {
+  const to = toWhatsAppNumber(input.riderPhone ?? "");
+  if (!HAS_WHATSAPP) {
+    console.info(
+      `[notifyRiderAssignmentWhatsApp] WhatsApp disabled. Order ${input.orderNumber} -> ${input.riderName}`,
+    );
+    return { sent: false, reason: "WhatsApp is not configured" };
+  }
+  if (!to) {
+    console.warn(
+      `[notifyRiderAssignmentWhatsApp] no rider phone for order ${input.orderNumber}`,
+    );
+    return { sent: false, reason: "Rider has no phone number" };
+  }
+
+  const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID!;
+  const accessToken = process.env.WHATSAPP_ACCESS_TOKEN!;
+
+  const res = await fetch(
+    `https://graph.facebook.com/v20.0/${phoneNumberId}/messages`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({
+        messaging_product: "whatsapp",
+        to,
+        type: "text",
+        text: { body: riderAssignmentMessage(input) },
+      }),
+    },
+  );
+  if (!res.ok) {
+    console.error(
+      "[notifyRiderAssignmentWhatsApp] WhatsApp API failed:",
+      res.status,
+      await res.text(),
+    );
+    return { sent: false, reason: "WhatsApp API rejected the message" };
+  }
+  return { sent: true };
 }

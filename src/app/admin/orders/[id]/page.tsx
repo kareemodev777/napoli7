@@ -10,6 +10,10 @@ import {
   type EditOrderItem,
   type EditOrderProduct,
 } from "@/components/admin/OrderEditForm";
+import {
+  AssignRiderForm,
+  type AssignableRider,
+} from "@/components/admin/AssignRiderForm";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { createClient } from "@/lib/supabase/server";
 import { labelForHandling, type PaymentHandling } from "@/lib/admin/order-edit";
@@ -42,7 +46,7 @@ async function loadOrder(id: string) {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, order_number, customer_name, customer_phone, customer_email, status, payment_method, payment_status, delivery_type, delivery_address, delivery_slot, pizza_cut, subtotal_aed, delivery_fee_aed, discount_aed, total_aed, promo_code, order_notes, admin_notes, created_at, order_items(id, product_name, base_price_aed, quantity, customizations, line_total_aed)",
+      "id, order_number, customer_name, customer_phone, customer_email, status, payment_method, payment_status, delivery_type, delivery_address, delivery_slot, pizza_cut, subtotal_aed, delivery_fee_aed, discount_aed, total_aed, promo_code, order_notes, admin_notes, assigned_rider_id, created_at, order_items(id, product_name, base_price_aed, quantity, customizations, line_total_aed)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -63,6 +67,14 @@ async function loadOrder(id: string) {
     .order("category_id")
     .order("position");
 
+  // Active riders, plus this order's currently assigned rider even if it has
+  // since been deactivated, so the selection always shows who it's assigned to.
+  const assignedRiderId = data.assigned_rider_id as string | null;
+  const ridersQuery = supabase.from("riders").select("id, name, phone").order("name");
+  const { data: riders } = await (assignedRiderId
+    ? ridersQuery.or(`is_active.eq.true,id.eq.${assignedRiderId}`)
+    : ridersQuery.eq("is_active", true));
+
   return {
     order: data,
     edits: (edits ?? []) as OrderEditRow[],
@@ -71,6 +83,11 @@ async function loadOrder(id: string) {
       name: product.name,
       priceAed: Number(product.price_aed),
     })) satisfies EditOrderProduct[],
+    riders: (riders ?? []).map((rider) => ({
+      id: rider.id,
+      name: rider.name,
+      phone: rider.phone,
+    })) satisfies AssignableRider[],
   };
 }
 
@@ -82,7 +99,7 @@ export default async function AdminOrderEditPage({
   const { id } = await params;
   const loaded = await loadOrder(id);
   if (!loaded) notFound();
-  const { order, edits, products } = loaded;
+  const { order, edits, products, riders } = loaded;
 
   const deliveryAddress = order.delivery_address as
     | {
@@ -205,6 +222,15 @@ export default async function AdminOrderEditPage({
                   Pin: {deliveryMapQuery}
                 </p>
               ) : null}
+              <div className="mt-3 border-t border-border pt-3">
+                <AssignRiderForm
+                  orderId={order.id}
+                  riders={riders}
+                  currentRiderId={
+                    (order.assigned_rider_id as string | null) ?? null
+                  }
+                />
+              </div>
             </div>
             {hasGps ? (
               <MapEmbed
