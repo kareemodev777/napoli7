@@ -51,6 +51,12 @@ export interface CheckoutSavedAddress {
 
 const NEW_ADDRESS = "__new__";
 
+// Real menu products use UUID ids. A cart item with a non-UUID id (e.g. a demo
+// slug like "margherita-classic") is stale and cannot be ordered — checkout
+// detects this up front so the customer gets a clear, recoverable message.
+const UUID_RE =
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
 export function CheckoutForm({
   zones,
   defaultFee,
@@ -75,6 +81,11 @@ export function CheckoutForm({
   const clearCart = useCart((s) => s.clear);
 
   const hydrated = useMounted();
+  // A stale cart holds items saved against an older (or demo) menu whose ids
+  // aren't UUIDs. These can't be ordered, so we block submission and offer a
+  // one-click recovery instead of failing deep in the server action.
+  const hasStaleItems =
+    hydrated && items.some((it) => !UUID_RE.test(it.productId));
   const [pending, startTransition] = useTransition();
   // Card checkout redirects to Stripe via /api/checkout/create-session, which
   // calls the Stripe API before issuing a 303. That round-trip can take a couple
@@ -230,6 +241,12 @@ export function CheckoutForm({
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError(null);
+    if (hasStaleItems) {
+      setError(
+        "Your cart is out of date. Please clear it and re-add your items from the menu.",
+      );
+      return;
+    }
     if (!areaSupported) {
       setError(
         "We don't deliver to that area yet. Choose a supported area or switch to pickup.",
@@ -628,6 +645,18 @@ export function CheckoutForm({
           <Alert variant="destructive">
             <AlertTitle>Order not placed</AlertTitle>
             <AlertDescription>{error}</AlertDescription>
+            {hasStaleItems ? (
+              <button
+                type="button"
+                onClick={() => {
+                  clearCart();
+                  router.push("/menu");
+                }}
+                className="mt-3 inline-flex items-center justify-center border border-foreground px-4 py-2 font-display text-xs tracking-[0.2em] uppercase hover:bg-foreground hover:text-background"
+              >
+                Clear cart &amp; browse menu
+              </button>
+            ) : null}
           </Alert>
         ) : null}
 

@@ -15,8 +15,8 @@ import {
   ProductForm,
   SaveButton,
   SizeSelect,
-  money,
 } from "../form-components";
+import { money } from "../format";
 import type { CategoryRow, ProductRow } from "../types";
 import { AdminModal } from "@/components/admin/AdminModal";
 import { SIZE_OPTIONS, type SizeId } from "@/data/types/catalog";

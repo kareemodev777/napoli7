@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { AdminModal } from "@/components/admin/AdminModal";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { getOrderingAvailability, formatOrderingWindow } from "@/lib/ordering-hours";
-import { upsertOpeningHours } from "./actions";
+import { OpeningHoursForm } from "./OpeningHoursForm";
 
 export const metadata: Metadata = {
   title: "Opening hours · Admin",
@@ -80,57 +80,7 @@ export default async function OpeningHoursAdminPage() {
                 title={`${DAY_TONES[day.dayOfWeek]} hours`}
                 description="Update the hours that control whether checkout is open or closed."
               >
-                <form action={upsertOpeningHours} className="space-y-4">
-                  <input type="hidden" name="day_of_week" value={day.dayOfWeek} />
-                  <label className="flex items-center gap-3 text-sm">
-                    <input
-                      type="checkbox"
-                      name="is_closed"
-                      defaultChecked={day.isClosed}
-                      className="h-4 w-4"
-                    />
-                    Closed all day
-                  </label>
-
-                  <div className="grid gap-4 sm:grid-cols-2">
-                    <label className="space-y-2 text-sm">
-                      <span className="block text-muted-foreground">Opens at</span>
-                      <input
-                        type="time"
-                        name="opens_at"
-                        defaultValue={day.opensAt ?? ""}
-                        className="w-full border border-border bg-background px-3 py-2.5"
-                      />
-                    </label>
-                    <label className="space-y-2 text-sm">
-                      <span className="block text-muted-foreground">Closes at</span>
-                      <input
-                        type="time"
-                        name="closes_at"
-                        defaultValue={day.closesAt ?? ""}
-                        className="w-full border border-border bg-background px-3 py-2.5"
-                      />
-                    </label>
-                  </div>
-
-                  <label className="space-y-2 text-sm block">
-                    <span className="block text-muted-foreground">Note</span>
-                    <input
-                      type="text"
-                      name="note"
-                      defaultValue={day.note ?? ""}
-                      placeholder="Optional note"
-                      className="w-full border border-border bg-background px-3 py-2.5"
-                    />
-                  </label>
-
-                  <button
-                    type="submit"
-                    className="inline-flex items-center justify-center bg-brand px-4 py-3 font-display text-xs tracking-[0.2em] uppercase text-primary-foreground hover:bg-brand-hover"
-                  >
-                    Save changes
-                  </button>
-                </form>
+                <OpeningHoursForm day={day} />
               </AdminModal>
             </article>
           ))}

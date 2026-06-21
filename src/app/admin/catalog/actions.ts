@@ -64,6 +64,8 @@ function logActionError(action: string, error: unknown) {
   console.error(`[admin/catalog] ${action} failed`, error);
 }
 
+export type ProductActionResult = { error?: string; message?: string };
+
 export async function upsertCategory(formData: FormData) {
   await requireAdmin();
   const parsed = categorySchema.safeParse(Object.fromEntries(formData));
@@ -97,7 +99,10 @@ export async function deleteCategory(formData: FormData) {
   revalidateCatalog();
 }
 
-export async function upsertProduct(formData: FormData) {
+export async function upsertProduct(
+  _prevState: ProductActionResult,
+  formData: FormData,
+): Promise<ProductActionResult> {
   await requireAdmin();
   const input = {
     ...Object.fromEntries(formData),
@@ -112,7 +117,7 @@ export async function upsertProduct(formData: FormData) {
   const parsed = productSchema.safeParse(input);
   if (!parsed.success) {
     logActionError("upsertProduct", parsed.error);
-    return;
+    return { error: "Please check the item details and try again." };
   }
 
   const { id, name_it, ...rest } = parsed.data;
@@ -128,10 +133,11 @@ export async function upsertProduct(formData: FormData) {
   const { error } = await query;
   if (error) {
     logActionError("upsertProduct", error);
-    return;
+    return { error: "Could not save the item. Please try again." };
   }
 
   revalidateCatalog();
+  return { message: id ? "Item saved." : "Item added." };
 }
 
 export async function deleteProduct(formData: FormData) {

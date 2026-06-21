@@ -7,7 +7,6 @@ import { Footer } from "@/components/site/Footer";
 import { MobileBottomBar } from "@/components/site/MobileBottomBar";
 import { CookieBar } from "@/components/site/CookieBar";
 import { LocalBusinessJsonLd } from "@/components/structured-data/LocalBusiness";
-import { getDeliveryZones } from "@/lib/checkout";
 import { getSiteImages } from "@/lib/site-images";
 
 export const metadata: Metadata = {
@@ -15,16 +14,13 @@ export const metadata: Metadata = {
 };
 
 export default async function HomePage() {
-  const [images, deliveryZones] = await Promise.all([
-    getSiteImages(),
-    getDeliveryZones(),
-  ]);
+  const images = await getSiteImages();
   return (
     <>
       <LocalBusinessJsonLd />
       <Header />
       <main id="main" className="flex-1 bg-background text-foreground">
-        <Hero image={images.home_hero} deliveryZones={deliveryZones} />
+        <Hero image={images.home_hero} />
         <HomeStory images={images} />
         <LocationBanner />
       </main>

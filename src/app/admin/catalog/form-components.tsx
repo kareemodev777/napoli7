@@ -1,13 +1,10 @@
-import type { ReactNode } from "react";
+"use client";
+
+import { useActionState, type ReactNode } from "react";
 import { SIZE_OPTIONS, type SizeId } from "@/data/types/catalog";
-import { upsertProduct } from "./actions";
+import { upsertProduct, type ProductActionResult } from "./actions";
 import { ImageUploadField } from "./ImageUploadField";
 import type { CategoryRow, ProductRow } from "./types";
-
-export function money(value: string | number | null) {
-  if (value === null) return "0";
-  return Number(value).toFixed(0);
-}
 
 export function Field({
   label,
@@ -121,13 +118,20 @@ export function SelectCategory({
   );
 }
 
-export function SaveButton({ children = "Save" }: { children?: ReactNode }) {
+export function SaveButton({
+  children = "Save",
+  pending = false,
+}: {
+  children?: ReactNode;
+  pending?: boolean;
+}) {
   return (
     <button
       type="submit"
-      className="inline-flex h-11 items-center justify-center rounded-md bg-brand px-4 font-display text-xs uppercase tracking-[0.16em] text-primary-foreground hover:bg-brand-hover"
+      disabled={pending}
+      className="inline-flex h-11 items-center justify-center rounded-md bg-brand px-4 font-display text-xs uppercase tracking-[0.16em] text-primary-foreground hover:bg-brand-hover disabled:opacity-50"
     >
-      {children}
+      {pending ? "Saving…" : children}
     </button>
   );
 }
@@ -151,6 +155,8 @@ export function Badge({ children }: { children: ReactNode }) {
   );
 }
 
+const initialProductState: ProductActionResult = {};
+
 export function ProductForm({
   product,
   categories,
@@ -160,8 +166,13 @@ export function ProductForm({
   categories: CategoryRow[];
   showImageUpload?: boolean;
 }) {
+  const [state, action, pending] = useActionState(
+    upsertProduct,
+    initialProductState,
+  );
+
   return (
-    <form action={upsertProduct} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+    <form action={action} className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
       {product ? <input type="hidden" name="id" value={product.id} /> : null}
       <Field
         label="Item name"
@@ -231,7 +242,27 @@ export function ProductForm({
           <input name="is_active" type="checkbox" defaultChecked={product?.is_active ?? true} />
           Show on menu
         </label>
-        <SaveButton>{product ? "Save item" : "Add item"}</SaveButton>
+        <SaveButton pending={pending}>
+          {product ? "Save item" : "Add item"}
+        </SaveButton>
+        {state.message ? (
+          <p
+            role="status"
+            aria-live="polite"
+            className="inline-flex h-11 items-center rounded-md border border-green-600/30 bg-green-50 px-3 text-sm font-medium text-green-700"
+          >
+            ✓ {state.message}
+          </p>
+        ) : null}
+        {state.error ? (
+          <p
+            role="alert"
+            aria-live="assertive"
+            className="inline-flex h-11 items-center rounded-md border border-destructive/30 bg-destructive/10 px-3 text-sm font-medium text-destructive"
+          >
+            {state.error}
+          </p>
+        ) : null}
       </div>
     </form>
   );

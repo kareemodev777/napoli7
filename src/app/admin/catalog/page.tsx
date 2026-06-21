@@ -9,8 +9,8 @@ import {
   Field,
   ProductForm,
   SaveButton,
-  money,
 } from "./form-components";
+import { money } from "./format";
 import type { CategoryRow, ProductRow } from "./types";
 import { AdminModal } from "@/components/admin/AdminModal";
 import { HAS_SUPABASE_SERVICE } from "@/lib/env";

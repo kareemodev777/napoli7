@@ -76,6 +76,18 @@ export interface PlaceOrderResult {
 export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   const parsed = placeOrderSchema.safeParse(input);
   if (!parsed.success) {
+    // A non-UUID productId means the cart holds stale items from a previous
+    // menu (e.g. demo/mock slugs like "margherita-classic"). Surface a
+    // recoverable message instead of leaking the raw Zod "Invalid UUID".
+    const staleCart = parsed.error.issues.some((issue) =>
+      issue.path.includes("productId"),
+    );
+    if (staleCart) {
+      return {
+        error:
+          "Your cart is out of date. Please clear it and re-add your items from the menu.",
+      };
+    }
     return {
       error:
         parsed.error.issues[0]?.message ??
