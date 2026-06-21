@@ -34,6 +34,7 @@ const blocks: Block[] = [
       "Caputo flour from Naples. San Marzano DOP tomatoes from southern Italy. A handcrafted Neapolitan oven built in Naples and imported to the UAE.",
       "Designed to reach temperatures of up to 450°C, our oven delivers the light, airy crust and distinctive character of true Neapolitan pizza. Together with a 48-hour fermented dough and traditional Neapolitan craftsmanship, they create the foundation of every Napoli 7 pizza.",
     ],
+    cta: { label: "About Napoli 7", href: "/about" },
   },
   {
     imageKey: "home_philosophy",
