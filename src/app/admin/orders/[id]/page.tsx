@@ -42,7 +42,7 @@ async function loadOrder(id: string) {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, order_number, customer_name, customer_phone, status, payment_method, payment_status, delivery_type, delivery_address, pizza_cut, subtotal_aed, delivery_fee_aed, discount_aed, total_aed, order_notes, admin_notes, order_items(id, product_name, quantity, line_total_aed)",
+      "id, order_number, customer_name, customer_phone, customer_email, status, payment_method, payment_status, delivery_type, delivery_address, delivery_slot, pizza_cut, subtotal_aed, delivery_fee_aed, discount_aed, total_aed, promo_code, order_notes, admin_notes, created_at, order_items(id, product_name, base_price_aed, quantity, customizations, line_total_aed)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -112,6 +112,43 @@ export default async function AdminOrderEditPage({
     }),
   );
 
+  // Read-only summary view: each line with its chosen extras/removals, so the
+  // kitchen/admin sees exactly what the customer ordered without entering edit
+  // mode. Mirrors the customization shape persisted at checkout.
+  type OrderItemCustomization = {
+    ingredient: string;
+    choice: "default" | "extra" | "without";
+    extraPrice?: number | string;
+  };
+  const summaryItems = (order.order_items ?? []).map(
+    (it: {
+      id: string;
+      product_name: string;
+      base_price_aed: number | string;
+      quantity: number;
+      customizations: OrderItemCustomization[] | null;
+      line_total_aed: number | string;
+    }) => ({
+      id: it.id,
+      productName: it.product_name,
+      basePriceAed: Number(it.base_price_aed),
+      quantity: it.quantity,
+      lineTotalAed: Number(it.line_total_aed),
+      extras: (it.customizations ?? [])
+        .filter((c) => c.choice === "extra")
+        .map((c) =>
+          Number(c.extraPrice) > 0
+            ? `+ ${c.ingredient} (${Number(c.extraPrice).toFixed(2)})`
+            : `+ ${c.ingredient}`,
+        ),
+      removed: (it.customizations ?? [])
+        .filter((c) => c.choice === "without")
+        .map((c) => `no ${c.ingredient}`),
+    }),
+  );
+
+  const placedAt = new Date(order.created_at as string).toLocaleString("en-AE");
+
   return (
     <section className="px-4 py-8 md:px-10">
       <div className="mx-auto max-w-[1400px]">
@@ -180,6 +217,100 @@ export default async function AdminOrderEditPage({
             ) : null}
           </div>
         ) : null}
+
+        <div className="mt-8 rounded-md border border-border bg-card p-5">
+          <h2 className="font-display text-xs uppercase tracking-[0.25em] text-muted-foreground">
+            Order summary
+          </h2>
+
+          <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
+            <div>
+              <dt className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                Placed
+              </dt>
+              <dd>{placedAt}</dd>
+            </div>
+            <div>
+              <dt className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                Fulfilment
+              </dt>
+              <dd className="capitalize">
+                {order.delivery_type} · {order.delivery_slot}
+              </dd>
+            </div>
+            <div>
+              <dt className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                Payment
+              </dt>
+              <dd>
+                {order.payment_method} · {order.payment_status}
+              </dd>
+            </div>
+            <div className="min-w-0">
+              <dt className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                Email
+              </dt>
+              <dd className="truncate">{order.customer_email ?? "—"}</dd>
+            </div>
+          </dl>
+
+          <ul className="mt-5 divide-y divide-border border-t border-border">
+            {summaryItems.map((it) => (
+              <li key={it.id} className="flex justify-between gap-4 py-3 text-sm">
+                <div className="min-w-0">
+                  <p className="font-medium">
+                    {it.quantity} × {it.productName}
+                  </p>
+                  {it.extras.length > 0 || it.removed.length > 0 ? (
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {[...it.extras, ...it.removed].join(" · ")}
+                    </p>
+                  ) : null}
+                  <p className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">
+                    {it.basePriceAed.toFixed(2)} AED each
+                  </p>
+                </div>
+                <span className="shrink-0 font-display tabular-nums">
+                  {it.lineTotalAed.toFixed(2)} AED
+                </span>
+              </li>
+            ))}
+          </ul>
+
+          <dl className="mt-4 space-y-1 border-t border-border pt-4 text-sm tabular-nums">
+            <div className="flex justify-between">
+              <dt className="text-muted-foreground">Subtotal</dt>
+              <dd>{Number(order.subtotal_aed).toFixed(2)} AED</dd>
+            </div>
+            {Number(order.delivery_fee_aed) > 0 ? (
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">Delivery fee</dt>
+                <dd>{Number(order.delivery_fee_aed).toFixed(2)} AED</dd>
+              </div>
+            ) : null}
+            {Number(order.discount_aed ?? 0) > 0 ? (
+              <div className="flex justify-between">
+                <dt className="text-muted-foreground">
+                  Discount{order.promo_code ? ` (${order.promo_code})` : ""}
+                </dt>
+                <dd>−{Number(order.discount_aed).toFixed(2)} AED</dd>
+              </div>
+            ) : null}
+            <div className="flex justify-between border-t border-border pt-2 font-display text-base">
+              <dt>Total</dt>
+              <dd>{Number(order.total_aed).toFixed(2)} AED</dd>
+            </div>
+          </dl>
+
+          {order.order_notes ? (
+            <p className="mt-4 border-t border-border pt-4 text-sm">
+              <span className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                Customer notes:{" "}
+              </span>
+              {order.order_notes}
+            </p>
+          ) : null}
+        </div>
 
         <div className="mt-8">
           <OrderEditForm

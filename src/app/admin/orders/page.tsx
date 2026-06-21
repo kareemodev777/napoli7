@@ -85,7 +85,12 @@ export default async function AdminOrdersPage() {
               {orders.map((o) => (
                 <tr key={o.id} className="border-t border-border align-top">
                   <td className="py-4 pr-4 font-display tabular-nums">
-                    {o.orderNumber}
+                    <Link
+                      href={`/admin/orders/${o.id}`}
+                      className="underline decoration-dotted underline-offset-4 hover:text-azure-deep"
+                    >
+                      {o.orderNumber}
+                    </Link>
                   </td>
                   <td className="py-4 pr-4">
                     <div>{o.customerName}</div>
