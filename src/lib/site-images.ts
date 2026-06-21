@@ -12,6 +12,7 @@ export const SITE_IMAGE_KEYS = [
   "home_tradition",
   "home_philosophy",
   "about_cultures",
+  "about_story",
 ] as const;
 
 export type SiteImageKey = (typeof SITE_IMAGE_KEYS)[number];
@@ -39,6 +40,10 @@ export const SITE_IMAGE_DEFAULTS: SiteImageMap = {
   about_cultures: {
     url: "/images/about-cultures-v2.jpg",
     alt: "Where cultures meet — Napoli 7, rooted in Naples, inspired by the world",
+  },
+  about_story: {
+    url: "/images/home-philosophy-v2.jpg",
+    alt: "From Naples to the Emirates — the Napoli 7 story",
   },
 };
 
@@ -77,6 +82,12 @@ export const SITE_IMAGE_FIELDS: Array<{
     key: "about_cultures",
     label: "About — Where cultures meet",
     description: "Banner on the About page.",
+    aspect: "3 / 2",
+  },
+  {
+    key: "about_story",
+    label: "About — Our Story",
+    description: "Image beside the Our Story section on the About page.",
     aspect: "3 / 2",
   },
 ];

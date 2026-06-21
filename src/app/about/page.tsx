@@ -41,6 +41,7 @@ const storyParagraphs = [
 export default async function AboutPage() {
   const images = await getSiteImages();
   const cultures = images.about_cultures;
+  const story = images.about_story;
   return (
     <SiteShell>
       <PageHero
@@ -88,13 +89,22 @@ export default async function AboutPage() {
 
       <section className="border-t border-border px-6 md:px-10 py-16 md:py-24 bg-brand-soft">
         <div className="max-w-[1140px] mx-auto grid md:grid-cols-[0.85fr_1.15fr] gap-12 md:gap-20 items-start">
-          <div>
+          <div className="md:sticky md:top-24">
             <p className="font-display text-xs tracking-[0.25em] uppercase text-brand-deep mb-4">
               Our Story
             </p>
             <h2 className="font-display text-3xl md:text-4xl uppercase tracking-[1.5px] leading-tight">
               From Naples to the Emirates
             </h2>
+            <div className="relative mt-8 aspect-[3/2] w-full overflow-hidden rounded-md border border-border bg-muted">
+              <Image
+                src={story.url}
+                alt={story.alt}
+                fill
+                sizes="(min-width: 768px) 42vw, 100vw"
+                className="object-contain"
+              />
+            </div>
           </div>
           <div className="space-y-5 text-base md:text-lg text-muted-foreground leading-relaxed">
             {storyParagraphs.map((paragraph) => (
