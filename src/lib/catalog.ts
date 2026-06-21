@@ -125,6 +125,33 @@ function mapCategory(row: CategoryRow): Category {
   };
 }
 
+export function normalizeProductSizes(
+  categoryId: string,
+  sizes: ProductSize[],
+  fallbackPrice: number,
+): ProductSize[] {
+  if (categoryId === "focaccia" && sizes.length > 0) {
+    return [
+      {
+        ...sizes[0],
+        label: "One size",
+        detail: "",
+      },
+    ];
+  }
+
+  if (sizes.length > 0) return sizes;
+
+  return [
+    {
+      id: "regular",
+      label: "Regular",
+      detail: "",
+      price: fallbackPrice,
+    },
+  ];
+}
+
 function mapProduct(row: ProductRow): Product {
   const sizes: ProductSize[] = (row.product_sizes ?? [])
     .filter((size) => isSizeId(size.size_id))
@@ -135,6 +162,12 @@ function mapProduct(row: ProductRow): Product {
       detail: size.detail,
       price: Number(size.price_aed),
     }));
+
+  const normalizedSizes = normalizeProductSizes(
+    row.category_id,
+    sizes,
+    Number(row.price_aed),
+  );
 
   const customizations: ProductCustomization[] = (
     row.product_customizations ?? []
@@ -159,8 +192,8 @@ function mapProduct(row: ProductRow): Product {
     description: row.description,
     price: Number(row.price_aed),
     sizes:
-      sizes.length > 0
-        ? sizes
+      normalizedSizes.length > 0
+        ? normalizedSizes
         : [
             {
               id: "regular",

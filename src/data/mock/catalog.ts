@@ -1917,15 +1917,9 @@ export const PRODUCTS: Product[] = [
     "sizes": [
       {
         "id": "regular",
-        "label": "Medium",
-        "detail": "30 cm",
+        "label": "One size",
+        "detail": "",
         "price": 48.0
-      },
-      {
-        "id": "small",
-        "label": "Small",
-        "detail": "24 cm",
-        "price": 35.0
       }
     ],
     "isVeg": false,
@@ -2001,15 +1995,9 @@ export const PRODUCTS: Product[] = [
     "sizes": [
       {
         "id": "regular",
-        "label": "Medium",
-        "detail": "30 cm",
+        "label": "One size",
+        "detail": "",
         "price": 42.0
-      },
-      {
-        "id": "small",
-        "label": "Small",
-        "detail": "24 cm",
-        "price": 29.0
       }
     ],
     "isVeg": false,
@@ -2079,15 +2067,9 @@ export const PRODUCTS: Product[] = [
     "sizes": [
       {
         "id": "regular",
-        "label": "Medium",
-        "detail": "30 cm",
+        "label": "One size",
+        "detail": "",
         "price": 46.0
-      },
-      {
-        "id": "small",
-        "label": "Small",
-        "detail": "24 cm",
-        "price": 32.0
       }
     ],
     "isVeg": false,
