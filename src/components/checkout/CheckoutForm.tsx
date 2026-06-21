@@ -57,6 +57,14 @@ const NEW_ADDRESS = "__new__";
 const UUID_RE =
   /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
 
+// Show the "Test mode" card hint only when Stripe is running on test keys. The
+// publishable key is a NEXT_PUBLIC var, so Next inlines it into the client
+// bundle at build time — a live (pk_live) production build hides the hint
+// automatically, with no separate flag to remember to flip.
+const STRIPE_TEST_MODE = (
+  process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? ""
+).startsWith("pk_test");
+
 export function CheckoutForm({
   zones,
   defaultFee,
@@ -635,9 +643,12 @@ export function CheckoutForm({
                 </p>
               </>
             )}
-            <p className="text-xs text-muted-foreground">
-              Test mode: card <code className="font-mono">4242 4242 4242 4242</code>.
-            </p>
+            {STRIPE_TEST_MODE ? (
+              <p className="text-xs text-muted-foreground">
+                Test mode: card{" "}
+                <code className="font-mono">4242 4242 4242 4242</code>.
+              </p>
+            ) : null}
           </div>
         </Section>
 
