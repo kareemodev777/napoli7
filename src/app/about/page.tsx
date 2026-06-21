@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import { Flame, Leaf, Clock, ShieldCheck } from "lucide-react";
 import { SiteShell } from "@/components/site/SiteShell";
 import { PageHero } from "@/components/site/PageHero";
-import { FeatureTiles } from "@/components/site/FeatureTiles";
 import { getSiteImages } from "@/lib/site-images";
 
 export const revalidate = 86400;
@@ -19,33 +17,6 @@ export const metadata: Metadata = {
       "Authentic Neapolitan pizza inspired by the world, crafted in the UAE.",
   },
 };
-
-const tiles = [
-  {
-    icon: Flame,
-    title: "Neapolitan oven",
-    description:
-      "Every pizza is baked at high temperature in our handmade Neapolitan oven for a soft, airy cornicione.",
-  },
-  {
-    icon: Leaf,
-    title: "Italian ingredients",
-    description:
-      "Imported Caputo flour, San Marzano DOP tomatoes, premium Italian ingredients, and traditional technique.",
-  },
-  {
-    icon: Clock,
-    title: "Slow fermentation",
-    description:
-      "True Neapolitan dough, prepared with patience, handcrafted skill, and the rhythm of proper fermentation.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Crafted in the UAE",
-    description:
-      "Italian tradition reimagined for the Emirates, bringing cultures and flavours together around the same table.",
-  },
-];
 
 const aboutParagraphs = [
   "Napoli 7 was born from a simple vision: bringing authentic Neapolitan pizza to the United Arab Emirates, starting from Ajman.",
@@ -114,8 +85,6 @@ export default async function AboutPage() {
           </div>
         </div>
       </section>
-
-      <FeatureTiles tiles={tiles} />
 
       <section className="border-t border-border px-6 md:px-10 py-16 md:py-24 bg-brand-soft">
         <div className="max-w-[1140px] mx-auto grid md:grid-cols-[0.85fr_1.15fr] gap-12 md:gap-20 items-start">
