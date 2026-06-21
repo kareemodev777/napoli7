@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ShoppingBag, Sliders } from "lucide-react";
+import { ShoppingCart, Sliders } from "lucide-react";
 import { SmartImage } from "@/components/ui/SmartImage";
 import type { Product, SizeId } from "@/data/types/catalog";
 import { useCart } from "@/store/cart";
@@ -132,7 +132,7 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
               disabled={unavailable}
               className="h-10 w-10 inline-flex items-center justify-center bg-brand text-primary-foreground hover:bg-brand-hover relative disabled:opacity-50 disabled:hover:bg-brand"
             >
-              <ShoppingBag className="h-4 w-4" strokeWidth={1.5} aria-hidden />
+              <ShoppingCart className="h-5 w-5" strokeWidth={1.75} aria-hidden />
               {justAdded ? (
                 <span
                   role="status"
