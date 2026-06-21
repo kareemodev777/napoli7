@@ -56,15 +56,14 @@ export default async function AboutPage() {
             <h2 className="font-display text-3xl md:text-4xl uppercase tracking-[1.5px] leading-tight">
               ABOUT NAPOLI7
             </h2>
-            <div className="relative mt-8 aspect-[3/2] w-full overflow-hidden rounded-md border border-border bg-muted">
-              <Image
-                src={cultures.url}
-                alt={cultures.alt}
-                fill
-                sizes="(min-width: 768px) 42vw, 100vw"
-                className="object-contain"
-              />
-            </div>
+            <Image
+              src={cultures.url}
+              alt={cultures.alt}
+              width={0}
+              height={0}
+              sizes="(min-width: 768px) 42vw, 100vw"
+              className="mt-8 h-auto w-full rounded-md border border-border"
+            />
           </div>
           <div className="space-y-5 text-base md:text-lg text-muted-foreground leading-relaxed">
             {aboutParagraphs.map((paragraph) => (
@@ -96,15 +95,14 @@ export default async function AboutPage() {
             <h2 className="font-display text-3xl md:text-4xl uppercase tracking-[1.5px] leading-tight">
               From Naples to the Emirates
             </h2>
-            <div className="relative mt-8 aspect-[3/2] w-full overflow-hidden rounded-md border border-border bg-muted">
-              <Image
-                src={story.url}
-                alt={story.alt}
-                fill
-                sizes="(min-width: 768px) 42vw, 100vw"
-                className="object-contain"
-              />
-            </div>
+            <Image
+              src={story.url}
+              alt={story.alt}
+              width={0}
+              height={0}
+              sizes="(min-width: 768px) 42vw, 100vw"
+              className="mt-8 h-auto w-full rounded-md border border-border"
+            />
           </div>
           <div className="space-y-5 text-base md:text-lg text-muted-foreground leading-relaxed">
             {storyParagraphs.map((paragraph) => (
