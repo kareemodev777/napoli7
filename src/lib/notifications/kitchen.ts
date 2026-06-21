@@ -15,10 +15,10 @@ interface OrderItemRow {
 /**
  * Build the kitchen notification from the persisted order and send it.
  *
- * Used by the Stripe webhook so card orders are only sent to the kitchen AFTER
- * payment is confirmed. Reads from the DB (the source of truth) rather than
- * trusting any client-supplied payload. Each channel is isolated so one failing
- * never blocks the other.
+ * Used by the Stripe webhook for card orders and by checkout placement for COD
+ * pickup orders. Reads from the DB (the source of truth) rather than trusting
+ * any client-supplied payload. Each channel is isolated so one failing never
+ * blocks the other.
  */
 export async function sendKitchenNotificationsForOrder(
   orderId: string,
@@ -51,7 +51,7 @@ export async function sendKitchenNotificationsForOrder(
     deliveryAddress: order.delivery_address ?? undefined,
     deliverySlot: order.delivery_slot,
     pizzaCut: Boolean(order.pizza_cut),
-    paymentMethod: "card",
+    paymentMethod: order.payment_method as "card" | "cod",
     totalAed: Number(order.total_aed),
     items: (order.order_items ?? []).map((it: OrderItemRow) => ({
       name: it.product_name,

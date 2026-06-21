@@ -76,13 +76,18 @@ export function CheckoutForm({
   const [deliveryType, setDeliveryType] = useState<"delivery" | "pickup">(
     "delivery",
   );
+  useEffect(() => {
+    if (deliveryType === "delivery") {
+      setPaymentMethod("card");
+    }
+  }, [deliveryType]);
   const [area, setArea] = useState(() =>
     chooseCheckoutArea({
       zones,
       preferredArea: preferredArea ?? initialDetails.deliveryAddress?.area,
     }),
   );
-  const paymentMethod = "card" as const;
+  const [paymentMethod, setPaymentMethod] = useState<"card" | "cod">("card");
   const [pizzaCut, setPizzaCut] = useState(false);
 
   // Address fields are controlled so picking a saved address can fill them.
@@ -518,14 +523,43 @@ export function CheckoutForm({
         </Section>
 
         <Section title="Payment">
-          <div className="max-w-md border border-border bg-brand/10 p-4">
-            <p className="font-display text-sm tracking-[0.1em] uppercase">
-              Card payment only
-            </p>
-            <p className="mt-2 text-xs text-muted-foreground">
-              We accept cards, Apple Pay, and Google Pay. No cash on delivery.
-            </p>
-            <p className="mt-2 text-xs text-muted-foreground">
+          <div className="max-w-md border border-border bg-brand/10 p-4 space-y-4">
+            {deliveryType === "pickup" ? (
+              <>
+                <p className="font-display text-sm tracking-[0.1em] uppercase">
+                  Choose payment method
+                </p>
+                <div className="grid grid-cols-2 gap-px bg-border border border-border w-fit">
+                  <Toggle
+                    active={paymentMethod === "card"}
+                    onClick={() => setPaymentMethod("card")}
+                  >
+                    Card
+                  </Toggle>
+                  <Toggle
+                    active={paymentMethod === "cod"}
+                    onClick={() => setPaymentMethod("cod")}
+                  >
+                    Cash on delivery
+                  </Toggle>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Card, Apple Pay, and Google Pay are still available. Cash on delivery
+                  is for pickup orders only.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="font-display text-sm tracking-[0.1em] uppercase">
+                  Card payment
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  We accept cards, Apple Pay, and Google Pay. Delivery orders can’t use
+                  cash on delivery.
+                </p>
+              </>
+            )}
+            <p className="text-xs text-muted-foreground">
               Test mode: card <code className="font-mono">4242 4242 4242 4242</code>.
             </p>
           </div>
@@ -559,7 +593,9 @@ export function CheckoutForm({
           ) : !meetsDeliveryMin ? (
             `Minimum ${formatAed(deliveryMinSubtotalAed)} total for delivery`
           ) : (
-            "Continue to secure payment"
+            paymentMethod === "cod" && deliveryType === "pickup"
+              ? "Place pickup order"
+              : "Continue to secure payment"
           )}
         </button>
       </div>

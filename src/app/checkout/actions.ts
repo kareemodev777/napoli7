@@ -12,6 +12,7 @@ import {
 } from "@/lib/delivery-settings";
 import { canonicalizeCheckoutCart } from "@/lib/checkout-pricing";
 import { planAddressSave, type AddressLike } from "@/lib/saved-address";
+import { sendKitchenNotificationsForOrder } from "@/lib/notifications/kitchen";
 import { pushOrderToPos } from "@/lib/pos/push";
 import { HAS_SUPABASE } from "@/lib/env";
 import { getOrderingAvailability } from "@/lib/ordering-hours";
@@ -56,7 +57,7 @@ const placeOrderSchema = z.object({
   deliverySlot: z.string().min(1),
   orderNotes: z.string().max(500).optional(),
   pizzaCut: z.boolean().optional(),
-  paymentMethod: z.literal("card"),
+  paymentMethod: z.enum(["card", "cod"]),
   promoCode: z.string().max(40).optional(),
   items: z.array(itemSchema).min(1),
 });
@@ -82,6 +83,9 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   const data = parsed.data;
   if (data.deliveryType === "delivery" && !data.deliveryAddress) {
     return { error: "Add a delivery address or switch to pickup." };
+  }
+  if (data.deliveryType === "delivery" && data.paymentMethod === "cod") {
+    return { error: "Cash on delivery is available for pickup orders only." };
   }
 
   const orderingAvailability = await getOrderingAvailability();
@@ -210,7 +214,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   if (!HAS_SUPABASE) {
     return {
       error:
-        "Card payment requires Stripe + Supabase env vars. Please try again in the live environment.",
+        "Ordering requires Supabase env vars. Please try again in the live environment.",
     };
   }
 
@@ -272,8 +276,9 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     await persistDeliveryAddress(supabase, user.id, data.deliveryAddress);
   }
 
-  // Redeem the promo right away. Card-only checkout means there is no delayed
-  // cash branch anymore, and the Stripe webhook handles the paid path.
+  // Redeem the promo right away. The order is already in the database, so the
+  // voucher can be consumed whether the customer is paying by card or pickup
+  // cash.
   if (appliedPromo) {
     try {
       const redeemed = await redeemPromo(appliedPromo);
@@ -287,10 +292,26 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     }
   }
 
-  // Defer fulfillment to the Stripe webhook: the kitchen is notified only
-  // after `checkout.session.completed` confirms the card was actually charged.
-  // Notifying here would alert the kitchen for checkouts the customer abandons.
-  // The promo (if any) is redeemed there too, for the same reason.
+  // Card orders are fulfilled by the Stripe webhook after payment succeeds.
+  // COD pickup orders are fulfilled immediately here so the kitchen and POS
+  // get the ticket without waiting for a payment callback.
+  if (data.paymentMethod === "cod") {
+    try {
+      await sendKitchenNotificationsForOrder(order.id);
+    } catch (e) {
+      console.error("[placeOrder] kitchen notification failed:", e);
+    }
+    try {
+      await pushOrderToPos(order.id);
+    } catch (e) {
+      console.error("[placeOrder] POS push failed:", e);
+    }
+    return {
+      orderId: order.id,
+      orderNumber: order.order_number,
+    };
+  }
+
   return {
     orderId: order.id,
     orderNumber: order.order_number,

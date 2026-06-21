@@ -24,7 +24,7 @@ export interface KitchenNotificationInput {
   };
   deliverySlot: string;
   pizzaCut: boolean;
-  paymentMethod: "card";
+  paymentMethod: "card" | "cod";
   totalAed: number;
   items: OrderItemSummary[];
 }
