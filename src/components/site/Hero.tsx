@@ -47,17 +47,17 @@ export function Hero({
   const orderHref = orderingOpen
     ? bestMatch
       ? checkoutHref(bestMatch.area)
-      : "/menu"
+      : "/register"
     : "/location";
   const orderLabel = orderingOpen
     ? bestMatch
       ? `use ${bestMatch.area}`
-      : "order now"
+      : "create your account"
     : "see opening hours";
   const orderAria = orderingOpen
     ? bestMatch
       ? `Use ${bestMatch.area}`
-      : "Order now"
+      : "Create your account"
     : "See opening hours";
 
   function handleAreaKeyDown(event: KeyboardEvent<HTMLInputElement>) {

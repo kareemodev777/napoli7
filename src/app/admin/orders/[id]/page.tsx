@@ -4,13 +4,14 @@ import { notFound } from "next/navigation";
 import { StatusBadge } from "@/components/account/StatusBadge";
 import { MapEmbed } from "@/components/site/MapEmbed";
 import { buildDeliveryMapQuery } from "@/lib/delivery-map";
-import { HAS_SUPABASE_SERVICE } from "@/lib/env";
+import { HAS_SUPABASE, HAS_SUPABASE_SERVICE } from "@/lib/env";
 import {
   OrderEditForm,
   type EditOrderItem,
   type EditOrderProduct,
 } from "@/components/admin/OrderEditForm";
 import { createServiceRoleClient } from "@/lib/supabase/service";
+import { createClient } from "@/lib/supabase/server";
 import { labelForHandling, type PaymentHandling } from "@/lib/admin/order-edit";
 
 export const metadata: Metadata = {
@@ -31,8 +32,13 @@ interface OrderEditRow {
 }
 
 async function loadOrder(id: string) {
-  if (!HAS_SUPABASE_SERVICE) return null;
-  const supabase = createServiceRoleClient();
+  if (!HAS_SUPABASE) return null;
+  // Prefer the service-role client when it's configured, but fall back to the
+  // authenticated admin client (the layout already gates on requireAdmin) so the
+  // edit page never 404s just because the service-role key isn't set.
+  const supabase = HAS_SUPABASE_SERVICE
+    ? createServiceRoleClient()
+    : await createClient();
   const { data } = await supabase
     .from("orders")
     .select(

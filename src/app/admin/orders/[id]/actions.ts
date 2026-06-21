@@ -4,7 +4,8 @@ import { z } from "zod";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { createServiceRoleClient } from "@/lib/supabase/service";
-import { HAS_SUPABASE_SERVICE } from "@/lib/env";
+import { createClient } from "@/lib/supabase/server";
+import { HAS_SUPABASE, HAS_SUPABASE_SERVICE } from "@/lib/env";
 import {
   computeOrderTotals,
   describeEdit,
@@ -56,8 +57,8 @@ interface OrderItemRow {
  */
 export async function editOrder(formData: FormData): Promise<EditOrderResult> {
   const admin = await requireAdmin();
-  if (!HAS_SUPABASE_SERVICE) {
-    return { error: "Supabase service environment is required to edit orders." };
+  if (!HAS_SUPABASE) {
+    return { error: "Supabase environment is required to edit orders." };
   }
 
   const parsed = editSchema.safeParse({
@@ -75,7 +76,12 @@ export async function editOrder(formData: FormData): Promise<EditOrderResult> {
   }
   const data = parsed.data;
 
-  const supabase = createServiceRoleClient();
+  // Prefer the service-role client when configured; otherwise use the
+  // authenticated admin client (requireAdmin already passed) so order edits work
+  // even when the service-role key isn't set in the deployment.
+  const supabase = HAS_SUPABASE_SERVICE
+    ? createServiceRoleClient()
+    : await createClient();
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .select(

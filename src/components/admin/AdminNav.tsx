@@ -10,6 +10,7 @@ const adminLinks = [
   { label: "Catalog", href: "/admin/catalog", description: "Menu, prices, images" },
   { label: "Site images", href: "/admin/site-images", description: "Hero & page photos" },
   { label: "Delivery", href: "/admin/delivery-zones", description: "Areas and fees" },
+  { label: "Opening hours", href: "/admin/opening-hours", description: "Checkout availability" },
   { label: "Promos", href: "/admin/promos", description: "Discount codes" },
 ];
 

@@ -27,7 +27,13 @@ describe("delivery minimum total helpers", () => {
     ).toBe(32);
   });
 
-  test("allows delivery when subtotal plus fee reaches the minimum", () => {
+  test("keeps persisted minimums above the default instead of capping them", () => {
+    expect(
+      normalizeDeliveryMinimumSubtotalAed(28),
+    ).toBe(28);
+  });
+
+  test("allows delivery when the item subtotal alone reaches the minimum", () => {
     expect(
       meetsDeliveryMinimumAed({
         subtotalAed: 20,
@@ -37,7 +43,18 @@ describe("delivery minimum total helpers", () => {
     ).toBe(true);
   });
 
-  test("blocks delivery when the final total stays below the minimum", () => {
+  test("ignores the delivery fee: a cheap item + big fee is still blocked", () => {
+    // coca 4 AED + 12 AED delivery = 16, but the items alone are below 13.
+    expect(
+      meetsDeliveryMinimumAed({
+        subtotalAed: 4,
+        deliveryFeeAed: 12,
+        minimumAed: 13,
+      }),
+    ).toBe(false);
+  });
+
+  test("blocks delivery when the item subtotal stays below the minimum", () => {
     expect(
       meetsDeliveryMinimumAed({
         subtotalAed: 5,

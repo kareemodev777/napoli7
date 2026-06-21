@@ -4,9 +4,6 @@ import { HAS_SUPABASE } from "@/lib/env";
 export const DEFAULT_DELIVERY_MIN_SUBTOTAL_AED = 13;
 const DELIVERY_SETTINGS_KEY = "delivery_min_subtotal_aed";
 
-// Temporary cap until the admin edit flow is working again. We want the live
-// checkout minimum to stay at 13 AED even if an older 28 AED row is still
-// present in Supabase.
 
 type DeliverySettingRow = {
   key: string;
@@ -40,18 +37,23 @@ export function getDeliveryOrderTotalAed({
   return Math.max(0, subtotalAed - discountAed) + deliveryFeeAed;
 }
 
+/**
+ * Whether a delivery order clears the minimum. The minimum is measured against
+ * the ITEM SUBTOTAL ONLY — the delivery fee is never counted toward it. So a
+ * 4 AED item with a 12 AED delivery fee does NOT qualify for a 13 AED minimum,
+ * even though subtotal + fee would be 16. `deliveryFeeAed`/`discountAed` are
+ * accepted for a stable call-site signature but intentionally ignored here.
+ */
 export function meetsDeliveryMinimumAed({
   subtotalAed,
-  deliveryFeeAed,
-  discountAed = 0,
   minimumAed,
 }: {
   subtotalAed: number;
-  deliveryFeeAed: number;
+  deliveryFeeAed?: number;
   discountAed?: number;
   minimumAed: number;
 }): boolean {
-  return getDeliveryOrderTotalAed({ subtotalAed, deliveryFeeAed, discountAed }) >= minimumAed;
+  return Math.max(0, subtotalAed) >= minimumAed;
 }
 
 export async function getDeliveryMinimumSubtotalAed(): Promise<number> {
@@ -77,7 +79,7 @@ export async function getDeliveryMinimumSubtotalAed(): Promise<number> {
     const row = data as DeliverySettingRow;
     const value = Number(row.value);
     const effectiveValue = Number.isFinite(value)
-      ? Math.min(value, DEFAULT_DELIVERY_MIN_SUBTOTAL_AED)
+      ? value
       : DEFAULT_DELIVERY_MIN_SUBTOTAL_AED;
     return normalizeDeliveryMinimumSubtotalAed(effectiveValue);
   } catch (error) {

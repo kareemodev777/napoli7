@@ -168,7 +168,8 @@ export function CheckoutForm({
         : "",
     [area, deliveryType, flat, street],
   );
-  // Delivery orders require a minimum total, including delivery fee; pickup has no minimum.
+  // Delivery orders require the item subtotal to clear the minimum (the delivery
+  // fee is NOT counted toward it); pickup has no minimum.
   const meetsDeliveryMin =
     deliveryType !== "delivery" ||
     meetsDeliveryMinimumAed({
@@ -205,7 +206,7 @@ export function CheckoutForm({
     }
     if (!meetsDeliveryMin) {
       setError(
-        `Delivery orders need a minimum total of ${formatAed(deliveryMinSubtotalAed)} including delivery. Add a little more, or switch to pickup.`,
+        `Delivery orders need at least ${formatAed(deliveryMinSubtotalAed)} in items (the delivery fee doesn't count). Add a little more, or switch to pickup.`,
       );
       return;
     }
@@ -591,7 +592,7 @@ export function CheckoutForm({
           ) : !areaSupported ? (
             "Delivery unavailable for this area"
           ) : !meetsDeliveryMin ? (
-            `Minimum ${formatAed(deliveryMinSubtotalAed)} total for delivery`
+            `Minimum ${formatAed(deliveryMinSubtotalAed)} in items for delivery`
           ) : (
             paymentMethod === "cod" && deliveryType === "pickup"
               ? "Place pickup order"
@@ -629,8 +630,9 @@ export function CheckoutForm({
         </dl>
         {!meetsDeliveryMin ? (
           <p className="mt-3 text-xs text-flag-red">
-            Minimum {formatAed(deliveryMinSubtotalAed)} total for delivery. Add{" "}
-            {formatAed(Math.max(0, deliveryMinSubtotalAed - orderTotal))} more, or switch to
+            Minimum {formatAed(deliveryMinSubtotalAed)} in items for delivery (delivery
+            fee excluded). Add{" "}
+            {formatAed(Math.max(0, deliveryMinSubtotalAed - subtotal))} more, or switch to
             pickup.
           </p>
         ) : null}

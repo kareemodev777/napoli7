@@ -45,7 +45,8 @@ const DAY_LABELS = [
 ] as const;
 
 const DEFAULT_HOURS: OrderingDay[] = [
-  { dayOfWeek: 0, label: DAY_LABELS[0], isClosed: true, opensAt: null, closesAt: null },
+  // Open Tuesday to Sunday 12:30–00:00; closed only on Monday.
+  { dayOfWeek: 0, label: DAY_LABELS[0], isClosed: false, opensAt: "12:30", closesAt: "00:00" },
   { dayOfWeek: 1, label: DAY_LABELS[1], isClosed: true, opensAt: null, closesAt: null },
   { dayOfWeek: 2, label: DAY_LABELS[2], isClosed: false, opensAt: "12:30", closesAt: "00:00" },
   { dayOfWeek: 3, label: DAY_LABELS[3], isClosed: false, opensAt: "12:30", closesAt: "00:00" },

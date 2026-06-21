@@ -14,20 +14,20 @@ export function MenuLayout({ products, categories }: MenuLayoutProps) {
     const items = products
       .filter((p) => p.categoryId === c.id)
       .sort((a, b) => a.position - b.position);
-    if (items.length > 0) grouped.set(c.id, items);
+    // Keep every admin-managed category — including new ones that don't have
+    // products assigned yet (e.g. "Vegan", "Create your Own Pizza") — so they
+    // are discoverable on the public menu instead of silently hidden.
+    grouped.set(c.id, items);
   });
 
   return (
     <div className="grid lg:grid-cols-[minmax(0,1fr)_360px] xl:grid-cols-[minmax(0,1fr)_400px] gap-10 px-6 md:px-10 pt-6 pb-24 lg:pb-16 max-w-[1500px] mx-auto">
       <div className="min-w-0 overflow-x-clip">
-        <MenuCategoryNav
-          categories={categories.filter((c) => grouped.has(c.id))}
-        />
+        <MenuCategoryNav categories={categories} />
 
         <div className="space-y-16 md:space-y-20">
           {categories.map((c) => {
-            const items = grouped.get(c.id);
-            if (!items) return null;
+            const items = grouped.get(c.id) ?? [];
             return (
               <section
                 key={c.id}
@@ -51,11 +51,17 @@ export function MenuLayout({ products, categories }: MenuLayoutProps) {
                     {c.description}
                   </p>
                 </header>
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 md:gap-6">
-                  {items.map((p) => (
-                    <MenuProductCard key={p.id} product={p} />
-                  ))}
-                </div>
+                {items.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5 md:gap-6">
+                    {items.map((p) => (
+                      <MenuProductCard key={p.id} product={p} />
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground">
+                    New items are coming to this category soon.
+                  </p>
+                )}
               </section>
             );
           })}

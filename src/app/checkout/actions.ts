@@ -201,7 +201,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
       minimumAed: deliveryMinSubtotalAed,
     })) {
       return {
-        error: `Delivery orders need a minimum total of ${deliveryMinSubtotalAed} AED including delivery. Add a little more, or switch to pickup.`,
+        error: `Delivery orders need at least ${deliveryMinSubtotalAed} AED in items (the delivery fee doesn't count). Add a little more, or switch to pickup.`,
       };
     }
   }
@@ -225,7 +225,9 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .insert({
-      user_id: user?.id ?? null,
+      // `||` (not `??`) so an empty-string id can never reach the uuid column —
+      // guests are stored as null, avoiding the "invalid input syntax for uuid".
+      user_id: user?.id || null,
       customer_name: `${data.firstName} ${data.lastName}`,
       customer_phone: data.phone,
       customer_email: data.email,
