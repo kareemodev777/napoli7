@@ -18,11 +18,11 @@ export const FAQ_ITEMS: FaqItem[] = [
   },
   {
     q: "What are your opening hours?",
-    a: "We are open every day from 11:00 to 22:00, including weekends and most public holidays.",
+    a: "We are open Tuesday to Sunday from 12:30 to 00:00. We are closed on Mondays.",
   },
   {
     q: "How can I pay?",
-    a: "Cash on delivery is available now. Card payments through a secure payment page (Apple Pay and Google Pay included) launch shortly.",
+    a: "Card payments are available at checkout, including Apple Pay and Google Pay. Cash on delivery is available for pickup orders only.",
   },
   {
     q: "Can I customize my pizza?",

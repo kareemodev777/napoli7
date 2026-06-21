@@ -22,8 +22,8 @@ export function LocationBanner() {
             </span>
           </h2>
           <div className="space-y-2 text-base leading-relaxed mb-8">
-            <p>Shop 4, Roof building, opposite Delta Center</p>
-            <p>213 Shaikh Rashid Bin Abdul Aziz Aaemi St – Al Jurf 2, Ajman</p>
+            <p>Shop 4, opposite Delta Supermarket</p>
+            <p>213 Sheikh Rashid bin Abdul Aziz Street, Al Jurf 2, Ajman</p>
             <p>Open Tuesday to Sunday: 12:30 – 00:00</p>
           </div>
           <Link

@@ -18,12 +18,12 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "Location",
   description:
-    "Visit Napoli 7 at Shop 4, Roof building, opposite Delta Center, 213 Shaikh Rashid Bin Abdul Aziz Aaemi St, Al Jurf 2, Ajman. Open Tuesday to Sunday 12:30–00:00.",
+    "Visit Napoli 7 at Shop 4, opposite Delta Supermarket, 213 Sheikh Rashid bin Abdul Aziz Street, Al Jurf 2, Ajman. Open Tuesday to Sunday 12:30–00:00.",
   alternates: { canonical: "/location" },
   openGraph: {
     title: "Location · Napoli 7",
     description:
-      "Shop 4, Al Jurf 2, Ajman. Open Tuesday to Sunday 12:30–00:00.",
+      "Shop 4, opposite Delta Supermarket, 213 Sheikh Rashid bin Abdul Aziz Street, Al Jurf 2, Ajman. Open Tuesday to Sunday 12:30–00:00.",
   },
 };
 

@@ -12,7 +12,7 @@ const localBusinessData = {
   priceRange: "AED 15-69",
   address: {
     "@type": "PostalAddress",
-    streetAddress: "Shop 4, 213 Sheikh Rashid bin Abdul Aziz St",
+    streetAddress: "Shop 4, opposite Delta Supermarket, 213 Sheikh Rashid bin Abdul Aziz Street",
     addressLocality: "Al Jurf 2, Ajman",
     addressCountry: "AE",
   },
@@ -21,7 +21,7 @@ const localBusinessData = {
     latitude: 25.4002327,
     longitude: 55.5033167,
   },
-  openingHours: "Mo-Su 11:00-22:00",
+  openingHours: "Tu-Su 12:30-00:00",
   sameAs: ["https://wa.me/971501628577"],
 };
 
