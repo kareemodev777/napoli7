@@ -17,7 +17,7 @@ export const WELCOME_OFFER: Deal = {
     "Exclusively via napoli7.com signup.",
     "Available for the first 1,000 who sign up ONLY!",
   ],
-  cta: { label: "Order Now", href: "/menu" },
+  cta: { label: "Create your account", href: "/register" },
 };
 
 export const SECONDARY_DEALS: Deal[] = [
