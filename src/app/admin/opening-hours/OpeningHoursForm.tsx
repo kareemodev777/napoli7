@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState } from "react";
+import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import type { OrderingDay } from "@/lib/ordering-hours";
 import {
@@ -33,14 +33,9 @@ function SubmitButton() {
   );
 }
 
-export function OpeningHoursForm({ day }: { day: OrderingDay }) {
+function OpeningHoursFormFields({ day }: { day: OrderingDay }) {
   const [state, formAction] = useActionState(upsertOpeningHours, INITIAL_STATE);
   const [isClosed, setIsClosed] = useState(day.isClosed);
-
-  // Re-sync local toggle if the saved data changes underneath the form.
-  useEffect(() => {
-    setIsClosed(day.isClosed);
-  }, [day.isClosed]);
 
   return (
     <form action={formAction} className="space-y-4">
@@ -111,4 +106,12 @@ export function OpeningHoursForm({ day }: { day: OrderingDay }) {
       </div>
     </form>
   );
+}
+
+export function OpeningHoursForm({ day }: { day: OrderingDay }) {
+  const key = [day.dayOfWeek, day.isClosed, day.opensAt, day.closesAt, day.note]
+    .map((value) => value ?? "")
+    .join("|");
+
+  return <OpeningHoursFormFields key={key} day={day} />;
 }
