@@ -284,6 +284,53 @@ export async function notifyStaffAlertEmail(input: {
   });
 }
 
+export async function notifyFreePizzaRewardEmail(input: {
+  to: string;
+  firstName: string;
+  code: string;
+  rewardName: string;
+  claimNumber: number;
+}) {
+  const subject = `Your free ${input.rewardName} is reserved — code inside`;
+  const intro = `Welcome to Napoli 7, ${input.firstName}. You're claimant #${input.claimNumber} of our free-pizza launch.`;
+  const body = `${intro}
+
+Use this code at checkout to get a free ${input.rewardName}:
+
+  ${input.code}
+
+It's valid once, on your account. Buon appetito!`;
+  const html = brandEmailHtml({
+    eyebrow: "Welcome gift",
+    heading: `A free ${input.rewardName} on us`,
+    intro,
+    children: `<p style="margin:0 0 18px;color:#d8c7b5;font-size:15px;line-height:1.6;">Apply this code in the cart to take a free <strong style="color:#fff7ed;">${escapeHtml(input.rewardName)}</strong> off your order. It works once, and it's tied to your account.</p>
+    <div style="margin:0 0 18px;padding:18px;background:#120f0d;border:1px dashed #d8b27c;border-radius:16px;text-align:center;">
+      <div style="font-size:12px;letter-spacing:0.24em;text-transform:uppercase;color:#9f8f82;">Your code</div>
+      <div style="margin-top:8px;font-family:'Courier New',monospace;font-size:26px;letter-spacing:0.12em;color:#f2c98b;">${escapeHtml(input.code)}</div>
+    </div>
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0">
+      ${detailRow("Reward", `Free ${input.rewardName}`)}
+      ${detailRow("Claimant", `#${input.claimNumber}`)}
+    </table>`,
+  });
+
+  if (!HAS_RESEND) {
+    console.info(
+      `[notifyFreePizzaRewardEmail] Resend disabled. To: ${input.to} :: ${input.code}`,
+    );
+    return;
+  }
+  const resend = new Resend(process.env.RESEND_API_KEY!);
+  await resend.emails.send({
+    from: `Napoli 7 <${ORDER_EMAIL_FROM}>`,
+    to: [input.to],
+    subject,
+    text: body,
+    html,
+  });
+}
+
 export async function notifyContactMessageEmail(input: {
   name: string;
   phone: string;

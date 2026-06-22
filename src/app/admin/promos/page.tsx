@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Pencil, Plus } from "lucide-react";
 import { DeletePromoButton } from "./DeletePromoButton";
+import { SignupCampaignCard, type RewardProductOption } from "./campaign";
 import { Badge, PromoForm, money } from "./form-components";
 import type { PromoCodeRow } from "./types";
 import { AdminModal } from "@/components/admin/AdminModal";
 import { HAS_SUPABASE_SERVICE } from "@/lib/env";
+import { getSignupCampaign } from "@/lib/signup-reward";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 
 export const metadata: Metadata = {
@@ -23,9 +25,24 @@ async function loadPromos(): Promise<PromoCodeRow[]> {
   const { data } = await supabase
     .from("promo_codes")
     .select("*")
+    // Per-signup free-pizza codes are managed via the campaign card, not here.
+    .eq("auto_generated", false)
     .order("created_at", { ascending: false });
 
   return (data ?? []) as PromoCodeRow[];
+}
+
+async function loadRewardProducts(): Promise<RewardProductOption[]> {
+  if (!HAS_SUPABASE_SERVICE) return [];
+
+  const supabase = createServiceRoleClient();
+  const { data } = await supabase
+    .from("products")
+    .select("id, name, price_aed")
+    .eq("is_active", true)
+    .order("name");
+
+  return (data ?? []) as RewardProductOption[];
 }
 
 /**
@@ -119,6 +136,10 @@ function windowLabel(promo: PromoCodeRow) {
 
 export default async function AdminPromosPage() {
   const promos = await loadPromos();
+  const [campaign, rewardProducts] = await Promise.all([
+    getSignupCampaign(),
+    loadRewardProducts(),
+  ]);
   const orderCounts = await loadOrderCounts(promos.map((promo) => promo.code));
   const activeCount = promos.filter((promo) => promo.active).length;
   const cappedCount = promos.filter(
@@ -146,6 +167,10 @@ export default async function AdminPromosPage() {
             <AddPromoModal />
           </div>
         </div>
+
+        {campaign ? (
+          <SignupCampaignCard campaign={campaign} products={rewardProducts} />
+        ) : null}
 
         {!HAS_SUPABASE_SERVICE ? (
           <div className="mt-8 rounded-md border border-border bg-card p-6 text-sm text-muted-foreground">

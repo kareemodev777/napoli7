@@ -49,6 +49,44 @@ function revalidatePromos() {
   refresh();
 }
 
+const campaignSchema = z.object({
+  active: z.coerce.boolean().default(false),
+  reward_product_id: z.string().uuid().optional().or(z.literal("")),
+  max_claims: z.coerce.number().int().positive().max(1_000_000),
+});
+
+/** Configure the "free pizza for the first N registrants" signup campaign. */
+export async function updateSignupCampaign(formData: FormData) {
+  await requireAdmin();
+  const parsed = campaignSchema.safeParse({
+    ...Object.fromEntries(formData),
+    active: boolFromForm(formData, "active"),
+  });
+  if (!parsed.success) {
+    logActionError("updateSignupCampaign", parsed.error);
+    return;
+  }
+
+  const supabase = createServiceRoleClient();
+  const { error } = await supabase
+    .from("signup_campaign")
+    .update({
+      active: parsed.data.active,
+      reward_product_id: nullableString(parsed.data.reward_product_id),
+      max_claims: parsed.data.max_claims,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", 1);
+  if (error) {
+    logActionError("updateSignupCampaign", error);
+    return;
+  }
+
+  revalidatePath("/admin/promos");
+  revalidatePath("/register");
+  refresh();
+}
+
 function logActionError(action: string, error: unknown) {
   console.error(`[admin/promos] ${action} failed`, error);
 }

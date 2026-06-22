@@ -3,6 +3,8 @@
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { HAS_SUPABASE, SITE_URL } from "@/lib/env";
+import { claimSignupFreePizza, type SignupReward } from "@/lib/signup-reward";
+import { notifyFreePizzaRewardEmail } from "@/lib/notifications/email";
 
 const registerSchema = z
   .object({
@@ -27,6 +29,8 @@ const registerSchema = z
 export interface RegisterResult {
   error?: string;
   message?: string;
+  /** Present when this new registrant claimed a launch free-pizza reward. */
+  reward?: SignupReward;
 }
 
 export async function registerCustomer(
@@ -52,7 +56,7 @@ export async function registerCustomer(
     };
   }
   const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
+  const { data, error } = await supabase.auth.signUp({
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
@@ -72,5 +76,34 @@ export async function registerCustomer(
     }
     return { error: error.message };
   }
-  return { message: "Check your inbox to confirm your email." };
+
+  // Launch promo: issue a free-pizza code to genuinely new registrants. Bound to
+  // email + phone so it can't be re-claimed by swapping one of them. Silent when
+  // the campaign is off, capped, or this identity already claimed — never blocks
+  // or fails the registration itself.
+  let reward: SignupReward | undefined;
+  try {
+    const claimed = await claimSignupFreePizza({
+      userId: data.user?.id ?? null,
+      email: parsed.data.email,
+      phone: parsed.data.mobile,
+    });
+    if (claimed) {
+      reward = claimed;
+      await notifyFreePizzaRewardEmail({
+        to: parsed.data.email,
+        firstName: parsed.data.firstName,
+        code: claimed.code,
+        rewardName: claimed.rewardName,
+        claimNumber: claimed.claimNumber,
+      }).catch((e) => console.error("[register] reward email failed", e));
+    }
+  } catch (e) {
+    console.error("[register] free-pizza claim failed", e);
+  }
+
+  return {
+    message: "Check your inbox to confirm your email.",
+    reward,
+  };
 }

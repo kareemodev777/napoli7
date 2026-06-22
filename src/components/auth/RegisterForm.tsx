@@ -95,6 +95,25 @@ export function RegisterForm() {
           <AlertDescription>{state.error}</AlertDescription>
         </Alert>
       ) : null}
+      {state.reward ? (
+        <div className="rounded-md border border-brand/40 bg-brand/5 p-5 text-center">
+          <p className="font-display text-xs uppercase tracking-[0.24em] text-brand">
+            Welcome gift · claimant #{state.reward.claimNumber}
+          </p>
+          <p className="mt-2 text-base text-foreground">
+            You scored a free{" "}
+            <span className="font-semibold">{state.reward.rewardName}</span>!
+          </p>
+          <p className="mt-3 font-mono text-2xl tracking-[0.12em] text-foreground">
+            {state.reward.code}
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Apply this code in the cart on your first order. It works once and is
+            tied to your account — we&rsquo;ve also emailed it to you.
+          </p>
+        </div>
+      ) : null}
+
       {state.message ? (
         <Alert>
           <AlertDescription>{state.message}</AlertDescription>

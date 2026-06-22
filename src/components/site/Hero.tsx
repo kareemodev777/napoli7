@@ -5,7 +5,6 @@ import Image from "next/image";
 import Link from "next/link";
 import type { SiteImage } from "@/lib/site-images";
 import { SITE_IMAGE_DEFAULTS } from "@/lib/site-images";
-import { useOrderingAvailability } from "@/lib/use-ordering-availability";
 
 export function Hero({
   image = SITE_IMAGE_DEFAULTS.home_hero,
@@ -15,11 +14,9 @@ export function Hero({
   // Single Ajman branch for now. When more UAE locations are added, the area /
   // branch picker comes back here, driven by the zones managed in admin.
   const [mode, setMode] = useState<"deliver" | "pickup">("deliver");
-  const { availability } = useOrderingAvailability();
-  const orderingOpen = availability?.isOpen ?? true;
-  const orderHref = orderingOpen ? "/menu" : "/location";
-  const orderLabel = orderingOpen ? "order now" : "see opening hours";
-  const orderAria = orderingOpen ? "Order now" : "See opening hours";
+  const orderHref = "/menu";
+  const orderLabel = "order now";
+  const orderAria = "Order now";
 
   return (
     <section className="relative mx-4 md:mx-6 h-[62svh] md:h-[68svh] min-h-[460px] max-h-[640px] overflow-hidden">
