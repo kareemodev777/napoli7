@@ -62,7 +62,7 @@ export async function registerCustomer(
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
-      emailRedirectTo: `${SITE_URL}/login?confirmed=true`,
+      emailRedirectTo: buildEmailVerificationRedirect(SITE_URL, parsed.data.email),
       data: {
         first_name: parsed.data.firstName,
         last_name: parsed.data.lastName,
