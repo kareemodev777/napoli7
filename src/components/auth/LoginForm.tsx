@@ -10,7 +10,6 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   loginWithPassword,
   sendMagicLink,
-  sendPasswordReset,
   sendPhoneOtp,
   verifyPhoneOtp,
   type AuthResult,
@@ -24,7 +23,7 @@ export function LoginForm() {
   const confirmed = params.get("confirmed") === "true";
   const passwordReset = params.get("password-reset") === "true";
 
-  const [mode, setMode] = useState<"password" | "magic" | "reset" | "phone">(
+  const [mode, setMode] = useState<"password" | "magic" | "phone">(
     "password",
   );
   const [showPassword, setShowPassword] = useState(false);
@@ -35,10 +34,6 @@ export function LoginForm() {
   );
   const [magicState, magicAction, magicPending] = useActionState(
     sendMagicLink,
-    initial,
-  );
-  const [resetState, resetAction, resetPending] = useActionState(
-    sendPasswordReset,
     initial,
   );
 
@@ -116,13 +111,12 @@ export function LoginForm() {
             >
               Send magic link instead
             </button>
-            <button
-              type="button"
-              onClick={() => setMode("reset")}
+            <Link
+              href="/forgot-password"
               className="text-muted-foreground hover:underline underline-offset-4"
             >
               Forgot password?
-            </button>
+            </Link>
           </div>
           <button
             type="button"
@@ -176,43 +170,6 @@ export function LoginForm() {
         </form>
       ) : null}
 
-      {mode === "reset" ? (
-        <form action={resetAction} className="space-y-5">
-          <Field id="reset-email" label="Email" required>
-            <Input
-              id="reset-email"
-              type="email"
-              name="email"
-              required
-              autoComplete="email"
-            />
-          </Field>
-          {resetState.error ? (
-            <Alert variant="destructive">
-              <AlertDescription>{resetState.error}</AlertDescription>
-            </Alert>
-          ) : null}
-          {resetState.message ? (
-            <Alert>
-              <AlertDescription>{resetState.message}</AlertDescription>
-            </Alert>
-          ) : null}
-          <button
-            type="submit"
-            disabled={resetPending}
-            className="w-full inline-flex items-center justify-center bg-brand text-primary-foreground py-3.5 font-display text-sm tracking-[0.2em] uppercase hover:bg-brand-hover disabled:opacity-50"
-          >
-            {resetPending ? "Sending…" : "Send reset link"}
-          </button>
-          <button
-            type="button"
-            onClick={() => setMode("password")}
-            className="block text-sm hover:underline underline-offset-4"
-          >
-            Back to password login
-          </button>
-        </form>
-      ) : null}
 
       <p className="text-sm text-center text-muted-foreground">
         Don&apos;t have an account?{" "}

@@ -42,20 +42,21 @@ export function ResetPasswordForm() {
       const session = sessionResult.data.session;
       if (!session) return setError("Open the reset link from your email first.");
 
-      const { error: updateError } = await supabase.auth.updateUser({ password: nextPassword });
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: nextPassword,
+      });
       if (updateError) return setError(updateError.message);
 
-      await supabase.auth.signOut();
-      setMessage("Password updated. Taking you back to login…");
-      router.replace("/login?password-reset=true");
+      setMessage("Password updated. Taking you to your account…");
+      router.replace("/account");
     });
   }
 
   return (
     <div className="space-y-6">
       <div className="space-y-2 text-sm text-muted-foreground">
-        <p>Use the reset link from your email to set a new password.</p>
-        <p>If the link opened in the wrong place, open the email again and click it once more.</p>
+        <p>Use the link from your email to log in and set a new password.</p>
+        <p>If the page opened in the wrong place, open the email again and click it once more.</p>
       </div>
 
       {message ? (
@@ -73,7 +74,7 @@ export function ResetPasswordForm() {
       {!ready ? (
         <Alert>
           <AlertDescription>
-            Waiting for the reset session. If nothing happens, open the reset link from your email.
+            Waiting for the recovery session. If nothing happens, open the email link again.
           </AlertDescription>
         </Alert>
       ) : null}

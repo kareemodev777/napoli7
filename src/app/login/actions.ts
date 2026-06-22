@@ -165,7 +165,7 @@ export async function sendPasswordReset(
   if (error) {
     return { error: error.message };
   }
-  return { message: "Check your inbox for a reset link." };
+  return { message: "Check your inbox. The link will open the change password page." };
 }
 
 export async function signOut() {
