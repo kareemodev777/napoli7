@@ -1,8 +1,10 @@
 "use server";
 
+import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { HAS_SUPABASE, SITE_URL } from "@/lib/env";
+import { buildEmailVerificationRedirect } from "@/lib/auth/registration";
 import { claimSignupFreePizza, type SignupReward } from "@/lib/signup-reward";
 import { notifyFreePizzaRewardEmail } from "@/lib/notifications/email";
 
@@ -81,7 +83,6 @@ export async function registerCustomer(
   // email + phone so it can't be re-claimed by swapping one of them. Silent when
   // the campaign is off, capped, or this identity already claimed — never blocks
   // or fails the registration itself.
-  let reward: SignupReward | undefined;
   try {
     const claimed = await claimSignupFreePizza({
       userId: data.user?.id ?? null,
@@ -89,21 +90,17 @@ export async function registerCustomer(
       phone: parsed.data.mobile,
     });
     if (claimed) {
-      reward = claimed;
       await notifyFreePizzaRewardEmail({
         to: parsed.data.email,
         firstName: parsed.data.firstName,
         code: claimed.code,
         rewardName: claimed.rewardName,
         claimNumber: claimed.claimNumber,
-      }).catch((e) => console.error("[register] reward email failed", e));
+      }).catch((e: unknown) => console.error("[register] reward email failed", e));
     }
-  } catch (e) {
+  } catch (e: unknown) {
     console.error("[register] free-pizza claim failed", e);
   }
 
-  return {
-    message: "Check your inbox to confirm your email.",
-    reward,
-  };
+  redirect(buildEmailVerificationRedirect(SITE_URL, parsed.data.email));
 }
