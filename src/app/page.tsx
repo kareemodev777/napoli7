@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { Header } from "@/components/site/Header";
 import { Hero } from "@/components/site/Hero";
 import { HomeStory } from "@/components/site/HomeStory";
@@ -13,7 +14,16 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ code?: string }>;
+}) {
+  const { code } = await searchParams;
+  if (code) {
+    redirect(`/auth/callback?code=${encodeURIComponent(code)}&next=/change-password`);
+  }
+
   const images = await getSiteImages();
   return (
     <>
