@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,7 +10,10 @@ import { getBrowserSupabase } from "@/lib/supabase/client";
 
 export function ResetPasswordForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const recoveryCode = searchParams.get("code");
   const [ready, setReady] = useState(false);
+  const [booting, setBooting] = useState(Boolean(recoveryCode));
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -19,14 +22,49 @@ export function ResetPasswordForm() {
 
   useEffect(() => {
     let active = true;
+
     void (async () => {
-      const sessionResult = await getBrowserSupabase().auth.getSession();
-      if (active) setReady(Boolean(sessionResult.data.session));
+      const supabase = getBrowserSupabase();
+      const sessionResult = await supabase.auth.getSession();
+      if (sessionResult.data.session) {
+        if (active) {
+          setReady(true);
+          setBooting(false);
+        }
+        return;
+      }
+
+      if (!recoveryCode) {
+        if (active) {
+          setReady(false);
+          setBooting(false);
+        }
+        return;
+      }
+
+      const { error: exchangeError } = await supabase.auth.exchangeCodeForSession(
+        recoveryCode,
+      );
+      if (active) {
+        if (exchangeError) {
+          setError("That reset link expired or was already used. Open the email again and click it once more.");
+          setReady(false);
+        } else {
+          setReady(Boolean((await supabase.auth.getSession()).data.session));
+        }
+        setBooting(false);
+      }
     })().catch(() => {
-      if (active) setReady(false);
+      if (active) {
+        setReady(false);
+        setBooting(false);
+      }
     });
-    return () => { active = false; };
-  }, []);
+
+    return () => {
+      active = false;
+    };
+  }, [recoveryCode]);
 
   function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -71,7 +109,7 @@ export function ResetPasswordForm() {
         </Alert>
       ) : null}
 
-      {!ready ? (
+      {(booting || !ready) ? (
         <Alert>
           <AlertDescription>
             Waiting for the recovery session. If nothing happens, open the email link again.

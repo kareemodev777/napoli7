@@ -27,7 +27,7 @@ export const SITE_IMAGE_DEFAULTS: SiteImageMap = {
   },
   home_family: {
     url: "/images/home-family-v2.jpg",
-    alt: "Sign in and get a free pizza — join the Napoli 7 family",
+    alt: "Sign in and get a free pizza — the Napoli 7 deal",
   },
   home_tradition: {
     url: "/images/home-tradition-v2.jpg",
@@ -62,7 +62,7 @@ export const SITE_IMAGE_FIELDS: Array<{
   },
   {
     key: "home_family",
-    label: 'Home — "Join the family"',
+    label: 'Home — Deal',
     description: "Image beside the free-pizza / sign-up section.",
     aspect: "16 / 9",
   },
