@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Check } from "lucide-react";
+import { Check, Truck } from "lucide-react";
 import { SiteShell } from "@/components/site/SiteShell";
 import { PageHero } from "@/components/site/PageHero";
 import { WELCOME_OFFER } from "@/data/mock/deals";
@@ -39,6 +39,22 @@ export default function DealsPage() {
             <p className="mt-6 text-lg text-muted-foreground max-w-[60ch] leading-relaxed">
               {WELCOME_OFFER.description}
             </p>
+            <div className="mt-6 flex items-start gap-3 text-base text-muted-foreground max-w-[60ch]">
+              <Truck
+                className="h-5 w-5 mt-0.5 text-azure-deep shrink-0"
+                strokeWidth={1.5}
+                aria-hidden
+              />
+              <p>
+                If you upgrade to another pizza, delivery is available.{" "}
+                <Link
+                  href="/delivery"
+                  className="text-azure-deep underline underline-offset-4 hover:text-brand"
+                >
+                  We deliver!
+                </Link>
+              </p>
+            </div>
             <ul className="mt-8 space-y-3">
               {WELCOME_OFFER.conditions.map((c) => (
                 <li key={c} className="flex items-start gap-3 text-sm">

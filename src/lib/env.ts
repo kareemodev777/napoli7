@@ -13,6 +13,16 @@ export const HAS_SUPABASE_SERVICE = Boolean(
 
 export const HAS_RESEND = Boolean(process.env["RESEND_API_KEY"]);
 
+// Twilio SMS (registration phone-OTP verification). Needs the account SID + auth
+// token plus a sender: either a Messaging Service SID (recommended for the UAE)
+// or a single From number. Omit to fall back to console logging in dev.
+export const HAS_TWILIO = Boolean(
+  process.env["TWILIO_ACCOUNT_SID"] &&
+    process.env["TWILIO_AUTH_TOKEN"] &&
+    (process.env["TWILIO_MESSAGING_SERVICE_SID"] ||
+      process.env["TWILIO_FROM_NUMBER"]),
+);
+
 export const HAS_STRIPE = Boolean(
   process.env["STRIPE_SECRET_KEY"] &&
     process.env["NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"],

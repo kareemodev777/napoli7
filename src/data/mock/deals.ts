@@ -13,7 +13,6 @@ export const WELCOME_OFFER: Deal = {
     "Sign up at Napoli 7 and your first Margherita is complimentary for pickup. Upgrade to any other pizza by paying the price difference.",
   conditions: [
     "One per person.",
-    "Available for pickup only.",
     "Exclusively via napoli7.com signup.",
     "Available for the first 1,000 who sign up ONLY!",
   ],

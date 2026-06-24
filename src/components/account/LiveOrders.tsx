@@ -8,6 +8,7 @@ import {
   type OrderStatus,
   type OrderStatusSnapshot,
 } from "@/lib/notifications/status-updates";
+import { customerOrderView } from "@/lib/payments/order-display";
 import type { CartItemInput } from "@/store/cart";
 
 export interface LiveOrderRow {
@@ -15,6 +16,8 @@ export interface LiveOrderRow {
   orderNumber: string;
   totalAed: number;
   status: OrderStatus;
+  paymentMethod: string;
+  paymentStatus: string;
   summary: string;
   reorderItems: CartItemInput[];
   reorderChangedCount: number;
@@ -33,6 +36,12 @@ export function LiveOrders({ orders }: { orders: LiveOrderRow[] }) {
   const [statuses, setStatuses] = useState<Record<string, OrderStatus>>(() =>
     Object.fromEntries(orders.map((o) => [o.id, o.status])),
   );
+  // Payment status is polled alongside fulfilment status so an "Awaiting
+  // payment" row flips to its real status the moment the Stripe webhook lands
+  // (e.g. the customer paid in another tab) without a manual refresh.
+  const [paymentStatuses, setPaymentStatuses] = useState<
+    Record<string, string>
+  >(() => Object.fromEntries(orders.map((o) => [o.id, o.paymentStatus])));
   const [announcement, setAnnouncement] = useState("");
   // Latest snapshot to diff the next poll against, kept in a ref so the polling
   // effect can read it without re-subscribing on every status change.
@@ -53,11 +62,23 @@ export function LiveOrders({ orders }: { orders: LiveOrderRow[] }) {
           cache: "no-store",
         });
         if (!res.ok) return;
-        const data = (await res.json()) as { orders?: OrderStatusSnapshot[] };
+        const data = (await res.json()) as {
+          orders?: (OrderStatusSnapshot & { paymentStatus?: string })[];
+        };
         if (cancelled || !data.orders) return;
 
         const changes = diffOrderStatuses(snapshotRef.current, data.orders);
         snapshotRef.current = data.orders;
+
+        // Payment status can change without the fulfilment status changing
+        // (pending -> paid / failed), so refresh it every tick regardless.
+        setPaymentStatuses((prev) => {
+          const next = { ...prev };
+          for (const o of data.orders!) {
+            if (o.paymentStatus) next[o.id] = o.paymentStatus;
+          }
+          return next;
+        });
 
         if (changes.length > 0) {
           setStatuses((prev) => {
@@ -92,10 +113,16 @@ export function LiveOrders({ orders }: { orders: LiveOrderRow[] }) {
       <ul className="mt-10 border-t border-border">
         {orders.map((o) => {
           const status = statuses[o.id] ?? o.status;
+          const paymentStatus = paymentStatuses[o.id] ?? o.paymentStatus;
+          const view = customerOrderView({
+            status,
+            paymentMethod: o.paymentMethod,
+            paymentStatus,
+          });
           return (
             <li
               key={o.id}
-              className="grid grid-cols-1 md:grid-cols-[140px_1fr_140px_120px_110px] gap-3 md:gap-6 items-baseline py-5 border-b border-border"
+              className="grid grid-cols-1 md:grid-cols-[140px_1fr_140px_140px_140px] gap-3 md:gap-6 items-baseline py-5 border-b border-border"
             >
               <span className="font-display tabular-nums tracking-[0.1em] text-sm">
                 {o.orderNumber}
@@ -104,17 +131,60 @@ export function LiveOrders({ orders }: { orders: LiveOrderRow[] }) {
               <span className="font-display tabular-nums text-sm">
                 {o.totalAed.toFixed(2)} AED
               </span>
-              <StatusBadge status={status} />
-              <ReorderButton
-                items={o.reorderItems}
-                changedCount={o.reorderChangedCount}
-                unavailableCount={o.reorderUnavailableCount}
-                disabled={o.reorderItems.length === 0}
-              />
+              {view.kind === "awaiting_payment" ? (
+                <PaymentBadge tone="info">Awaiting payment</PaymentBadge>
+              ) : view.kind === "payment_failed" ? (
+                <PaymentBadge tone="error">Payment failed</PaymentBadge>
+              ) : (
+                <StatusBadge status={status} />
+              )}
+              {view.kind === "awaiting_payment" ? (
+                <a
+                  href={`/api/checkout/create-session?orderId=${encodeURIComponent(o.id)}`}
+                  className="inline-flex items-center justify-center bg-brand text-primary-foreground px-3 py-2 font-display text-[10px] tracking-[0.16em] uppercase hover:bg-brand-hover"
+                >
+                  Complete payment
+                </a>
+              ) : (
+                <ReorderButton
+                  items={o.reorderItems}
+                  changedCount={o.reorderChangedCount}
+                  unavailableCount={o.reorderUnavailableCount}
+                  disabled={o.reorderItems.length === 0}
+                />
+              )}
             </li>
           );
         })}
       </ul>
     </>
+  );
+}
+
+/**
+ * Badge for the two payment-driven states a card order can show in place of its
+ * fulfilment status: "Awaiting payment" (info) and "Payment failed" (error).
+ * Mirrors the look of StatusBadge so the column stays visually consistent.
+ */
+function PaymentBadge({
+  tone,
+  children,
+}: {
+  tone: "info" | "error";
+  children: React.ReactNode;
+}) {
+  const classes =
+    tone === "error"
+      ? "bg-flag-red/10 text-flag-red"
+      : "bg-azure-soft text-azure-deep";
+  return (
+    <span
+      className={
+        "inline-flex items-center px-2.5 py-1 font-display text-[10px] tracking-[0.2em] uppercase " +
+        classes
+      }
+    >
+      {children}
+    </span>
   );
 }

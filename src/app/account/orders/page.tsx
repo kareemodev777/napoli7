@@ -25,6 +25,8 @@ interface OrderRow {
     | "out_for_delivery"
     | "delivered"
     | "cancelled";
+  paymentMethod: string;
+  paymentStatus: string;
   createdAt: string;
   items: { product_name: string; quantity: number }[];
   reorderItems: CartItemInput[];
@@ -105,7 +107,7 @@ async function loadOrders(userId: string): Promise<OrderRow[]> {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, order_number, total_aed, status, created_at, order_items(product_id, product_name, base_price_aed, quantity, customizations)",
+      "id, order_number, total_aed, status, payment_method, payment_status, created_at, order_items(product_id, product_name, base_price_aed, quantity, customizations)",
     )
     .eq("user_id", userId)
     .order("created_at", { ascending: false })
@@ -139,6 +141,8 @@ async function loadOrders(userId: string): Promise<OrderRow[]> {
       orderNumber: row.order_number,
       totalAed: Number(row.total_aed),
       status: row.status,
+      paymentMethod: row.payment_method,
+      paymentStatus: row.payment_status,
       createdAt: row.created_at,
       items: row.order_items ?? [],
       reorderItems: reorderResults
@@ -186,6 +190,8 @@ export default async function AccountOrdersPage() {
                   orderNumber: o.orderNumber,
                   totalAed: o.totalAed,
                   status: o.status,
+                  paymentMethod: o.paymentMethod,
+                  paymentStatus: o.paymentStatus,
                   summary:
                     o.items.length === 0
                       ? "No items"

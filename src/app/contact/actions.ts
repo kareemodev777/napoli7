@@ -2,6 +2,8 @@
 
 import { z } from "zod";
 import { notifyContactMessageEmail } from "@/lib/notifications/email";
+import { createClient } from "@/lib/supabase/server";
+import { HAS_SUPABASE } from "@/lib/env";
 import type { ContactFormState } from "./state";
 
 const contactSchema = z.object({
@@ -47,14 +49,44 @@ export async function submitContactMessage(
     };
   }
 
-  try {
-    await notifyContactMessageEmail(parsed.data);
-    return { status: "ok" };
-  } catch (error) {
-    console.error("[submitContactMessage] Resend failure", error);
+  // Notify by email (best-effort) and record whether it actually went out, so a
+  // misconfigured mailer (no key / unverified domain) never silently swallows a
+  // customer's message.
+  const emailResult = await notifyContactMessageEmail(parsed.data);
+
+  // The database row is the durable source of truth: even if email is down the
+  // message is captured and visible in the admin Messages log. Persisting is
+  // what makes the form genuinely "work" regardless of the mailer.
+  let stored = false;
+  if (HAS_SUPABASE) {
+    try {
+      const supabase = await createClient();
+      const { error } = await supabase.from("contact_messages").insert({
+        name: parsed.data.name,
+        phone: parsed.data.phone,
+        email: parsed.data.email,
+        message: parsed.data.message,
+        email_sent: emailResult.sent,
+        email_error: emailResult.sent ? null : (emailResult.reason ?? null),
+      });
+      if (error) {
+        console.error("[submitContactMessage] DB insert failed:", error);
+      } else {
+        stored = true;
+      }
+    } catch (error) {
+      console.error("[submitContactMessage] DB insert threw:", error);
+    }
+  }
+
+  // Only a genuine dead-end — neither stored nor emailed — is an error the
+  // customer needs to act on.
+  if (!stored && !emailResult.sent) {
     return {
       status: "error",
       error: "Could not send your message. Please call +971 6 534 5772.",
     };
   }
+
+  return { status: "ok" };
 }

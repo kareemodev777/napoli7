@@ -25,7 +25,7 @@ export async function GET() {
   const supabase = await createClient();
   const { data } = await supabase
     .from("orders")
-    .select("id, order_number, status")
+    .select("id, order_number, status, payment_status")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false })
     .limit(50);
@@ -34,6 +34,7 @@ export async function GET() {
     id: o.id,
     orderNumber: o.order_number,
     status: o.status,
+    paymentStatus: o.payment_status,
   }));
 
   return NextResponse.json(

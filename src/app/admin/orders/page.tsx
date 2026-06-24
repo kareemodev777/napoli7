@@ -3,6 +3,7 @@ import Link from "next/link";
 import { StatusSelect } from "@/components/admin/StatusSelect";
 import { createClient } from "@/lib/supabase/server";
 import { HAS_SUPABASE } from "@/lib/env";
+import { paymentSummary, type PaymentTone } from "@/lib/payments/order-display";
 
 export const metadata: Metadata = {
   title: "Orders · Admin",
@@ -24,6 +25,8 @@ interface AdminOrderRow {
     | "out_for_delivery"
     | "delivered"
     | "cancelled";
+  paymentMethod: string;
+  paymentStatus: string;
   createdAt: string;
   items: { product_name: string; quantity: number }[];
 }
@@ -34,7 +37,7 @@ async function loadOrders(): Promise<AdminOrderRow[]> {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, order_number, customer_name, customer_phone, total_aed, delivery_type, delivery_slot, status, created_at, order_items(product_name, quantity)",
+      "id, order_number, customer_name, customer_phone, total_aed, delivery_type, delivery_slot, status, payment_method, payment_status, created_at, order_items(product_name, quantity)",
     )
     .order("created_at", { ascending: false })
     .limit(100);
@@ -47,6 +50,8 @@ async function loadOrders(): Promise<AdminOrderRow[]> {
     deliveryType: row.delivery_type,
     deliverySlot: row.delivery_slot,
     status: row.status,
+    paymentMethod: row.payment_method,
+    paymentStatus: row.payment_status,
     createdAt: row.created_at,
     items: row.order_items ?? [],
   }));
@@ -74,6 +79,7 @@ export default async function AdminOrdersPage() {
                 <th className="py-3 pr-4">Customer</th>
                 <th className="py-3 pr-4">Items</th>
                 <th className="py-3 pr-4">Total</th>
+                <th className="py-3 pr-4">Payment</th>
                 <th className="py-3 pr-4">Type</th>
                 <th className="py-3 pr-4">Slot</th>
                 <th className="py-3 pr-4">Status</th>
@@ -111,6 +117,12 @@ export default async function AdminOrdersPage() {
                   <td className="py-4 pr-4 font-display tabular-nums">
                     {o.totalAed.toFixed(2)} AED
                   </td>
+                  <td className="py-4 pr-4">
+                    <PaymentTag
+                      paymentMethod={o.paymentMethod}
+                      paymentStatus={o.paymentStatus}
+                    />
+                  </td>
                   <td className="py-4 pr-4 text-xs uppercase tracking-[0.1em]">
                     {o.deliveryType}
                   </td>
@@ -133,5 +145,33 @@ export default async function AdminOrdersPage() {
         </div>
       </div>
     </section>
+  );
+}
+
+const PAYMENT_TONE_CLASSES: Record<PaymentTone, string> = {
+  paid: "bg-flag-green/15 text-flag-green",
+  unpaid: "bg-flag-red/10 text-flag-red",
+  warn: "bg-azure-soft text-azure-deep",
+  cod: "bg-muted text-muted-foreground",
+};
+
+/** At-a-glance payment state for the admin orders table. */
+function PaymentTag({
+  paymentMethod,
+  paymentStatus,
+}: {
+  paymentMethod: string;
+  paymentStatus: string;
+}) {
+  const { label, tone } = paymentSummary(paymentMethod, paymentStatus);
+  return (
+    <span
+      className={
+        "inline-flex items-center whitespace-nowrap px-2.5 py-1 font-display text-[10px] tracking-[0.16em] uppercase " +
+        PAYMENT_TONE_CLASSES[tone]
+      }
+    >
+      {label}
+    </span>
   );
 }

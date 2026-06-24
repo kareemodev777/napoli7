@@ -1,53 +1,176 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useState, useTransition } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { registerCustomer, type RegisterResult } from "@/app/register/actions";
+import {
+  sendRegistrationOtp,
+  verifyAndRegister,
+  type SignupReward,
+} from "@/app/register/actions";
 
-const initial: RegisterResult = {};
+type Step = "details" | "code" | "done";
+
+interface FormState {
+  firstName: string;
+  lastName: string;
+  email: string;
+  mobile: string;
+  password: string;
+  confirmPassword: string;
+}
+
+const EMPTY_FORM: FormState = {
+  firstName: "",
+  lastName: "",
+  email: "",
+  mobile: "",
+  password: "",
+  confirmPassword: "",
+};
 
 export function RegisterForm() {
-  const [state, action, pending] = useActionState(registerCustomer, initial);
+  const router = useRouter();
+  const [step, setStep] = useState<Step>("details");
+  const [form, setForm] = useState<FormState>(EMPTY_FORM);
+  const [code, setCode] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [reward, setReward] = useState<SignupReward | null>(null);
+  const [pending, startTransition] = useTransition();
+
+  function update<K extends keyof FormState>(key: K, value: string) {
+    setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  // Step 1 → validate + anti-abuse checks server-side, then text a Twilio OTP.
+  function sendCode(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setNotice(null);
+    startTransition(async () => {
+      const res = await sendRegistrationOtp(form);
+      if (res.error) {
+        setError(res.error);
+        return;
+      }
+      setNotice("We texted a 6-digit code to your mobile. Enter it below.");
+      setStep("code");
+    });
+  }
+
+  // Step 2 → verify the texted code (proves the number is real), create the
+  // account, and claim the launch offer.
+  function verifyAndCreate(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    startTransition(async () => {
+      const res = await verifyAndRegister(form, code.trim());
+      if (res.error) {
+        setError(res.error);
+        return;
+      }
+      if (res.reward) {
+        setReward(res.reward);
+        setStep("done");
+        return;
+      }
+      router.push(`/verify-email?email=${encodeURIComponent(form.email.trim())}`);
+    });
+  }
+
+  if (step === "done" && reward) {
+    return (
+      <div className="space-y-5">
+        <div className="rounded-md border border-brand/40 bg-brand/5 p-5 text-center">
+          <p className="font-display text-xs uppercase tracking-[0.24em] text-brand">
+            Welcome gift · claimant #{reward.claimNumber}
+          </p>
+          <p className="mt-2 text-base text-foreground">
+            You scored a free{" "}
+            <span className="font-semibold">{reward.rewardName}</span>!
+          </p>
+          <p className="mt-3 font-mono text-2xl tracking-[0.12em] text-foreground">
+            {reward.code}
+          </p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Apply this code in the cart on your first order. It works once and is
+            tied to your account — we&rsquo;ve also emailed it to you.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() =>
+            router.push(
+              `/verify-email?email=${encodeURIComponent(form.email.trim())}`,
+            )
+          }
+          className="w-full inline-flex items-center justify-center bg-brand text-primary-foreground py-3.5 font-display text-sm tracking-[0.2em] uppercase hover:bg-brand-hover"
+        >
+          Verify your email to finish
+        </button>
+      </div>
+    );
+  }
 
   return (
-    <form action={action} className="space-y-5">
+    <form
+      onSubmit={step === "details" ? sendCode : verifyAndCreate}
+      className="space-y-5"
+    >
       <div className="grid sm:grid-cols-2 gap-4">
         <Field id="reg-firstName" label="First name" required>
-          <Input id="reg-firstName" name="firstName" required />
+          <Input
+            id="reg-firstName"
+            value={form.firstName}
+            onChange={(e) => update("firstName", e.target.value)}
+            required
+            disabled={step === "code"}
+          />
         </Field>
         <Field id="reg-lastName" label="Last name" required>
-          <Input id="reg-lastName" name="lastName" required />
+          <Input
+            id="reg-lastName"
+            value={form.lastName}
+            onChange={(e) => update("lastName", e.target.value)}
+            required
+            disabled={step === "code"}
+          />
         </Field>
       </div>
       <Field id="reg-email" label="Email" required>
         <Input
           id="reg-email"
           type="email"
-          name="email"
+          value={form.email}
+          onChange={(e) => update("email", e.target.value)}
           required
           autoComplete="email"
+          disabled={step === "code"}
         />
       </Field>
       <Field
         id="reg-mobile"
         label="Mobile number"
         required
-        hint="UAE mobile starting with +9715."
+        hint="UAE mobile starting with +9715. We'll text a code to verify it."
       >
         <Input
           id="reg-mobile"
           type="tel"
-          name="mobile"
+          value={form.mobile}
+          onChange={(e) => update("mobile", e.target.value)}
           required
           inputMode="tel"
           autoComplete="tel"
           placeholder="+9715XXXXXXXX"
           pattern="^\+9715[0-9]{8}$"
+          disabled={step === "code"}
         />
       </Field>
       <Field
@@ -60,11 +183,13 @@ export function RegisterForm() {
           <Input
             id="reg-password"
             type={showPassword ? "text" : "password"}
-            name="password"
+            value={form.password}
+            onChange={(e) => update("password", e.target.value)}
             required
             minLength={8}
             autoComplete="new-password"
             className="pr-10"
+            disabled={step === "code"}
           />
           <button
             type="button"
@@ -84,39 +209,42 @@ export function RegisterForm() {
         <Input
           id="reg-confirm"
           type={showPassword ? "text" : "password"}
-          name="confirmPassword"
+          value={form.confirmPassword}
+          onChange={(e) => update("confirmPassword", e.target.value)}
           required
           autoComplete="new-password"
+          disabled={step === "code"}
         />
       </Field>
 
-      {state.error ? (
-        <Alert variant="destructive">
-          <AlertDescription>{state.error}</AlertDescription>
-        </Alert>
-      ) : null}
-      {state.reward ? (
-        <div className="rounded-md border border-brand/40 bg-brand/5 p-5 text-center">
-          <p className="font-display text-xs uppercase tracking-[0.24em] text-brand">
-            Welcome gift · claimant #{state.reward.claimNumber}
-          </p>
-          <p className="mt-2 text-base text-foreground">
-            You scored a free{" "}
-            <span className="font-semibold">{state.reward.rewardName}</span>!
-          </p>
-          <p className="mt-3 font-mono text-2xl tracking-[0.12em] text-foreground">
-            {state.reward.code}
-          </p>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Apply this code in the cart on your first order. It works once and is
-            tied to your account — we&rsquo;ve also emailed it to you.
-          </p>
-        </div>
+      {step === "code" ? (
+        <Field
+          id="reg-code"
+          label="SMS code"
+          required
+          hint="6-digit code we texted to your mobile."
+        >
+          <Input
+            id="reg-code"
+            type="text"
+            inputMode="numeric"
+            value={code}
+            onChange={(e) => setCode(e.target.value)}
+            required
+            placeholder="123456"
+            autoComplete="one-time-code"
+          />
+        </Field>
       ) : null}
 
-      {state.message ? (
+      {error ? (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      ) : null}
+      {notice && step === "code" ? (
         <Alert>
-          <AlertDescription>{state.message}</AlertDescription>
+          <AlertDescription>{notice}</AlertDescription>
         </Alert>
       ) : null}
 
@@ -125,8 +253,29 @@ export function RegisterForm() {
         disabled={pending}
         className="w-full inline-flex items-center justify-center bg-brand text-primary-foreground py-3.5 font-display text-sm tracking-[0.2em] uppercase hover:bg-brand-hover disabled:opacity-50"
       >
-        {pending ? "Creating…" : "Create account"}
+        {pending
+          ? step === "details"
+            ? "Sending code…"
+            : "Verifying…"
+          : step === "details"
+            ? "Send verification code"
+            : "Verify & create account"}
       </button>
+
+      {step === "code" ? (
+        <button
+          type="button"
+          onClick={() => {
+            setStep("details");
+            setCode("");
+            setError(null);
+            setNotice(null);
+          }}
+          className="block w-full text-center text-sm text-muted-foreground hover:underline underline-offset-4"
+        >
+          Use a different number
+        </button>
+      ) : null}
 
       <p className="text-sm text-center text-muted-foreground">
         Already have an account?{" "}

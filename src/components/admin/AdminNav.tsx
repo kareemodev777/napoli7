@@ -13,6 +13,7 @@ const adminLinks = [
   { label: "Delivery", href: "/admin/delivery-zones", description: "Areas and fees" },
   { label: "Opening hours", href: "/admin/opening-hours", description: "Checkout availability" },
   { label: "Promos", href: "/admin/promos", description: "Discount codes" },
+  { label: "Messages", href: "/admin/messages", description: "Contact form log" },
 ];
 
 function isActive(pathname: string, href: string) {

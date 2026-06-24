@@ -331,12 +331,18 @@ It's valid once, on your account. Buon appetito!`;
   });
 }
 
+/** Outcome of a best-effort notification send, so callers can record it. */
+export interface EmailSendResult {
+  sent: boolean;
+  reason?: string;
+}
+
 export async function notifyContactMessageEmail(input: {
   name: string;
   phone: string;
   email: string;
   message: string;
-}) {
+}): Promise<EmailSendResult> {
   const subject = `New contact form message from ${input.name}`;
   const body = `Name:    ${input.name}\nPhone:   ${input.phone}\nEmail:   ${input.email}\n\nMessage:\n${input.message}`;
   const html = brandEmailHtml({
@@ -354,15 +360,31 @@ export async function notifyContactMessageEmail(input: {
     console.info(
       "[notifyContactMessageEmail] Resend disabled. Payload:\n" + body,
     );
-    return;
+    return { sent: false, reason: "Email service not configured" };
   }
-  const resend = new Resend(process.env.RESEND_API_KEY!);
-  await resend.emails.send({
-    from: `Napoli 7 Contact <${ORDER_EMAIL_FROM}>`,
-    to: [ORDER_EMAIL_TO],
-    subject,
-    text: body,
-    html,
-    replyTo: input.email,
-  });
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY!);
+    // Resend reports failures (e.g. an unverified sending domain) in the
+    // returned `error`, NOT by throwing — so we must inspect it, or a rejected
+    // send would look like success.
+    const { error } = await resend.emails.send({
+      from: `Napoli 7 Contact <${ORDER_EMAIL_FROM}>`,
+      to: [ORDER_EMAIL_TO],
+      subject,
+      text: body,
+      html,
+      replyTo: input.email,
+    });
+    if (error) {
+      console.error("[notifyContactMessageEmail] Resend error:", error);
+      return { sent: false, reason: error.message ?? "Resend send failed" };
+    }
+    return { sent: true };
+  } catch (e) {
+    console.error("[notifyContactMessageEmail] send threw:", e);
+    return {
+      sent: false,
+      reason: e instanceof Error ? e.message : "Email send failed",
+    };
+  }
 }

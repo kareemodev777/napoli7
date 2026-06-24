@@ -45,7 +45,6 @@ export default async function AboutPage() {
   return (
     <SiteShell>
       <PageHero
-        eyebrow="Our story"
         heading="About Napoli 7"
         intro="Authentic Neapolitan Pizza inspired by the world, crafted in the UAE. Neapolitan tradition, reimagined for the Emirates."
       />
@@ -89,11 +88,8 @@ export default async function AboutPage() {
       <section className="border-t border-border px-6 md:px-10 py-16 md:py-24 bg-brand-soft">
         <div className="max-w-[1140px] mx-auto grid md:grid-cols-[0.85fr_1.15fr] gap-12 md:gap-20 items-start">
           <div className="md:sticky md:top-24">
-            <p className="font-display text-xs tracking-[0.25em] uppercase text-brand-deep mb-4">
-              Our Story
-            </p>
             <h2 className="font-display text-3xl md:text-4xl uppercase tracking-[1.5px] leading-tight">
-              From Naples to the Emirates
+              Our story from Naples to UAE
             </h2>
             <Image
               src={story.url}
