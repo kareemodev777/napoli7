@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { SiteShell } from "@/components/site/SiteShell";
 import { PageHero } from "@/components/site/PageHero";
 import { RegisterForm } from "@/components/auth/RegisterForm";
+import { REGISTRATION_OTP_ENABLED } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "Register",
@@ -20,7 +21,7 @@ export default function RegisterPage() {
       />
       <section className="px-6 md:px-10 py-12">
         <div className="max-w-md mx-auto">
-          <RegisterForm />
+          <RegisterForm otpEnabled={REGISTRATION_OTP_ENABLED} />
         </div>
       </section>
     </SiteShell>

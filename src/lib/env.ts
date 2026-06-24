@@ -23,6 +23,13 @@ export const HAS_TWILIO = Boolean(
       process.env["TWILIO_FROM_NUMBER"]),
 );
 
+// Whether registration requires an SMS one-time-code. It only turns on when
+// Twilio is actually configured, so a missing config can never strand a user on
+// a code they'll never receive — registration falls back to a direct sign-up.
+// Set REGISTRATION_OTP_ENABLED=false to force it off even with Twilio present.
+export const REGISTRATION_OTP_ENABLED =
+  process.env["REGISTRATION_OTP_ENABLED"] === "false" ? false : HAS_TWILIO;
+
 export const HAS_STRIPE = Boolean(
   process.env["STRIPE_SECRET_KEY"] &&
     process.env["NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY"],
@@ -46,3 +53,9 @@ export const HAS_POS = Boolean(
 export const POS_WEBHOOK_URL = process.env["POS_WEBHOOK_URL"] ?? "";
 export const POS_PRODUCT_WEBHOOK_URL =
   process.env["POS_PRODUCT_WEBHOOK_URL"] ?? "";
+// Read-only POS catalog endpoint (product list + SKUs) used to verify our SKU
+// map. Falls back to deriving it from the order webhook URL
+// (.../woocommerce/webhook -> .../woocommerce/products) when not set explicitly.
+export const POS_PRODUCTS_URL =
+  process.env["POS_PRODUCTS_URL"] ??
+  (POS_WEBHOOK_URL ? POS_WEBHOOK_URL.replace(/\/webhook\/?$/, "/products") : "");

@@ -86,6 +86,16 @@ export async function pushOrderToPos(orderId: string): Promise<void> {
       payload: body,
     });
 
+    // Stamp the order itself so the admin table shows sync state without
+    // cross-referencing pos_push_log. A retry can flip failed -> sent.
+    await supabase
+      .from("orders")
+      .update({
+        pos_sync_status: result.ok ? "sent" : "failed",
+        pos_synced_at: result.ok ? new Date().toISOString() : null,
+      })
+      .eq("id", order.id);
+
     if (result.ok) {
       console.info(`[pos] order ${order.order_number} pushed (create)`);
     }

@@ -27,6 +27,7 @@ interface AdminOrderRow {
     | "cancelled";
   paymentMethod: string;
   paymentStatus: string;
+  posSyncStatus: string;
   createdAt: string;
   items: { product_name: string; quantity: number }[];
 }
@@ -37,7 +38,7 @@ async function loadOrders(): Promise<AdminOrderRow[]> {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, order_number, customer_name, customer_phone, total_aed, delivery_type, delivery_slot, status, payment_method, payment_status, created_at, order_items(product_name, quantity)",
+      "id, order_number, customer_name, customer_phone, total_aed, delivery_type, delivery_slot, status, payment_method, payment_status, pos_sync_status, created_at, order_items(product_name, quantity)",
     )
     .order("created_at", { ascending: false })
     .limit(100);
@@ -52,6 +53,7 @@ async function loadOrders(): Promise<AdminOrderRow[]> {
     status: row.status,
     paymentMethod: row.payment_method,
     paymentStatus: row.payment_status,
+    posSyncStatus: row.pos_sync_status,
     createdAt: row.created_at,
     items: row.order_items ?? [],
   }));
@@ -80,6 +82,7 @@ export default async function AdminOrdersPage() {
                 <th className="py-3 pr-4">Items</th>
                 <th className="py-3 pr-4">Total</th>
                 <th className="py-3 pr-4">Payment</th>
+                <th className="py-3 pr-4">POS</th>
                 <th className="py-3 pr-4">Type</th>
                 <th className="py-3 pr-4">Slot</th>
                 <th className="py-3 pr-4">Status</th>
@@ -122,6 +125,9 @@ export default async function AdminOrdersPage() {
                       paymentMethod={o.paymentMethod}
                       paymentStatus={o.paymentStatus}
                     />
+                  </td>
+                  <td className="py-4 pr-4">
+                    <PosTag status={o.posSyncStatus} />
                   </td>
                   <td className="py-4 pr-4 text-xs uppercase tracking-[0.1em]">
                     {o.deliveryType}
@@ -172,6 +178,27 @@ function PaymentTag({
       }
     >
       {label}
+    </span>
+  );
+}
+
+const POS_TAG: Record<string, { label: string; classes: string }> = {
+  sent: { label: "Synced", classes: "bg-flag-green/15 text-flag-green" },
+  failed: { label: "Failed", classes: "bg-flag-red/10 text-flag-red" },
+  pending: { label: "Pending", classes: "bg-muted text-muted-foreground" },
+};
+
+/** Whether the order reached the POS (order-create push). */
+function PosTag({ status }: { status: string }) {
+  const tag = POS_TAG[status] ?? POS_TAG.pending;
+  return (
+    <span
+      className={
+        "inline-flex items-center whitespace-nowrap px-2.5 py-1 font-display text-[10px] tracking-[0.16em] uppercase " +
+        tag.classes
+      }
+    >
+      {tag.label}
     </span>
   );
 }

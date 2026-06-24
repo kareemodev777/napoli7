@@ -7,6 +7,17 @@ import { Bell } from "lucide-react";
 
 const POLL_MS = 15_000;
 
+type AudioContextCtor = typeof AudioContext;
+
+function getAudioContextCtor(): AudioContextCtor | undefined {
+  if (typeof window === "undefined") return undefined;
+  return (
+    window.AudioContext ??
+    (window as unknown as { webkitAudioContext?: AudioContextCtor })
+      .webkitAudioContext
+  );
+}
+
 /**
  * Admin notification bell. Polls the actionable-orders endpoint (Supabase
  * realtime needs anon RLS we don't expose on `orders`, so polling is the safe
@@ -18,7 +29,55 @@ export function NotificationBell({ initialCount }: { initialCount: number }) {
   const [count, setCount] = useState(initialCount);
   const [pulse, setPulse] = useState(false);
   const prevCount = useRef(initialCount);
+  const audioCtx = useRef<AudioContext | null>(null);
   const pathname = usePathname();
+
+  // Browsers block audio until the user interacts with the page, so unlock (and
+  // lazily create) the AudioContext on the admin's first click/tap.
+  useEffect(() => {
+    function unlock() {
+      try {
+        const Ctor = getAudioContextCtor();
+        if (Ctor && !audioCtx.current) audioCtx.current = new Ctor();
+        void audioCtx.current?.resume();
+      } catch {
+        // Audio is best-effort — ignore unlock failures.
+      }
+    }
+    window.addEventListener("pointerdown", unlock, { once: true });
+    return () => window.removeEventListener("pointerdown", unlock);
+  }, []);
+
+  // A short two-tone chime (Web Audio, no asset) plus a vibration on mobile, so
+  // a new order is heard even when the admin isn't looking at the screen.
+  function playAlert() {
+    try {
+      const Ctor = getAudioContextCtor();
+      if (!Ctor) return;
+      const ctx = audioCtx.current ?? new Ctor();
+      audioCtx.current = ctx;
+      if (ctx.state === "suspended") void ctx.resume();
+      const start = ctx.currentTime;
+      [
+        { at: 0, freq: 880 },
+        { at: 0.18, freq: 1175 },
+      ].forEach(({ at, freq }) => {
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.0001, start + at);
+        gain.gain.exponentialRampToValueAtTime(0.35, start + at + 0.02);
+        gain.gain.exponentialRampToValueAtTime(0.0001, start + at + 0.15);
+        osc.connect(gain).connect(ctx.destination);
+        osc.start(start + at);
+        osc.stop(start + at + 0.16);
+      });
+      navigator.vibrate?.([120, 60, 120]);
+    } catch {
+      // Never let an audio failure break the bell.
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -33,6 +92,7 @@ export function NotificationBell({ initialCount }: { initialCount: number }) {
         if (cancelled || typeof data.count !== "number") return;
         if (data.count > prevCount.current) {
           setPulse(true);
+          playAlert();
           window.setTimeout(() => setPulse(false), 2000);
         }
         prevCount.current = data.count;

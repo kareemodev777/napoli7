@@ -10,6 +10,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   sendRegistrationOtp,
   verifyAndRegister,
+  registerDirect,
   type SignupReward,
 } from "@/app/register/actions";
 
@@ -33,7 +34,7 @@ const EMPTY_FORM: FormState = {
   confirmPassword: "",
 };
 
-export function RegisterForm() {
+export function RegisterForm({ otpEnabled = true }: { otpEnabled?: boolean }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("details");
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
@@ -48,12 +49,30 @@ export function RegisterForm() {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  // Step 1 → validate + anti-abuse checks server-side, then text a Twilio OTP.
+  // Step 1 → validate + anti-abuse checks server-side. When OTP is enabled we
+  // text a code and move to the verify step; when it's disabled (no Twilio) we
+  // create the account directly so registration is never blocked.
   function sendCode(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     setNotice(null);
     startTransition(async () => {
+      if (!otpEnabled) {
+        const res = await registerDirect(form);
+        if (res.error) {
+          setError(res.error);
+          return;
+        }
+        if (res.reward) {
+          setReward(res.reward);
+          setStep("done");
+          return;
+        }
+        router.push(
+          `/verify-email?email=${encodeURIComponent(form.email.trim())}`,
+        );
+        return;
+      }
       const res = await sendRegistrationOtp(form);
       if (res.error) {
         setError(res.error);
@@ -158,7 +177,11 @@ export function RegisterForm() {
         id="reg-mobile"
         label="Mobile number"
         required
-        hint="UAE mobile starting with +9715. We'll text a code to verify it."
+        hint={
+          otpEnabled
+            ? "UAE mobile starting with +9715. We'll text a code to verify it."
+            : "UAE mobile starting with +9715."
+        }
       >
         <Input
           id="reg-mobile"
@@ -255,10 +278,14 @@ export function RegisterForm() {
       >
         {pending
           ? step === "details"
-            ? "Sending code…"
+            ? otpEnabled
+              ? "Sending code…"
+              : "Creating…"
             : "Verifying…"
           : step === "details"
-            ? "Send verification code"
+            ? otpEnabled
+              ? "Send verification code"
+              : "Create account"
             : "Verify & create account"}
       </button>
 

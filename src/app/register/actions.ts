@@ -211,24 +211,54 @@ export async function verifyAndRegister(
   // Valid — burn the code so it can't be replayed.
   await service.from("phone_otps").delete().eq("phone_norm", phoneNorm);
 
-  // Re-screen right before creating the account (another signup may have taken
-  // the email/phone since step 1).
-  const blocked = await screenIdentity(parsed.data);
+  return createAccountAndClaim(parsed.data);
+}
+
+/**
+ * Direct registration with NO SMS step — used when OTP is disabled (Twilio not
+ * configured, or explicitly turned off). The fake-number and duplicate
+ * email/phone guards still apply, so a missing SMS config relaxes verification
+ * without removing the anti-abuse checks or blocking anyone.
+ */
+export async function registerDirect(input: unknown): Promise<RegisterResult> {
+  const parsed = registerSchema.safeParse(input);
+  if (!parsed.success) {
+    return {
+      error: parsed.error.issues[0]?.message ?? "Some fields are missing.",
+    };
+  }
+  if (!HAS_SUPABASE) {
+    return {
+      error: "Registration activates once Supabase is configured. See README.",
+    };
+  }
+  if (isLikelyFakePhone(parsed.data.mobile)) {
+    return { error: "Enter a real UAE mobile number." };
+  }
+  return createAccountAndClaim(parsed.data);
+}
+
+/**
+ * Create the account (standard email sign-up → keeps the verify-email flow) and
+ * issue the launch free-pizza reward. Re-screens identity right before creation
+ * for race-safety. Shared by the OTP and the direct (no-OTP) paths.
+ */
+async function createAccountAndClaim(
+  data: RegisterInput,
+): Promise<RegisterResult> {
+  const blocked = await screenIdentity(data);
   if (blocked) return blocked;
 
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.signUp({
-    email: parsed.data.email,
-    password: parsed.data.password,
+  const { data: signUp, error } = await supabase.auth.signUp({
+    email: data.email,
+    password: data.password,
     options: {
-      emailRedirectTo: buildEmailVerificationRedirect(
-        SITE_URL,
-        parsed.data.email,
-      ),
+      emailRedirectTo: buildEmailVerificationRedirect(SITE_URL, data.email),
       data: {
-        first_name: parsed.data.firstName,
-        last_name: parsed.data.lastName,
-        mobile: parsed.data.mobile,
+        first_name: data.firstName,
+        last_name: data.lastName,
+        mobile: data.mobile,
       },
     },
   });
@@ -241,17 +271,17 @@ export async function verifyAndRegister(
     return { error: error.message };
   }
 
-  // Launch offer — phone is now verified; deduped on email + phone in the RPC.
+  // Launch offer — deduped on email + phone in the RPC.
   try {
     const claimed = await claimSignupFreePizza({
-      userId: data.user?.id ?? null,
-      email: parsed.data.email,
-      phone: parsed.data.mobile,
+      userId: signUp.user?.id ?? null,
+      email: data.email,
+      phone: data.mobile,
     });
     if (claimed) {
       await notifyFreePizzaRewardEmail({
-        to: parsed.data.email,
-        firstName: parsed.data.firstName,
+        to: data.email,
+        firstName: data.firstName,
         code: claimed.code,
         rewardName: claimed.rewardName,
         claimNumber: claimed.claimNumber,
