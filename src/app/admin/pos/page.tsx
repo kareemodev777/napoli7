@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { HAS_SUPABASE_SERVICE } from "@/lib/env";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { verifyPosCatalog, type CatalogIssue } from "@/lib/pos/catalog";
+import { RetryPosButton } from "@/components/admin/RetryPosButton";
 
 export const metadata: Metadata = {
   title: "POS · Admin",
@@ -49,10 +50,21 @@ const DATE_FMT = new Intl.DateTimeFormat("en-GB", {
   minute: "2-digit",
 });
 
+async function countFailedSyncs(): Promise<number> {
+  if (!HAS_SUPABASE_SERVICE) return 0;
+  const supabase = createServiceRoleClient();
+  const { count } = await supabase
+    .from("orders")
+    .select("id", { count: "exact", head: true })
+    .eq("pos_sync_status", "failed");
+  return count ?? 0;
+}
+
 export default async function AdminPosPage() {
-  const [verification, pushLog] = await Promise.all([
+  const [verification, pushLog, failedCount] = await Promise.all([
     verifyPosCatalog(),
     loadPushLog(),
+    countFailedSyncs(),
   ]);
 
   return (
@@ -69,7 +81,7 @@ export default async function AdminPosPage() {
         </div>
 
         <Catalog verification={verification} />
-        <PushLog rows={pushLog} />
+        <PushLog rows={pushLog} failedCount={failedCount} />
       </div>
     </section>
   );
@@ -168,12 +180,21 @@ function IssueRow({ issue }: { issue: CatalogIssue }) {
   );
 }
 
-function PushLog({ rows }: { rows: PushLogRow[] }) {
+function PushLog({
+  rows,
+  failedCount,
+}: {
+  rows: PushLogRow[];
+  failedCount: number;
+}) {
   return (
     <div>
-      <h2 className="font-display text-xl uppercase tracking-[1.5px]">
-        Push log
-      </h2>
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <h2 className="font-display text-xl uppercase tracking-[1.5px]">
+          Push log
+        </h2>
+        <RetryPosButton failedCount={failedCount} />
+      </div>
       <p className="mt-2 text-sm text-muted-foreground">
         {rows.length === 0
           ? "No POS pushes yet."

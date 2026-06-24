@@ -128,7 +128,54 @@ function detailRow(label: string, value: string) {
   return `<tr><td style="padding:6px 0;color:#9f8f82;font-size:13px;">${escapeHtml(label)}</td><td style="padding:6px 0;color:#fff7ed;text-align:right;font-size:13px;">${escapeHtml(value)}</td></tr>`;
 }
 
-export async function notifyKitchenEmail(input: KitchenNotificationInput) {
+interface SendArgs {
+  label: string;
+  from: string;
+  to: string[];
+  subject: string;
+  text: string;
+  html: string;
+  replyTo?: string;
+}
+
+/**
+ * Send through Resend and REPORT the outcome. Resend surfaces delivery failures
+ * (e.g. an unverified sending domain) in `error` rather than throwing — so we
+ * must inspect it, or a rejected send silently looks like success. When Resend
+ * isn't configured we log in dev and report not-sent.
+ */
+async function sendBrandedEmail(args: SendArgs): Promise<EmailSendResult> {
+  if (!HAS_RESEND) {
+    console.info(`[${args.label}] Resend disabled. Subject: ${args.subject}`);
+    return { sent: false, reason: "Email service not configured" };
+  }
+  try {
+    const resend = new Resend(process.env.RESEND_API_KEY!);
+    const { error } = await resend.emails.send({
+      from: args.from,
+      to: args.to,
+      subject: args.subject,
+      text: args.text,
+      html: args.html,
+      ...(args.replyTo ? { replyTo: args.replyTo } : {}),
+    });
+    if (error) {
+      console.error(`[${args.label}] Resend error:`, error);
+      return { sent: false, reason: error.message ?? "Resend send failed" };
+    }
+    return { sent: true };
+  } catch (e) {
+    console.error(`[${args.label}] send threw:`, e);
+    return {
+      sent: false,
+      reason: e instanceof Error ? e.message : "Email send failed",
+    };
+  }
+}
+
+export async function notifyKitchenEmail(
+  input: KitchenNotificationInput,
+): Promise<EmailSendResult> {
   const subject = `New order ${input.orderNumber} — ${input.totalAed.toFixed(2)} AED — ${input.paymentMethod.toUpperCase()}`;
   const address =
     input.deliveryType === "delivery" && input.deliveryAddress
@@ -181,14 +228,8 @@ ${pinText ? `${pinText}
     <div style="margin-top:18px;text-align:right;color:#fff7ed;font-size:18px;font-weight:700;">Total ${input.totalAed.toFixed(2)} AED</div>`,
   });
 
-  if (!HAS_RESEND) {
-    console.info(
-      "[notifyKitchenEmail] Resend disabled. Email payload:\n" + body,
-    );
-    return;
-  }
-  const resend = new Resend(process.env.RESEND_API_KEY!);
-  await resend.emails.send({
+  return sendBrandedEmail({
+    label: "notifyKitchenEmail",
     from: `Napoli 7 Orders <${ORDER_EMAIL_FROM}>`,
     to: [ORDER_EMAIL_TO],
     subject,
@@ -199,7 +240,7 @@ ${pinText ? `${pinText}
 
 export async function notifyCustomerStatusEmail(
   input: CustomerNotificationInput,
-) {
+): Promise<EmailSendResult> {
   const subject =
     input.status === "preparing"
       ? `Your Napoli 7 order ${input.orderNumber} is being prepared`
@@ -233,14 +274,8 @@ export async function notifyCustomerStatusEmail(
     </table>`,
   });
 
-  if (!HAS_RESEND) {
-    console.info(
-      `[notifyCustomerStatusEmail] Resend disabled. To: ${input.to} :: ${subject}`,
-    );
-    return;
-  }
-  const resend = new Resend(process.env.RESEND_API_KEY!);
-  await resend.emails.send({
+  return sendBrandedEmail({
+    label: "notifyCustomerStatusEmail",
     from: `Napoli 7 <${ORDER_EMAIL_FROM}>`,
     to: [input.to],
     subject,
@@ -254,7 +289,7 @@ export async function notifyStaffAlertEmail(input: {
   heading: string;
   intro: string;
   details: Array<[string, string]>;
-}) {
+}): Promise<EmailSendResult> {
   const body = [
     input.intro,
     "",
@@ -268,14 +303,8 @@ export async function notifyStaffAlertEmail(input: {
       ${input.details.map(([label, value]) => detailRow(label, value)).join("")}
     </table>`,
   });
-  if (!HAS_RESEND) {
-    console.warn(
-      `[notifyStaffAlertEmail] Resend disabled. ${input.subject}\n${body}`,
-    );
-    return;
-  }
-  const resend = new Resend(process.env.RESEND_API_KEY!);
-  await resend.emails.send({
+  return sendBrandedEmail({
+    label: "notifyStaffAlertEmail",
     from: `Napoli 7 Alerts <${ORDER_EMAIL_FROM}>`,
     to: [ORDER_EMAIL_TO],
     subject: input.subject,
@@ -290,7 +319,7 @@ export async function notifyFreePizzaRewardEmail(input: {
   code: string;
   rewardName: string;
   claimNumber: number;
-}) {
+}): Promise<EmailSendResult> {
   const subject = `Your free ${input.rewardName} is reserved — code inside`;
   const intro = `Welcome to Napoli 7, ${input.firstName}. You're claimant #${input.claimNumber} of our free-pizza launch.`;
   const body = `${intro}
@@ -315,14 +344,8 @@ It's valid once, on your account. Buon appetito!`;
     </table>`,
   });
 
-  if (!HAS_RESEND) {
-    console.info(
-      `[notifyFreePizzaRewardEmail] Resend disabled. To: ${input.to} :: ${input.code}`,
-    );
-    return;
-  }
-  const resend = new Resend(process.env.RESEND_API_KEY!);
-  await resend.emails.send({
+  return sendBrandedEmail({
+    label: "notifyFreePizzaRewardEmail",
     from: `Napoli 7 <${ORDER_EMAIL_FROM}>`,
     to: [input.to],
     subject,
@@ -356,35 +379,65 @@ export async function notifyContactMessageEmail(input: {
     </table>
     <div style="background:#120f0d;border:1px solid #2f2823;border-radius:16px;padding:16px;color:#fff7ed;line-height:1.6;white-space:pre-wrap;">${escapeHtml(input.message)}</div>`,
   });
-  if (!HAS_RESEND) {
-    console.info(
-      "[notifyContactMessageEmail] Resend disabled. Payload:\n" + body,
-    );
-    return { sent: false, reason: "Email service not configured" };
-  }
-  try {
-    const resend = new Resend(process.env.RESEND_API_KEY!);
-    // Resend reports failures (e.g. an unverified sending domain) in the
-    // returned `error`, NOT by throwing — so we must inspect it, or a rejected
-    // send would look like success.
-    const { error } = await resend.emails.send({
-      from: `Napoli 7 Contact <${ORDER_EMAIL_FROM}>`,
-      to: [ORDER_EMAIL_TO],
-      subject,
-      text: body,
-      html,
-      replyTo: input.email,
-    });
-    if (error) {
-      console.error("[notifyContactMessageEmail] Resend error:", error);
-      return { sent: false, reason: error.message ?? "Resend send failed" };
-    }
-    return { sent: true };
-  } catch (e) {
-    console.error("[notifyContactMessageEmail] send threw:", e);
-    return {
-      sent: false,
-      reason: e instanceof Error ? e.message : "Email send failed",
-    };
-  }
+  return sendBrandedEmail({
+    label: "notifyContactMessageEmail",
+    from: `Napoli 7 Contact <${ORDER_EMAIL_FROM}>`,
+    to: [ORDER_EMAIL_TO],
+    subject,
+    text: body,
+    html,
+    replyTo: input.email,
+  });
+}
+
+/**
+ * Order confirmation sent to the CUSTOMER who placed the order (distinct from
+ * the kitchen alert). Fires for a placed COD order and for a paid card order.
+ */
+export async function notifyCustomerOrderConfirmationEmail(input: {
+  to: string;
+  orderNumber: string;
+  deliveryType: "delivery" | "pickup";
+  deliverySlot: string;
+  paymentMethod: "card" | "cod";
+  totalAed: number;
+  items: OrderItemSummary[];
+}): Promise<EmailSendResult> {
+  const isPickup = input.deliveryType === "pickup";
+  const estimate = isPickup
+    ? "Pickup is usually ready in about 15 minutes."
+    : "Estimated delivery: 30–45 minutes.";
+  const payLine =
+    input.paymentMethod === "cod"
+      ? `Pay cash ${isPickup ? "at pickup" : "to the driver on arrival"}.`
+      : "Your card payment was received.";
+  const subject = `Your Napoli 7 order ${input.orderNumber} is confirmed`;
+  const body = `Thank you — your order ${input.orderNumber} is confirmed.
+
+${payLine}
+${estimate}
+
+Items:
+${formatItems(input.items)}
+
+Total: ${input.totalAed.toFixed(2)} AED
+
+We'll be in touch as your order progresses. Buon appetito!`;
+  const html = brandEmailHtml({
+    eyebrow: "Order confirmed",
+    heading: `Order ${input.orderNumber} confirmed`,
+    intro: `${payLine} ${estimate}`,
+    children: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0">${formatItemsHtml(input.items)}</table>
+    <div style="margin-top:18px;text-align:right;color:#fff7ed;font-size:18px;font-weight:700;">Total ${input.totalAed.toFixed(2)} AED</div>
+    <p style="margin:18px 0 0;color:#9f8f82;font-size:13px;">${escapeHtml(input.deliveryType === "delivery" ? "Delivery" : "Pickup")} · Slot: ${escapeHtml(input.deliverySlot)}</p>`,
+  });
+
+  return sendBrandedEmail({
+    label: "notifyCustomerOrderConfirmationEmail",
+    from: `Napoli 7 <${ORDER_EMAIL_FROM}>`,
+    to: [input.to],
+    subject,
+    text: body,
+    html,
+  });
 }

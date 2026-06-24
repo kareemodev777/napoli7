@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { StatusSelect } from "@/components/admin/StatusSelect";
+import { OrdersAutoRefresh } from "@/components/admin/OrdersAutoRefresh";
+import { PosSyncCell } from "@/components/admin/PosSyncCell";
 import { createClient } from "@/lib/supabase/server";
 import { HAS_SUPABASE } from "@/lib/env";
 import { paymentSummary, type PaymentTone } from "@/lib/payments/order-display";
@@ -63,6 +65,7 @@ export default async function AdminOrdersPage() {
   const orders = await loadOrders();
   return (
     <section className="px-6 md:px-10 py-12">
+      <OrdersAutoRefresh />
       <div className="max-w-[1400px] mx-auto">
         <h1 className="font-display text-3xl md:text-4xl uppercase tracking-[1.5px] leading-tight">
           Live orders
@@ -127,7 +130,15 @@ export default async function AdminOrdersPage() {
                     />
                   </td>
                   <td className="py-4 pr-4">
-                    <PosTag status={o.posSyncStatus} />
+                    <PosSyncCell
+                      orderId={o.id}
+                      status={o.posSyncStatus}
+                      payable={
+                        o.status !== "cancelled" &&
+                        (o.paymentMethod === "cod" ||
+                          o.paymentStatus === "paid")
+                      }
+                    />
                   </td>
                   <td className="py-4 pr-4 text-xs uppercase tracking-[0.1em]">
                     {o.deliveryType}
@@ -182,23 +193,3 @@ function PaymentTag({
   );
 }
 
-const POS_TAG: Record<string, { label: string; classes: string }> = {
-  sent: { label: "Synced", classes: "bg-flag-green/15 text-flag-green" },
-  failed: { label: "Failed", classes: "bg-flag-red/10 text-flag-red" },
-  pending: { label: "Pending", classes: "bg-muted text-muted-foreground" },
-};
-
-/** Whether the order reached the POS (order-create push). */
-function PosTag({ status }: { status: string }) {
-  const tag = POS_TAG[status] ?? POS_TAG.pending;
-  return (
-    <span
-      className={
-        "inline-flex items-center whitespace-nowrap px-2.5 py-1 font-display text-[10px] tracking-[0.16em] uppercase " +
-        tag.classes
-      }
-    >
-      {tag.label}
-    </span>
-  );
-}

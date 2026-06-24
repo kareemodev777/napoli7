@@ -17,6 +17,7 @@ import {
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { createClient } from "@/lib/supabase/server";
 import { labelForHandling, type PaymentHandling } from "@/lib/admin/order-edit";
+import { SyncPosButton } from "@/components/admin/SyncPosButton";
 
 export const metadata: Metadata = {
   title: "Edit order · Admin",
@@ -46,7 +47,7 @@ async function loadOrder(id: string) {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, order_number, customer_name, customer_phone, customer_email, status, payment_method, payment_status, delivery_type, delivery_address, delivery_slot, pizza_cut, subtotal_aed, delivery_fee_aed, discount_aed, total_aed, promo_code, order_notes, admin_notes, assigned_rider_id, created_at, order_items(id, product_name, base_price_aed, quantity, customizations, line_total_aed)",
+      "id, order_number, customer_name, customer_phone, customer_email, status, payment_method, payment_status, pos_sync_status, delivery_type, delivery_address, delivery_slot, pizza_cut, subtotal_aed, delivery_fee_aed, discount_aed, total_aed, promo_code, order_notes, admin_notes, assigned_rider_id, created_at, order_items(id, product_name, base_price_aed, quantity, customizations, line_total_aed)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -336,6 +337,27 @@ export default async function AdminOrderEditPage({
               {order.order_notes}
             </p>
           ) : null}
+        </div>
+
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-md border border-border bg-card p-5">
+          <div>
+            <h2 className="font-display text-xs uppercase tracking-[0.25em] text-muted-foreground">
+              POS
+            </h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Send this order to the POS (xtbooks). Use this if the automatic
+              push failed or the order was paid before the POS was connected.
+            </p>
+          </div>
+          <SyncPosButton
+            orderId={order.id}
+            initialStatus={(order.pos_sync_status as string) ?? "pending"}
+            payable={
+              order.status !== "cancelled" &&
+              (order.payment_method === "cod" ||
+                order.payment_status === "paid")
+            }
+          />
         </div>
 
         <div className="mt-8">

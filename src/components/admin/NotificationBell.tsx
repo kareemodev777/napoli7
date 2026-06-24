@@ -2,82 +2,41 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Bell } from "lucide-react";
+import { getBrowserSupabase } from "@/lib/supabase/client";
+import { playAlarm, unlockAlarm } from "./alarm";
 
-const POLL_MS = 15_000;
+// Realtime is the primary signal; this slow poll is only a safety net in case
+// the websocket drops (sleep/wake, flaky network).
+const FALLBACK_POLL_MS = 30_000;
 
-type AudioContextCtor = typeof AudioContext;
+const SUPABASE_CONFIGURED = Boolean(
+  process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+);
 
-function getAudioContextCtor(): AudioContextCtor | undefined {
-  if (typeof window === "undefined") return undefined;
-  return (
-    window.AudioContext ??
-    (window as unknown as { webkitAudioContext?: AudioContextCtor })
-      .webkitAudioContext
-  );
-}
+// Unique channel name per subscription so a re-mount never reuses an
+// already-subscribed channel (which throws on a second `.on()`).
+let channelSeq = 0;
 
 /**
- * Admin notification bell. Polls the actionable-orders endpoint (Supabase
- * realtime needs anon RLS we don't expose on `orders`, so polling is the safe
- * choice) and shows a live badge of orders the kitchen still needs to treat.
- * Re-checks immediately whenever the admin navigates, and when the tab regains
- * focus, so a freshly treated order updates without waiting for the interval.
+ * Admin notification bell, driven by Supabase Realtime (Postgres Changes on the
+ * `orders` table). When an order is inserted or updated it re-reads the
+ * admin-gated actionable count: a higher count means a new paid/COD order, so it
+ * chimes + pulses, and refreshes the current route so the orders table updates
+ * live. A slow poll + tab-focus check back it up if the socket drops.
  */
 export function NotificationBell({ initialCount }: { initialCount: number }) {
   const [count, setCount] = useState(initialCount);
   const [pulse, setPulse] = useState(false);
   const prevCount = useRef(initialCount);
-  const audioCtx = useRef<AudioContext | null>(null);
-  const pathname = usePathname();
 
-  // Browsers block audio until the user interacts with the page, so unlock (and
-  // lazily create) the AudioContext on the admin's first click/tap.
+  // Browsers block audio until the user interacts with the page, so unlock the
+  // shared AudioContext on the admin's first click/tap.
   useEffect(() => {
-    function unlock() {
-      try {
-        const Ctor = getAudioContextCtor();
-        if (Ctor && !audioCtx.current) audioCtx.current = new Ctor();
-        void audioCtx.current?.resume();
-      } catch {
-        // Audio is best-effort — ignore unlock failures.
-      }
-    }
-    window.addEventListener("pointerdown", unlock, { once: true });
-    return () => window.removeEventListener("pointerdown", unlock);
+    window.addEventListener("pointerdown", unlockAlarm, { once: true });
+    return () => window.removeEventListener("pointerdown", unlockAlarm);
   }, []);
-
-  // A short two-tone chime (Web Audio, no asset) plus a vibration on mobile, so
-  // a new order is heard even when the admin isn't looking at the screen.
-  function playAlert() {
-    try {
-      const Ctor = getAudioContextCtor();
-      if (!Ctor) return;
-      const ctx = audioCtx.current ?? new Ctor();
-      audioCtx.current = ctx;
-      if (ctx.state === "suspended") void ctx.resume();
-      const start = ctx.currentTime;
-      [
-        { at: 0, freq: 880 },
-        { at: 0.18, freq: 1175 },
-      ].forEach(({ at, freq }) => {
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.value = freq;
-        gain.gain.setValueAtTime(0.0001, start + at);
-        gain.gain.exponentialRampToValueAtTime(0.35, start + at + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.0001, start + at + 0.15);
-        osc.connect(gain).connect(ctx.destination);
-        osc.start(start + at);
-        osc.stop(start + at + 0.16);
-      });
-      navigator.vibrate?.([120, 60, 120]);
-    } catch {
-      // Never let an audio failure break the bell.
-    }
-  }
 
   useEffect(() => {
     let cancelled = false;
@@ -92,7 +51,7 @@ export function NotificationBell({ initialCount }: { initialCount: number }) {
         if (cancelled || typeof data.count !== "number") return;
         if (data.count > prevCount.current) {
           setPulse(true);
-          playAlert();
+          playAlarm();
           window.setTimeout(() => setPulse(false), 2000);
         }
         prevCount.current = data.count;
@@ -103,8 +62,19 @@ export function NotificationBell({ initialCount }: { initialCount: number }) {
     }
 
     refresh();
-    const id = window.setInterval(refresh, POLL_MS);
 
+    // Live updates: any insert/update on orders triggers a re-check.
+    const supabase = SUPABASE_CONFIGURED ? getBrowserSupabase() : null;
+    const channel = supabase
+      ?.channel(`admin-orders-bell-${++channelSeq}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "orders" },
+        () => refresh(),
+      )
+      .subscribe();
+
+    const id = window.setInterval(refresh, FALLBACK_POLL_MS);
     function onVisible() {
       if (document.visibilityState === "visible") refresh();
     }
@@ -114,9 +84,9 @@ export function NotificationBell({ initialCount }: { initialCount: number }) {
       cancelled = true;
       window.clearInterval(id);
       document.removeEventListener("visibilitychange", onVisible);
+      if (channel) supabase?.removeChannel(channel);
     };
-    // Re-run on navigation so the count reflects actions just taken.
-  }, [pathname]);
+  }, []);
 
   const label =
     count > 0

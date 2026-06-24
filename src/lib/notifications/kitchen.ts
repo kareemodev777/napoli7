@@ -1,6 +1,7 @@
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import {
   notifyKitchenEmail,
+  notifyCustomerOrderConfirmationEmail,
   type KitchenNotificationInput,
 } from "@/lib/notifications/email";
 import { notifyKitchenWhatsApp } from "@/lib/notifications/whatsapp";
@@ -61,14 +62,43 @@ export async function sendKitchenNotificationsForOrder(
     })),
   };
 
-  try {
-    await notifyKitchenEmail(payload);
-  } catch (e) {
-    console.error("[kitchen] email failed:", e);
+  // Kitchen email (to the shop). Reports its outcome rather than throwing, so a
+  // misconfigured mailer is logged loudly instead of silently swallowed.
+  const kitchenEmail = await notifyKitchenEmail(payload).catch((e) => {
+    console.error("[kitchen] email threw:", e);
+    return { sent: false, reason: "threw" } as const;
+  });
+  if (!kitchenEmail.sent) {
+    console.warn(
+      `[kitchen] kitchen email NOT sent for ${order.order_number}: ${kitchenEmail.reason}`,
+    );
   }
+
   try {
     await notifyKitchenWhatsApp(payload);
   } catch (e) {
     console.error("[kitchen] whatsapp failed:", e);
+  }
+
+  // Confirmation to the customer who placed the order (distinct from the kitchen
+  // alert). Best-effort — never blocks the kitchen notification.
+  if (order.customer_email) {
+    const customerEmail = await notifyCustomerOrderConfirmationEmail({
+      to: order.customer_email,
+      orderNumber: order.order_number,
+      deliveryType: payload.deliveryType,
+      deliverySlot: payload.deliverySlot,
+      paymentMethod: payload.paymentMethod,
+      totalAed: payload.totalAed,
+      items: payload.items,
+    }).catch((e) => {
+      console.error("[kitchen] customer confirmation threw:", e);
+      return { sent: false, reason: "threw" } as const;
+    });
+    if (!customerEmail.sent) {
+      console.warn(
+        `[kitchen] customer confirmation NOT sent for ${order.order_number}: ${customerEmail.reason}`,
+      );
+    }
   }
 }
