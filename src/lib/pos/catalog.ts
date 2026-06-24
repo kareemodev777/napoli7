@@ -53,10 +53,13 @@ export async function fetchPosCatalog(
     return { ok: true, products };
   } catch (e) {
     clearTimeout(timer);
-    return {
-      ok: false,
-      error: e instanceof Error ? e.message : "Could not reach the POS.",
-    };
+    // Node's fetch reports connection-level failures as a bare "fetch failed";
+    // the real reason (ENOTFOUND, ECONNREFUSED, timeout, TLS…) is on `cause`.
+    const cause = (e as { cause?: { code?: string; message?: string } }).cause;
+    const detail = cause?.code ?? cause?.message;
+    const base = e instanceof Error ? e.message : "Could not reach the POS.";
+    console.error("[pos] catalog fetch failed:", POS_PRODUCTS_URL, e);
+    return { ok: false, error: detail ? `${base} — ${detail}` : base };
   }
 }
 
