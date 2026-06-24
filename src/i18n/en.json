@@ -11,7 +11,8 @@
     "addressLine2": "213 Sheikh Rashid bin Abdul Aziz Street, Al Jurf 2, Ajman",
     "hours": "Tuesday to Sunday: 12:30 – 00:00",
     "lat": 25.4002327,
-    "lng": 55.5033167
+    "lng": 55.5033167,
+    "mapQuery": "Napoli 7, 213 Sheikh Rashid bin Abdul Aziz Street, Al Jurf 2, Ajman"
   },
   "deals": {
     "heading": "Deals",

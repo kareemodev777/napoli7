@@ -5,10 +5,8 @@ import { useFormStatus } from "react-dom";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import {
-  INITIAL_CONTACT_STATE,
-  submitContactMessage,
-} from "@/app/contact/actions";
+import { submitContactMessage } from "@/app/contact/actions";
+import { INITIAL_CONTACT_STATE } from "@/app/contact/state";
 
 export function ContactForm() {
   const [state, formAction] = useActionState(

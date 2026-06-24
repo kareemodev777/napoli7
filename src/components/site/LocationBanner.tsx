@@ -8,7 +8,7 @@ export function LocationBanner() {
     <section className="bg-secondary">
       <div className="max-w-[1500px] mx-auto px-6 md:px-10 py-16 md:py-24 grid md:grid-cols-2 gap-10 items-center">
         <div className="w-full">
-          <MapEmbed lat={en.brand.lat} lng={en.brand.lng} />
+          <MapEmbed query={en.brand.mapQuery} />
         </div>
         <div>
           <p className="font-display text-xs tracking-[0.2em] uppercase text-muted-foreground mb-4">
@@ -30,7 +30,7 @@ export function LocationBanner() {
             href="/location"
             className="inline-flex items-center gap-2 font-display text-sm border-b border-foreground pb-1 hover:opacity-60"
           >
-            Get directions
+            Location
             <ArrowRight className="h-4 w-4" strokeWidth={1.5} />
           </Link>
         </div>

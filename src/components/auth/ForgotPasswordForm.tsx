@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,6 +12,7 @@ const initial: AuthResult = {};
 
 export function ForgotPasswordForm() {
   const [state, action, pending] = useActionState(sendPasswordReset, initial);
+  const expired = useSearchParams().get("expired") === "1";
 
   return (
     <div className="space-y-6">
@@ -18,6 +20,14 @@ export function ForgotPasswordForm() {
         <p>We&apos;ll email you a link to log back in and change your password.</p>
         <p>Open the link once. It will take you straight to the change password page.</p>
       </div>
+
+      {expired ? (
+        <Alert variant="destructive">
+          <AlertDescription>
+            That reset link expired or was already used. Request a new one below.
+          </AlertDescription>
+        </Alert>
+      ) : null}
 
       {state.error ? (
         <Alert variant="destructive">

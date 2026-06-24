@@ -4,10 +4,12 @@ export const PASSWORD_FORGOT_PATH = "/forgot-password";
 export const PASSWORD_CHANGE_PATH = "/change-password";
 export const PASSWORD_RESET_CALLBACK_PATH = "/auth/callback";
 
+// Send recovery links straight to the change-password screen. The form there
+// handles both Supabase flows on the client: PKCE (token arrives as `?code=`)
+// and implicit (token arrives in the URL `#hash`). Routing through a server
+// callback would drop an implicit-flow hash, which the server can't read.
 export function buildPasswordResetRedirect(baseUrl = SITE_URL) {
-  const url = new URL(PASSWORD_RESET_CALLBACK_PATH, baseUrl);
-  url.searchParams.set("next", PASSWORD_CHANGE_PATH);
-  return url.toString();
+  return new URL(PASSWORD_CHANGE_PATH, baseUrl).toString();
 }
 
 export function buildRecoveryCallbackRedirect(

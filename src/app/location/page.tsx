@@ -86,7 +86,7 @@ export default function LocationPage() {
             </Block>
           </div>
           <div>
-            <MapEmbed lat={lat} lng={lng} />
+            <MapEmbed query={en.brand.mapQuery} />
             <div className="mt-6 border border-border bg-card p-6">
               <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep mb-3">
                 Delivery zone

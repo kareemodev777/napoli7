@@ -9,9 +9,9 @@ import {
 } from "./password-reset";
 
 describe("password reset helpers", () => {
-  test("sends reset emails through the auth callback to the change password page", () => {
+  test("sends reset emails straight to the change password page", () => {
     expect(buildPasswordResetRedirect("https://napoli7.com")).toBe(
-      "https://napoli7.com/auth/callback?next=%2Fchange-password",
+      "https://napoli7.com/change-password",
     );
   });
 

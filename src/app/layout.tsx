@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Inter_Tight } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
+import { RecoveryRedirect } from "@/components/auth/RecoveryRedirect";
 import "./globals.css";
 
 const inter = Inter({
@@ -53,6 +54,7 @@ export default function RootLayout({
         >
           Skip to content
         </a>
+        <RecoveryRedirect />
         {children}
         {enableVercelInsights ? (
           <>

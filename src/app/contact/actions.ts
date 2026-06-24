@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { notifyContactMessageEmail } from "@/lib/notifications/email";
+import type { ContactFormState } from "./state";
 
 const contactSchema = z.object({
   name: z.string().trim().min(2).max(80),
@@ -14,14 +15,6 @@ const contactSchema = z.object({
   email: z.string().trim().email(),
   message: z.string().trim().min(1).max(500),
 });
-
-export type ContactFormState = {
-  status: "idle" | "ok" | "error";
-  error?: string;
-  fieldErrors?: Partial<Record<"name" | "phone" | "email" | "message", string>>;
-};
-
-export const INITIAL_CONTACT_STATE: ContactFormState = { status: "idle" };
 
 export async function submitContactMessage(
   _prev: ContactFormState,

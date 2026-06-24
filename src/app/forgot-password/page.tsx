@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { SiteShell } from "@/components/site/SiteShell";
 import { PageHero } from "@/components/site/PageHero";
 import { ForgotPasswordForm } from "@/components/auth/ForgotPasswordForm";
@@ -20,7 +21,11 @@ export default function ForgotPasswordPage() {
       />
       <section className="px-6 md:px-10 py-12">
         <div className="max-w-md mx-auto">
-          <ForgotPasswordForm />
+          <Suspense
+            fallback={<p className="text-sm text-muted-foreground">Loading…</p>}
+          >
+            <ForgotPasswordForm />
+          </Suspense>
         </div>
       </section>
     </SiteShell>
