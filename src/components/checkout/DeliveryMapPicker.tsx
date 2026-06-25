@@ -1,7 +1,14 @@
 "use client";
 
-import { useRef } from "react";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { useEffect, useRef, useState } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  useMap,
+  useMapEvents,
+} from "react-leaflet";
+import { LocateFixed } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
@@ -57,6 +64,19 @@ function ClickCapture({ onPick }: { onPick: (loc: PickedLocation) => void }) {
   return null;
 }
 
+/** Smoothly recenters the map when `to` changes (used by "Use my location"). */
+function FlyTo({ to }: { to: PickedLocation | null }) {
+  const map = useMap();
+  const last = useRef<PickedLocation | null>(null);
+  useEffect(() => {
+    if (!to) return;
+    if (last.current?.lat === to.lat && last.current?.lng === to.lng) return;
+    last.current = to;
+    map.flyTo([to.lat, to.lng], 16);
+  }, [to, map]);
+  return null;
+}
+
 export default function DeliveryMapPicker({
   value,
   onChange,
@@ -65,6 +85,9 @@ export default function DeliveryMapPicker({
   onChange: (loc: PickedLocation, address?: string) => void;
 }) {
   const markerRef = useRef<L.Marker | null>(null);
+  const [flyTo, setFlyTo] = useState<PickedLocation | null>(null);
+  const [locating, setLocating] = useState(false);
+  const [geoError, setGeoError] = useState<string | null>(null);
 
   async function handlePick(loc: PickedLocation) {
     // Send the coordinates straight away so the pin moves without waiting on the
@@ -74,36 +97,86 @@ export default function DeliveryMapPicker({
     if (address) onChange(loc, address);
   }
 
+  function useMyLocation() {
+    setGeoError(null);
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      setGeoError("Location isn't supported on this device. Drop the pin instead.");
+      return;
+    }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setLocating(false);
+        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        setFlyTo(loc);
+        void handlePick(loc);
+      },
+      (err) => {
+        setLocating(false);
+        setGeoError(
+          err.code === err.PERMISSION_DENIED
+            ? "Location permission was blocked. Allow it in your browser, or drop the pin on the map."
+            : "Couldn't get your location. Drop the pin on the map instead.",
+        );
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
+    );
+  }
+
   const center = value ?? AJMAN_CENTER;
 
   return (
-    <MapContainer
-      center={[center.lat, center.lng]}
-      zoom={value ? 16 : 13}
-      scrollWheelZoom={false}
-      className="h-[280px] md:h-[360px] w-full border border-border"
-    >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      <ClickCapture onPick={handlePick} />
-      {value ? (
-        <Marker
-          position={[value.lat, value.lng]}
-          icon={markerIcon}
-          draggable
-          ref={markerRef}
-          eventHandlers={{
-            dragend() {
-              const m = markerRef.current;
-              if (!m) return;
-              const ll = m.getLatLng();
-              void handlePick({ lat: ll.lat, lng: ll.lng });
-            },
-          }}
-        />
-      ) : null}
-    </MapContainer>
+    <div className="space-y-2">
+      <div className="relative">
+        <MapContainer
+          center={[center.lat, center.lng]}
+          zoom={value ? 16 : 13}
+          scrollWheelZoom={false}
+          className="h-[280px] md:h-[360px] w-full border border-border"
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          <ClickCapture onPick={handlePick} />
+          <FlyTo to={flyTo} />
+          {value ? (
+            <Marker
+              position={[value.lat, value.lng]}
+              icon={markerIcon}
+              draggable
+              ref={markerRef}
+              eventHandlers={{
+                dragend() {
+                  const m = markerRef.current;
+                  if (!m) return;
+                  const ll = m.getLatLng();
+                  void handlePick({ lat: ll.lat, lng: ll.lng });
+                },
+              }}
+            />
+          ) : null}
+        </MapContainer>
+
+        <button
+          type="button"
+          onClick={useMyLocation}
+          disabled={locating}
+          className="absolute right-3 top-3 z-[1000] inline-flex items-center gap-1.5 rounded-md border border-border bg-background/95 px-3 py-2 font-display text-[11px] uppercase tracking-[0.14em] text-foreground shadow-sm backdrop-blur hover:bg-muted disabled:opacity-60"
+        >
+          <LocateFixed className="h-3.5 w-3.5" strokeWidth={1.7} aria-hidden />
+          {locating ? "Locating…" : "Use my location"}
+        </button>
+      </div>
+
+      {geoError ? (
+        <p className="text-xs text-flag-red">{geoError}</p>
+      ) : (
+        <p className="text-xs text-muted-foreground">
+          Tap “Use my location” (allow the permission), or tap/drag the pin to
+          your exact spot.
+        </p>
+      )}
+    </div>
   );
 }

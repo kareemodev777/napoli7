@@ -96,10 +96,6 @@ export function AdminSidebar({
           </button>
         </div>
 
-        <div className="mt-5 hidden px-4 md:block">
-          <NotificationBell initialCount={actionableOrders} variant="panel" />
-        </div>
-
         <div className="mt-6 flex-1 overflow-y-auto px-4 pb-2">
           <AdminNav onNavigate={() => setOpen(false)} />
         </div>

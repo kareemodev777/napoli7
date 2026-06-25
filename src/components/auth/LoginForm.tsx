@@ -171,15 +171,19 @@ export function LoginForm() {
       ) : null}
 
 
-      <p className="text-sm text-center text-muted-foreground">
-        Don&apos;t have an account?{" "}
+      <div className="border-t border-border pt-6">
         <Link
           href="/register"
-          className="text-foreground hover:underline underline-offset-4"
+          className="group flex w-full flex-col items-center gap-0.5 rounded-md border border-brand bg-card px-4 py-3 text-center transition-colors hover:bg-brand-soft"
         >
-          Register
+          <span className="font-display text-sm uppercase tracking-[0.18em] text-brand">
+            Create an account
+          </span>
+          <span className="text-xs text-muted-foreground">
+            It&apos;s quick and easy
+          </span>
         </Link>
-      </p>
+      </div>
     </div>
   );
 }

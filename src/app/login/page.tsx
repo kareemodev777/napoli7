@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import { redirect } from "next/navigation";
-import { SiteShell } from "@/components/site/SiteShell";
-import { PageHero } from "@/components/site/PageHero";
+import { AuthShell } from "@/components/auth/AuthShell";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { getCurrentUser } from "@/lib/auth/require-auth";
 import { isAdminUser, isAdminPath } from "@/lib/auth/roles";
@@ -31,17 +30,15 @@ export default async function LoginPage({
   }
 
   return (
-    <SiteShell>
-      <PageHero eyebrow="Account" heading="Log in" intro="Welcome back." />
-      <section className="px-6 md:px-10 py-12">
-        <div className="max-w-md mx-auto">
-          <Suspense
-            fallback={<p className="text-sm text-muted-foreground">Loading…</p>}
-          >
-            <LoginForm />
-          </Suspense>
-        </div>
-      </section>
-    </SiteShell>
+    <AuthShell
+      heading="Log in"
+      intro="Welcome back. Sign in to track orders and save your addresses."
+    >
+      <Suspense
+        fallback={<p className="text-sm text-muted-foreground">Loading…</p>}
+      >
+        <LoginForm />
+      </Suspense>
+    </AuthShell>
   );
 }
