@@ -41,6 +41,7 @@ export default async function AdminSiteImagesPage() {
               label={field.label}
               description={field.description}
               aspect={field.aspect}
+              recommended={field.recommended}
               current={images[field.key]}
             />
           ))}

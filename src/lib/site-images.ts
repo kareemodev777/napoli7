@@ -47,48 +47,63 @@ export const SITE_IMAGE_DEFAULTS: SiteImageMap = {
   },
 };
 
+/** Hard upload limit (server-enforced). Files are compressed client-side well
+ *  below this; it's the backstop for the rare case compression is skipped. */
+export const SITE_IMAGE_MAX_MB = 5;
+
+/** Target longest edge after client-side resize, for fast-loading pages. */
+export const SITE_IMAGE_MAX_WIDTH = 1920;
+
 /** Admin-facing labels/descriptions for each editable image. */
 export const SITE_IMAGE_FIELDS: Array<{
   key: SiteImageKey;
   label: string;
   description: string;
   aspect: string;
+  /** Recommended pixel dimensions shown as an admin hint. */
+  recommended: string;
 }> = [
   {
     key: "home_hero",
     label: "Home hero",
     description: "Large banner at the top of the home page.",
     aspect: "16 / 9",
+    recommended: "1920 × 1080 px",
   },
   {
     key: "home_family",
     label: 'Home — Deal',
     description: "Image beside the free-pizza / sign-up section.",
     aspect: "16 / 9",
+    recommended: "1280 × 720 px",
   },
   {
     key: "home_tradition",
     label: "Home — Neapolitan tradition",
     description: "Image beside the ingredients / oven section.",
     aspect: "16 / 9",
+    recommended: "1280 × 720 px",
   },
   {
     key: "home_philosophy",
     label: "Home — Our philosophy",
     description: "Image beside the philosophy section.",
     aspect: "16 / 9",
+    recommended: "1280 × 720 px",
   },
   {
     key: "about_cultures",
     label: "About — Where cultures meet",
     description: "Banner on the About page.",
     aspect: "3 / 2",
+    recommended: "1500 × 1000 px",
   },
   {
     key: "about_story",
     label: "About — Our Story",
     description: "Image beside the Our Story section on the About page.",
     aspect: "3 / 2",
+    recommended: "1500 × 1000 px",
   },
 ];
 

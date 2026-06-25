@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { createServiceRoleClient } from "@/lib/supabase/service";
-import { SITE_IMAGE_KEYS, type SiteImageKey } from "@/lib/site-images";
+import {
+  SITE_IMAGE_KEYS,
+  SITE_IMAGE_MAX_MB,
+  type SiteImageKey,
+} from "@/lib/site-images";
 
 export interface SiteImageActionResult {
   error?: string;
@@ -11,7 +15,7 @@ export interface SiteImageActionResult {
 }
 
 const BUCKET = "catalog-images";
-const MAX_BYTES = 5 * 1024 * 1024;
+const MAX_BYTES = SITE_IMAGE_MAX_MB * 1024 * 1024;
 
 function extensionFor(file: File) {
   const fromName = file.name.split(".").pop()?.toLowerCase();
@@ -53,7 +57,7 @@ export async function updateSiteImage(
       return { error: "Upload an image file (JPG, PNG, WebP, or GIF)." };
     }
     if (file.size > MAX_BYTES) {
-      return { error: "Image must be smaller than 5 MB." };
+      return { error: `Image must be smaller than ${SITE_IMAGE_MAX_MB} MB.` };
     }
 
     const supabase = createServiceRoleClient();

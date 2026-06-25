@@ -39,6 +39,15 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns,
   },
+  experimental: {
+    serverActions: {
+      // Admin image uploads go through a Server Action. Next caps the action
+      // request body at 1MB by default, so a >1MB image fails with a 502 before
+      // our own 5MB check runs. Raise it to 8MB (5MB image + multipart/base64
+      // overhead) so the action's validation is the real boundary.
+      bodySizeLimit: "8mb",
+    },
+  },
   turbopack: {
     // Keep Turbopack scoped to this app even though /Users/kareemo/Projects has
     // its own package-lock.json. Without this, Next.js may infer the parent
