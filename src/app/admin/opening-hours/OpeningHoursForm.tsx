@@ -4,6 +4,12 @@ import { useActionState, useState } from "react";
 import { useFormStatus } from "react-dom";
 import type { OrderingDay } from "@/lib/ordering-hours";
 import {
+  defaultTimeSelection,
+  TIME_HOUR_OPTIONS,
+  TIME_MERIDIEM_OPTIONS,
+  TIME_MINUTE_OPTIONS,
+} from "./time-input";
+import {
   upsertOpeningHours,
   type OpeningHoursFormState,
 } from "./actions";
@@ -20,6 +26,9 @@ const NOTE_PRESETS = [
   "Closed for a private event",
 ] as const;
 
+const TIME_SELECT_CLASS =
+  "w-full border border-border bg-background px-3 py-2.5 text-sm font-display tracking-[0.08em] uppercase focus:outline-none focus:border-brand disabled:opacity-50";
+
 function SubmitButton() {
   const { pending } = useFormStatus();
   return (
@@ -30,6 +39,81 @@ function SubmitButton() {
     >
       {pending ? "Saving…" : "Save changes"}
     </button>
+  );
+}
+
+function TimePickerField({
+  label,
+  name,
+  defaultValue,
+  disabled,
+}: {
+  label: string;
+  name: string;
+  defaultValue: string | null | undefined;
+  disabled: boolean;
+}) {
+  const selection = defaultTimeSelection(defaultValue);
+
+  return (
+    <fieldset className="space-y-2 text-sm">
+      <legend className="block text-muted-foreground">{label}</legend>
+      <div className="grid grid-cols-3 gap-2">
+        <label className="sr-only" htmlFor={`${name}_hour`}>
+          {label} hour
+        </label>
+        <select
+          id={`${name}_hour`}
+          name={`${name}_hour`}
+          defaultValue={selection.hour}
+          disabled={disabled}
+          aria-label={`${label} hour`}
+          className={TIME_SELECT_CLASS}
+        >
+          {TIME_HOUR_OPTIONS.map((hour) => (
+            <option key={hour} value={hour}>
+              {hour}
+            </option>
+          ))}
+        </select>
+
+        <label className="sr-only" htmlFor={`${name}_minute`}>
+          {label} minute
+        </label>
+        <select
+          id={`${name}_minute`}
+          name={`${name}_minute`}
+          defaultValue={selection.minute}
+          disabled={disabled}
+          aria-label={`${label} minute`}
+          className={TIME_SELECT_CLASS}
+        >
+          {TIME_MINUTE_OPTIONS.map((minute) => (
+            <option key={minute} value={minute}>
+              {minute}
+            </option>
+          ))}
+        </select>
+
+        <label className="sr-only" htmlFor={`${name}_meridiem`}>
+          {label} AM/PM
+        </label>
+        <select
+          id={`${name}_meridiem`}
+          name={`${name}_meridiem`}
+          defaultValue={selection.meridiem}
+          disabled={disabled}
+          aria-label={`${label} AM/PM`}
+          className={TIME_SELECT_CLASS}
+        >
+          {TIME_MERIDIEM_OPTIONS.map((meridiem) => (
+            <option key={meridiem} value={meridiem}>
+              {meridiem}
+            </option>
+          ))}
+        </select>
+      </div>
+    </fieldset>
   );
 }
 
@@ -52,26 +136,18 @@ function OpeningHoursFormFields({ day }: { day: OrderingDay }) {
       </label>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="space-y-2 text-sm">
-          <span className="block text-muted-foreground">Opens at</span>
-          <input
-            type="time"
-            name="opens_at"
-            defaultValue={day.opensAt ?? ""}
-            disabled={isClosed}
-            className="w-full border border-border bg-background px-3 py-2.5 disabled:opacity-50"
-          />
-        </label>
-        <label className="space-y-2 text-sm">
-          <span className="block text-muted-foreground">Closes at</span>
-          <input
-            type="time"
-            name="closes_at"
-            defaultValue={day.closesAt ?? ""}
-            disabled={isClosed}
-            className="w-full border border-border bg-background px-3 py-2.5 disabled:opacity-50"
-          />
-        </label>
+        <TimePickerField
+          label="Opens at"
+          name="opens_at"
+          defaultValue={day.opensAt}
+          disabled={isClosed}
+        />
+        <TimePickerField
+          label="Closes at"
+          name="closes_at"
+          defaultValue={day.closesAt}
+          disabled={isClosed}
+        />
       </div>
 
       <label className="space-y-2 text-sm block">

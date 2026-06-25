@@ -4,6 +4,7 @@ import { revalidatePath, refresh } from "next/cache";
 import { z } from "zod";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { createServiceRoleClient } from "@/lib/supabase/service";
+import { readTimeValue } from "./time-input";
 
 const openingHoursSchema = z.object({
   day_of_week: z.coerce.number().int().min(0).max(6),
@@ -13,8 +14,6 @@ const openingHoursSchema = z.object({
   is_closed: z
     .preprocess((value) => value === "on" || value === "true" || value === true, z.boolean())
     .default(false),
-  opens_at: z.string().max(5).optional().or(z.literal("")),
-  closes_at: z.string().max(5).optional().or(z.literal("")),
   note: z.string().max(200).optional().or(z.literal("")),
 });
 
@@ -52,8 +51,8 @@ export async function upsertOpeningHours(
   }
 
   const { day_of_week, is_closed } = parsed.data;
-  const opens_at = is_closed ? null : (parsed.data.opens_at || null);
-  const closes_at = is_closed ? null : (parsed.data.closes_at || null);
+  const opens_at = is_closed ? null : readTimeValue(formData, "opens_at");
+  const closes_at = is_closed ? null : readTimeValue(formData, "closes_at");
   const note = parsed.data.note?.trim() || null;
 
   if (!is_closed && (!opens_at || !closes_at)) {
