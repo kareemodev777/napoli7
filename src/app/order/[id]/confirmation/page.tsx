@@ -52,35 +52,41 @@ async function loadOrder(id: string): Promise<OrderForConfirmation | null> {
       items: [],
     };
   }
-  const supabase = await createClient();
-  const { data: order } = await supabase
-    .from("orders")
-    .select(
-      "id, order_number, total_aed, payment_method, payment_status, delivery_type, customer_phone, order_items(product_name, quantity, line_total_aed)",
-    )
-    .eq("id", id)
-    .maybeSingle();
-  if (!order) return null;
-  return {
-    id: order.id,
-    orderNumber: order.order_number,
-    totalAed: Number(order.total_aed),
-    paymentMethod: order.payment_method,
-    paymentStatus: order.payment_status,
-    deliveryType: order.delivery_type,
-    customerPhone: order.customer_phone,
-    items: (order.order_items ?? []).map(
-      (it: {
-        product_name: string;
-        quantity: number;
-        line_total_aed: number | string;
-      }) => ({
-        name: it.product_name,
-        quantity: it.quantity,
-        lineTotal: Number(it.line_total_aed),
-      }),
-    ),
-  };
+  try {
+    const supabase = await createClient();
+    const { data: order } = await supabase
+      .from("orders")
+      .select(
+        "id, order_number, total_aed, payment_method, payment_status, delivery_type, customer_phone, order_items(product_name, quantity, line_total_aed)",
+      )
+      .eq("id", id)
+      .maybeSingle();
+    if (!order) return null;
+    return {
+      id: order.id,
+      orderNumber: order.order_number,
+      totalAed: Number(order.total_aed),
+      paymentMethod: order.payment_method,
+      paymentStatus: order.payment_status,
+      deliveryType: order.delivery_type,
+      customerPhone: order.customer_phone,
+      items: (order.order_items ?? []).map(
+        (it: {
+          product_name: string;
+          quantity: number;
+          line_total_aed: number | string;
+        }) => ({
+          name: it.product_name,
+          quantity: it.quantity,
+          lineTotal: Number(it.line_total_aed),
+        }),
+      ),
+    };
+  } catch (e) {
+    // A transient DB/network error must not crash the page right after payment.
+    console.error("[confirmation] loadOrder failed for", id, e);
+    return null;
+  }
 }
 
 type PaymentView = {

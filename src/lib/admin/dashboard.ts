@@ -169,12 +169,10 @@ function buildWindow(range: DashboardRange, now: Date): Window {
         orders: 0,
       });
     }
-    const first = out[0].key.split("-").map(Number);
-    const currentStart = dayStartUtc(first[0], first[1], 1);
+    const [firstY, firstM] = out[0].key.split("-").map(Number);
+    const currentStart = dayStartUtc(firstY, firstM, 1);
     // Previous period = the 12 months before the first bucket.
-    let py = first[0] - 1;
-    const prevStart = dayStartUtc(py, first[1], 1);
-    void py;
+    const prevStart = dayStartUtc(firstY - 1, firstM, 1);
     return { currentStart, prevStart, granularity, buckets: out };
   }
 
