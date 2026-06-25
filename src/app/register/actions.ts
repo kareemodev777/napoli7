@@ -57,8 +57,6 @@ export interface RegisterResult {
   reward?: SignupReward;
 }
 
-export type { SignupReward };
-
 /** Validate identity + anti-abuse, then bail with a clear reason if blocked. */
 async function screenIdentity(
   data: RegisterInput,

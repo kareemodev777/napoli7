@@ -11,8 +11,8 @@ import {
   sendRegistrationOtp,
   verifyAndRegister,
   registerDirect,
-  type SignupReward,
 } from "@/app/register/actions";
+import type { SignupReward } from "@/lib/signup-reward";
 
 type Step = "details" | "code" | "done";
 

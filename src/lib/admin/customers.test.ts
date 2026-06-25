@@ -6,12 +6,20 @@ import {
   type OrderForCustomer,
 } from "./customers";
 
+let seq = 0;
 function order(partial: Partial<OrderForCustomer>): OrderForCustomer {
+  seq += 1;
   return {
+    id: `order-${seq}`,
+    order_number: `N7-${String(seq).padStart(5, "0")}`,
+    user_id: null,
     customer_name: "Guest",
     customer_email: null,
     customer_phone: null,
     total_aed: 0,
+    status: "received",
+    payment_method: "cod",
+    payment_status: "unpaid",
     created_at: "2026-01-01T00:00:00.000Z",
     ...partial,
   };
@@ -59,6 +67,9 @@ describe("deriveCustomers", () => {
     expect(c.phone).toBe("+971500000002");
     expect(c.firstOrderAt).toBe("2026-02-01T10:00:00.000Z");
     expect(c.lastOrderAt).toBe("2026-03-01T10:00:00.000Z");
+    // Orders are attached newest first for the detail view.
+    expect(c.orders).toHaveLength(2);
+    expect(c.orders[0].createdAt).toBe("2026-03-01T10:00:00.000Z");
   });
 
   test("falls back to phone when an order has no email", () => {
@@ -83,5 +94,26 @@ describe("deriveCustomers", () => {
       order({ customer_email: "new@x.com", created_at: "2026-05-01T00:00:00.000Z" }),
     ]);
     expect(customers.map((c) => c.email)).toEqual(["new@x.com", "old@x.com"]);
+  });
+
+  test("flags guest vs registered", () => {
+    // Guest: all orders user_id null and email not in the registered set.
+    const guest = deriveCustomers([
+      order({ customer_email: "guest@x.com", user_id: null }),
+    ]);
+    expect(guest[0].isRegistered).toBe(false);
+
+    // Registered via a signed-in order.
+    const signedIn = deriveCustomers([
+      order({ customer_email: "member@x.com", user_id: "u-1" }),
+    ]);
+    expect(signedIn[0].isRegistered).toBe(true);
+
+    // Registered via a known auth email, even when all orders are guest.
+    const knownEmail = deriveCustomers(
+      [order({ customer_email: "Known@x.com", user_id: null })],
+      new Set(["known@x.com"]),
+    );
+    expect(knownEmail[0].isRegistered).toBe(true);
   });
 });

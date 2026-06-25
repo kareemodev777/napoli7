@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { HAS_SUPABASE_SERVICE } from "@/lib/env";
 import { createServiceRoleClient } from "@/lib/supabase/service";
+import { ResendEmailCell } from "@/components/admin/ResendEmailCell";
 
 export const metadata: Metadata = {
   title: "Messages · Admin",
@@ -100,7 +101,11 @@ export default async function AdminMessagesPage() {
                     </p>
                   </td>
                   <td className="py-4 pr-4">
-                    <SentTag sent={m.emailSent} error={m.emailError} />
+                    <ResendEmailCell
+                      messageId={m.id}
+                      sent={m.emailSent}
+                      error={m.emailError}
+                    />
                   </td>
                 </tr>
               ))}
@@ -109,28 +114,5 @@ export default async function AdminMessagesPage() {
         </div>
       </div>
     </section>
-  );
-}
-
-/** Whether the email notification for a stored message was delivered. */
-function SentTag({ sent, error }: { sent: boolean; error: string | null }) {
-  return (
-    <div className="space-y-1">
-      <span
-        className={
-          "inline-flex items-center whitespace-nowrap px-2.5 py-1 font-display text-[10px] tracking-[0.16em] uppercase " +
-          (sent
-            ? "bg-flag-green/15 text-flag-green"
-            : "bg-flag-red/10 text-flag-red")
-        }
-      >
-        {sent ? "Sent" : "Not sent"}
-      </span>
-      {!sent && error ? (
-        <p className="max-w-[200px] text-[11px] leading-4 text-muted-foreground">
-          {error}
-        </p>
-      ) : null}
-    </div>
   );
 }

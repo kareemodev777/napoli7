@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Bell } from "lucide-react";
+import { Bell, ChevronRight } from "lucide-react";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import { playAlarm, unlockAlarm } from "./alarm";
 
@@ -19,14 +19,8 @@ const SUPABASE_CONFIGURED = Boolean(
 // already-subscribed channel (which throws on a second `.on()`).
 let channelSeq = 0;
 
-/**
- * Admin notification bell, driven by Supabase Realtime (Postgres Changes on the
- * `orders` table). When an order is inserted or updated it re-reads the
- * admin-gated actionable count: a higher count means a new paid/COD order, so it
- * chimes + pulses, and refreshes the current route so the orders table updates
- * live. A slow poll + tab-focus check back it up if the socket drops.
- */
-export function NotificationBell({ initialCount }: { initialCount: number }) {
+/** Shared realtime state: the live count + a brief pulse on a fresh order. */
+function useActionableOrders(initialCount: number) {
   const [count, setCount] = useState(initialCount);
   const [pulse, setPulse] = useState(false);
   const prevCount = useRef(initialCount);
@@ -88,10 +82,84 @@ export function NotificationBell({ initialCount }: { initialCount: number }) {
     };
   }, []);
 
-  const label =
-    count > 0
-      ? `${count} order${count === 1 ? "" : "s"} to treat`
-      : "No orders waiting";
+  return { count, pulse };
+}
+
+function statusLabel(count: number) {
+  return count > 0
+    ? `${count} order${count === 1 ? "" : "s"} to treat`
+    : "No orders waiting";
+}
+
+/**
+ * Admin notification surface, driven by Supabase Realtime (Postgres Changes on
+ * the `orders` table). A new paid/COD order raises the actionable count, which
+ * chimes + flashes and refreshes the queue.
+ *
+ * `panel` renders a full-width status pill for the wide sidebar; `compact`
+ * renders the icon button for the mobile top bar.
+ */
+export function NotificationBell({
+  initialCount,
+  variant = "compact",
+}: {
+  initialCount: number;
+  variant?: "compact" | "panel";
+}) {
+  const { count, pulse } = useActionableOrders(initialCount);
+  const waiting = count > 0;
+  const label = statusLabel(count);
+
+  if (variant === "panel") {
+    return (
+      <Link
+        href="/admin/orders"
+        aria-label={label}
+        className={`group flex items-center gap-3 rounded-md border px-3 py-2.5 transition-colors ${
+          waiting
+            ? "border-brand/30 bg-brand-soft hover:bg-brand-soft/70"
+            : "border-border bg-card hover:bg-muted/60"
+        }`}
+      >
+        <span className="relative inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md">
+          {waiting ? (
+            <span
+              aria-hidden
+              className={`absolute inset-0 rounded-md ${
+                pulse ? "animate-ping bg-flag-red/40" : ""
+              }`}
+            />
+          ) : null}
+          <span
+            className={`relative inline-flex h-9 w-9 items-center justify-center rounded-md ${
+              waiting
+                ? "bg-brand text-primary-foreground"
+                : "bg-muted text-muted-foreground"
+            }`}
+          >
+            <Bell className="h-4 w-4" strokeWidth={1.8} aria-hidden />
+          </span>
+        </span>
+        <span className="min-w-0 flex-1">
+          <span
+            className={`block font-display text-sm uppercase tracking-[0.08em] tabular-nums ${
+              waiting ? "text-brand-deep" : "text-foreground"
+            }`}
+          >
+            {waiting ? `${count} to treat` : "All caught up"}
+          </span>
+          <span className="mt-0.5 block text-[11px] leading-4 text-muted-foreground">
+            {waiting ? "Open the kitchen queue" : "No orders waiting"}
+          </span>
+        </span>
+        <ChevronRight
+          className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5"
+          strokeWidth={1.7}
+          aria-hidden
+        />
+      </Link>
+    );
+  }
 
   return (
     <Link
@@ -100,12 +168,18 @@ export function NotificationBell({ initialCount }: { initialCount: number }) {
       title={label}
       className="relative inline-flex h-10 w-10 items-center justify-center rounded-md border border-border bg-background text-foreground hover:bg-muted"
     >
+      {waiting && pulse ? (
+        <span
+          aria-hidden
+          className="absolute inset-0 rounded-md bg-flag-red/30 animate-ping"
+        />
+      ) : null}
       <Bell
-        className={`h-4 w-4 ${pulse ? "animate-pulse text-brand" : ""}`}
+        className={`relative h-4 w-4 ${pulse ? "text-brand" : ""}`}
         strokeWidth={1.7}
         aria-hidden
       />
-      {count > 0 ? (
+      {waiting ? (
         <span className="absolute -right-1.5 -top-1.5 inline-flex min-w-[18px] items-center justify-center rounded-full bg-brand px-1 text-[10px] font-display leading-[18px] tabular-nums text-primary-foreground">
           {count > 99 ? "99+" : count}
         </span>
