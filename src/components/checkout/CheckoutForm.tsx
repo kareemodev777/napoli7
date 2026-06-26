@@ -28,6 +28,7 @@ import { useCart } from "@/store/cart";
 import { useMounted } from "@/lib/use-mounted";
 import { placeOrder, type PlaceOrderInput } from "@/app/checkout/actions";
 import { formatAed } from "@/components/catalog/PriceBadge";
+import { PromoField } from "@/components/cart/PromoField";
 import {
   getDeliveryOrderTotalAed,
   meetsDeliveryMinimumAed,
@@ -738,6 +739,12 @@ export function CheckoutForm({
             pickup.
           </p>
         ) : null}
+        <div className="mt-4">
+          <p className="font-display text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-2">
+            Promo code
+          </p>
+          <PromoField />
+        </div>
         <div className="mt-4 border-t border-border pt-3 flex items-baseline justify-between">
           <span className="font-display text-xs tracking-[0.25em] uppercase">
             Total
