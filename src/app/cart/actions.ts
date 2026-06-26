@@ -2,6 +2,8 @@
 
 import { z } from "zod";
 import { validatePromo, type PromoResult } from "@/lib/promo";
+import { createClient } from "@/lib/supabase/server";
+import { HAS_SUPABASE } from "@/lib/env";
 
 const schema = z.object({
   code: z.string().min(1).max(40),
@@ -10,7 +12,9 @@ const schema = z.object({
 
 /**
  * Server Action: validate a promo code against the current cart subtotal.
- * Returns `{ code, amount }` on success or `{ error }` for display.
+ * Returns `{ code, amount }` on success or `{ error }` for display. The signed-in
+ * account is passed so personal reward (free-pizza) codes can be gated to their
+ * owner — a guest or the wrong account is rejected early.
  */
 export async function validatePromoCode(
   code: string,
@@ -18,5 +22,19 @@ export async function validatePromoCode(
 ): Promise<PromoResult> {
   const parsed = schema.safeParse({ code, subtotal });
   if (!parsed.success) return { error: "Enter a valid promo code." };
-  return validatePromo(parsed.data.code, parsed.data.subtotal);
+
+  let identity: { userId?: string | null; email?: string | null } | undefined;
+  if (HAS_SUPABASE) {
+    try {
+      const supabase = await createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      identity = { userId: user?.id ?? null, email: user?.email ?? null };
+    } catch {
+      // Treat as a guest if the session can't be read.
+    }
+  }
+
+  return validatePromo(parsed.data.code, parsed.data.subtotal, identity);
 }

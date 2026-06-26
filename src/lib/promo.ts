@@ -125,16 +125,64 @@ async function lookupPromo(code: string): Promise<PromoRow | null> {
   };
 }
 
+/** The signed-in customer, used to gate personal (free-pizza) reward codes. */
+export interface PromoIdentity {
+  userId?: string | null;
+  /** The AUTHENTICATED account email (not a typed order email — can't be spoofed). */
+  email?: string | null;
+}
+
+/**
+ * Personal reward codes (the auto-generated signup free-pizza codes) are bound
+ * to the account that claimed them — recorded in free_pizza_claims. They must NOT be
+ * redeemable by anyone who merely has the string. Returns an error PromoResult
+ * when the code is personal and the identity doesn't own it; null otherwise
+ * (general codes, or owned personal codes).
+ */
+async function checkPromoOwnership(
+  code: string,
+  identity: PromoIdentity | undefined,
+): Promise<PromoResult | null> {
+  if (!HAS_SUPABASE_SERVICE) return null; // mock/dev: no claims table
+
+  const supabase = createServiceRoleClient();
+  const { data: claim } = await supabase
+    .from("free_pizza_claims")
+    .select("user_id, email_norm")
+    .eq("code", code)
+    .maybeSingle();
+
+  // Not a personal reward code → a general promo anyone may use.
+  if (!claim) return null;
+
+  const userId = identity?.userId ?? null;
+  const email = (identity?.email ?? "").trim().toLowerCase();
+  const owns =
+    (!!userId && !!claim.user_id && userId === claim.user_id) ||
+    (!!email && !!claim.email_norm && email === claim.email_norm);
+
+  if (owns) return null;
+  return {
+    error:
+      "This reward code belongs to a specific account. Sign in to that account to use it.",
+  };
+}
+
 /** Validate a code against a subtotal. Shared by the cart action and placeOrder. */
 export async function validatePromo(
   code: string,
   subtotal: number,
+  identity?: PromoIdentity,
 ): Promise<PromoResult> {
   const normalized = normalizeCode(code);
   if (!normalized) return { error: "Enter a promo code." };
 
   const row = await lookupPromo(normalized);
   if (!row) return { error: "That promo code isn't valid." };
+
+  // Personal reward codes may only be used by the account that claimed them.
+  const ownership = await checkPromoOwnership(normalized, identity);
+  if (ownership) return ownership;
 
   return computeDiscount(row, subtotal);
 }

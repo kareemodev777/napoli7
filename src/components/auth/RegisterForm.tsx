@@ -118,8 +118,9 @@ export function RegisterForm({ otpEnabled = true }: { otpEnabled?: boolean }) {
             {reward.code}
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
-            Apply this code in the cart on your first order. It works once and is
-            tied to your account — we&rsquo;ve also emailed it to you.
+            Stay signed in and apply this code at checkout on your first order. It
+            works once and is tied to your account — we&rsquo;ve also emailed it
+            to you.
           </p>
         </div>
         <button

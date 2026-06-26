@@ -181,17 +181,39 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     subtotal = canonical.subtotalAed;
   }
 
-  // Re-validate the promo server-side — never trust a client-sent amount.
+  // Re-validate the promo server-side — never trust a client-sent amount, and
+  // gate personal reward (free-pizza) codes to the signed-in account that
+  // claimed them so a leaked code can't be redeemed by anyone else.
   let discount = 0;
   let appliedPromo: string | undefined;
   if (data.promoCode) {
-    const promoResult = await validatePromo(data.promoCode, subtotal);
+    let promoIdentity:
+      | { userId?: string | null; email?: string | null }
+      | undefined;
+    if (HAS_SUPABASE) {
+      try {
+        const authClient = await createClient();
+        const {
+          data: { user: authUser },
+        } = await authClient.auth.getUser();
+        promoIdentity = {
+          userId: authUser?.id ?? null,
+          email: authUser?.email ?? null,
+        };
+      } catch {
+        // Treat as a guest if the session can't be read.
+      }
+    }
+    const promoResult = await validatePromo(
+      data.promoCode,
+      subtotal,
+      promoIdentity,
+    );
     if (promoResult.code && promoResult.amount) {
       discount = promoResult.amount;
       appliedPromo = promoResult.code;
     }
-    // An invalid/expired code at submit time is ignored (no discount applied);
-    // the cart UI already validated, so this only catches edge races.
+    // An invalid/expired/unowned code at submit time is ignored (no discount).
   }
 
   const deliveryMinSubtotalAed = await getDeliveryMinimumSubtotalAed();

@@ -324,16 +324,16 @@ export async function notifyFreePizzaRewardEmail(input: {
   const intro = `Welcome to Napoli 7, ${input.firstName}. You're claimant #${input.claimNumber} of our free-pizza launch.`;
   const body = `${intro}
 
-Use this code at checkout to get a free ${input.rewardName}:
+Sign in to your Napoli 7 account, then apply this code at checkout to get a free ${input.rewardName}:
 
   ${input.code}
 
-It's valid once, on your account. Buon appetito!`;
+It works once and is tied to your account, so make sure you're signed in when you order. Buon appetito!`;
   const html = brandEmailHtml({
     eyebrow: "Welcome gift",
     heading: `A free ${input.rewardName} on us`,
     intro,
-    children: `<p style="margin:0 0 18px;color:#d8c7b5;font-size:15px;line-height:1.6;">Apply this code in the cart to take a free <strong style="color:#fff7ed;">${escapeHtml(input.rewardName)}</strong> off your order. It works once, and it's tied to your account.</p>
+    children: `<p style="margin:0 0 18px;color:#d8c7b5;font-size:15px;line-height:1.6;"><strong style="color:#fff7ed;">Sign in to your account</strong>, then apply this code at checkout to take a free <strong style="color:#fff7ed;">${escapeHtml(input.rewardName)}</strong> off your order. It works once and is tied to your account.</p>
     <div style="margin:0 0 18px;padding:18px;background:#120f0d;border:1px dashed #d8b27c;border-radius:16px;text-align:center;">
       <div style="font-size:12px;letter-spacing:0.24em;text-transform:uppercase;color:#9f8f82;">Your code</div>
       <div style="margin-top:8px;font-family:'Courier New',monospace;font-size:26px;letter-spacing:0.12em;color:#f2c98b;">${escapeHtml(input.code)}</div>
