@@ -52,3 +52,16 @@ export async function resendContactEmail(
     ? { sent: true }
     : { sent: false, error: result.reason ?? "Send failed." };
 }
+
+/** Mark a single contact message as read (clears it from the unread badge). */
+export async function markMessageRead(messageId: string): Promise<void> {
+  await requireAdmin();
+  if (!HAS_SUPABASE_SERVICE) return;
+  const supabase = createServiceRoleClient();
+  await supabase
+    .from("contact_messages")
+    .update({ read_at: new Date().toISOString() })
+    .eq("id", messageId)
+    .is("read_at", null);
+  revalidatePath("/admin/messages");
+}

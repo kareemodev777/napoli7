@@ -71,10 +71,13 @@ export function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
   const { snapshot } = useAdminNotifications();
 
-  // Live badge counts for the operational nav items.
+  // Live badge counts for the operational nav items. Unread contact messages
+  // surface on both Messages and Customers (they come from customers).
   const badgeFor = (href: string): number => {
     if (href === "/admin/orders") return snapshot.orders;
-    if (href === "/admin/messages") return snapshot.messages;
+    if (href === "/admin/messages" || href === "/admin/customers") {
+      return snapshot.messages;
+    }
     return 0;
   };
 

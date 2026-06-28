@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { HAS_SUPABASE_SERVICE } from "@/lib/env";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { ResendEmailCell } from "@/components/admin/ResendEmailCell";
-import { markAllMessagesRead } from "@/lib/admin/notifications";
+import { MessageReadCell } from "@/components/admin/MessageReadCell";
 
 export const metadata: Metadata = {
   title: "Messages · Admin",
@@ -21,6 +21,7 @@ interface ContactMessageRow {
   emailSent: boolean;
   emailError: string | null;
   createdAt: string;
+  read: boolean;
 }
 
 async function loadMessages(): Promise<ContactMessageRow[]> {
@@ -28,7 +29,7 @@ async function loadMessages(): Promise<ContactMessageRow[]> {
   const supabase = createServiceRoleClient();
   const { data } = await supabase
     .from("contact_messages")
-    .select("id, name, phone, email, message, email_sent, email_error, created_at")
+    .select("id, name, phone, email, message, email_sent, email_error, created_at, read_at")
     .order("created_at", { ascending: false })
     .limit(200);
   return (data ?? []).map((row) => ({
@@ -40,6 +41,7 @@ async function loadMessages(): Promise<ContactMessageRow[]> {
     emailSent: row.email_sent,
     emailError: row.email_error,
     createdAt: row.created_at,
+    read: row.read_at != null,
   }));
 }
 
@@ -52,8 +54,7 @@ const DATE_FMT = new Intl.DateTimeFormat("en-GB", {
 
 export default async function AdminMessagesPage() {
   const messages = await loadMessages();
-  // Opening the inbox clears the unread badge.
-  await markAllMessagesRead();
+  const unread = messages.filter((m) => !m.read).length;
 
   return (
     <section className="px-6 md:px-10 py-12">
@@ -64,13 +65,14 @@ export default async function AdminMessagesPage() {
         <p className="mt-3 text-sm text-muted-foreground">
           {messages.length === 0
             ? "No messages yet."
-            : `${messages.length} messages, newest first. “Email” shows whether the notification email was delivered.`}
+            : `${messages.length} messages${unread > 0 ? ` · ${unread} unread` : ""}, newest first. Click “New” to mark a message read.`}
         </p>
 
         <div className="mt-10 overflow-x-auto">
           <table className="w-full text-sm border-t border-border">
             <thead>
               <tr className="text-left font-display text-[10px] tracking-[0.25em] uppercase text-muted-foreground">
+                <th className="py-3 pr-4">Status</th>
                 <th className="py-3 pr-4">When</th>
                 <th className="py-3 pr-4">From</th>
                 <th className="py-3 pr-4">Message</th>
@@ -79,7 +81,15 @@ export default async function AdminMessagesPage() {
             </thead>
             <tbody>
               {messages.map((m) => (
-                <tr key={m.id} className="border-t border-border align-top">
+                <tr
+                  key={m.id}
+                  className={`border-t border-border align-top ${
+                    m.read ? "" : "bg-brand-soft/30"
+                  }`}
+                >
+                  <td className="py-4 pr-4">
+                    <MessageReadCell messageId={m.id} read={m.read} />
+                  </td>
                   <td className="py-4 pr-4 whitespace-nowrap text-xs text-muted-foreground">
                     {DATE_FMT.format(new Date(m.createdAt))}
                   </td>

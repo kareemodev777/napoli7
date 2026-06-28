@@ -90,16 +90,3 @@ export async function getAdminNotificationSnapshot(): Promise<AdminNotificationS
     })),
   };
 }
-
-/** Mark every unread contact message as read (the admin opened the inbox). */
-export async function markAllMessagesRead(): Promise<void> {
-  if (!HAS_SUPABASE_SERVICE) return;
-  const supabase = createServiceRoleClient();
-  const { error } = await supabase
-    .from("contact_messages")
-    .update({ read_at: new Date().toISOString() })
-    .is("read_at", null);
-  if (error) {
-    console.error("[admin/notifications] mark messages read failed:", error);
-  }
-}
