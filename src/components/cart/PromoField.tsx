@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useRef, useState, useTransition } from "react";
 import { useCart } from "@/store/cart";
 import { validatePromoCode } from "@/app/cart/actions";
 
@@ -23,6 +23,42 @@ export function PromoField() {
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  // A promo persists in localStorage (Zustand persist), so it can outlive its
+  // validity — the code may have been used, expired, removed, or no longer met
+  // (e.g. the DB was reset). Re-check a persisted promo once the cart has a
+  // subtotal and drop it if it's no longer valid, so a phantom "applied" chip
+  // and discount never linger.
+  const checkedCodeRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!promo || subtotal <= 0) return;
+    if (checkedCodeRef.current === promo.code) return;
+    checkedCodeRef.current = promo.code;
+    let cancelled = false;
+    validatePromoCode(promo.code, subtotal)
+      .then((result) => {
+        if (cancelled) return;
+        if (result.error || !result.code || result.amount == null) {
+          clearPromo();
+        } else if (
+          result.amount !== promo.amount ||
+          Boolean(result.isReward) !== Boolean(promo.isReward)
+        ) {
+          setPromo({
+            code: result.code,
+            amount: result.amount,
+            isReward: result.isReward,
+          });
+        }
+      })
+      .catch(() => {
+        // Transient failure — allow a retry instead of dropping a valid promo.
+        checkedCodeRef.current = null;
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [promo, subtotal, clearPromo, setPromo]);
 
   function apply() {
     setError(null);
