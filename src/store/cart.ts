@@ -26,6 +26,8 @@ export interface CartItem extends CartItemInput {
 export interface AppliedPromo {
   code: string;
   amount: number;
+  /** True for the signup free-pizza reward — drives the pickup-only rule. */
+  isReward?: boolean;
 }
 
 interface CartState {

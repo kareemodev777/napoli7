@@ -11,6 +11,7 @@ export interface PromoRow {
   max_uses: number | null;
   times_used: number;
   active: boolean;
+  auto_generated: boolean;
 }
 
 export interface PromoResult {
@@ -18,6 +19,8 @@ export interface PromoResult {
   code?: string;
   /** Discount in AED, rounded to 2dp and capped at the subtotal. */
   amount?: number;
+  /** True for an auto-generated signup reward (drives the pickup-only rule). */
+  isReward?: boolean;
   /** Present only on failure — a customer-facing message. */
   error?: string;
 }
@@ -35,6 +38,7 @@ const MOCK_PROMOS: PromoRow[] = [
     max_uses: null,
     times_used: 0,
     active: true,
+    auto_generated: false,
   },
   {
     code: "NAPOLI20",
@@ -46,6 +50,7 @@ const MOCK_PROMOS: PromoRow[] = [
     max_uses: null,
     times_used: 0,
     active: true,
+    auto_generated: false,
   },
 ];
 
@@ -122,6 +127,7 @@ async function lookupPromo(code: string): Promise<PromoRow | null> {
     max_uses: data.max_uses == null ? null : Number(data.max_uses),
     times_used: Number(data.times_used),
     active: data.active,
+    auto_generated: Boolean(data.auto_generated),
   };
 }
 
@@ -184,7 +190,9 @@ export async function validatePromo(
   const ownership = await checkPromoOwnership(normalized, identity);
   if (ownership) return ownership;
 
-  return computeDiscount(row, subtotal);
+  const result = computeDiscount(row, subtotal);
+  if (result.code) result.isReward = row.auto_generated;
+  return result;
 }
 
 /**

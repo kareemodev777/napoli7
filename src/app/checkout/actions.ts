@@ -191,6 +191,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   // claimed them so a leaked code can't be redeemed by anyone else.
   let discount = 0;
   let appliedPromo: string | undefined;
+  let appliedPromoIsReward = false;
   if (data.promoCode) {
     let promoIdentity:
       | { userId?: string | null; email?: string | null }
@@ -217,6 +218,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     if (promoResult.code && promoResult.amount) {
       discount = promoResult.amount;
       appliedPromo = promoResult.code;
+      appliedPromoIsReward = Boolean(promoResult.isReward);
     }
     // An invalid/expired/unowned code at submit time is ignored (no discount).
   }
@@ -227,13 +229,15 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   // never charged a default fee — mirroring the client-side guard (UC-45).
   let deliveryFee = 0;
   if (data.deliveryType === "delivery" && data.deliveryAddress) {
-    // A fully-discounted (free) order — e.g. the free small-pizza reward alone —
-    // is pickup-only. Once the items cost more than the discount (an upgrade or
-    // an extra item), delivery is allowed.
-    if (subtotal > 0 && discount >= subtotal) {
+    // The signup free-pizza reward is for a SMALL pizza, pickup-only — for any
+    // small pizza it's applied to. Delivery unlocks only on a non-small upgrade.
+    if (
+      appliedPromoIsReward &&
+      data.items.every((it) => it.sizeId === "small")
+    ) {
       return {
         error:
-          "Your free pizza is pickup-only. Upgrade to a larger pizza or add an item to unlock delivery, or switch to pickup.",
+          "Your free pizza offer is pickup-only for a small pizza. Upgrade to a larger size to unlock delivery, or switch to pickup.",
       };
     }
     // The customer must drop a GPS pin, and it must fall inside Ajman. This is

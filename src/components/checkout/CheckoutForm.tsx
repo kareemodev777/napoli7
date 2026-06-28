@@ -230,11 +230,14 @@ export function CheckoutForm({
   const pinInAjman =
     deliveryType !== "delivery" ||
     (coords !== null && isWithinAjmanDeliveryArea(coords.lat, coords.lng));
-  // A fully-discounted (free) order — e.g. the free small-pizza reward on its
-  // own — is pickup-only. Upgrading to a larger pizza makes subtotal exceed the
-  // discount, which unlocks delivery.
-  const isFreeOrder = subtotal > 0 && discount >= subtotal;
-  const deliveryAllowed = deliveryType !== "delivery" || !isFreeOrder;
+  // The signup free-pizza reward is for a SMALL pizza, pickup-only — and that
+  // holds for any small pizza it's applied to (Margherita or another). Delivery
+  // unlocks only when the customer upgrades to a non-small (e.g. Medium) size.
+  const rewardPickupOnly =
+    Boolean(promo?.isReward) &&
+    items.length > 0 &&
+    items.every((it) => it.sizeId === "small");
+  const deliveryAllowed = deliveryType !== "delivery" || !rewardPickupOnly;
   const canSubmit =
     areaSupported && meetsDeliveryMin && hasPin && pinInAjman && deliveryAllowed;
 
@@ -274,9 +277,9 @@ export function CheckoutForm({
       );
       return;
     }
-    if (deliveryType === "delivery" && isFreeOrder) {
+    if (deliveryType === "delivery" && rewardPickupOnly) {
       setError(
-        "Your free pizza is pickup-only. Upgrade to a larger pizza (or add an item) to unlock delivery, or switch to pickup.",
+        "Your free pizza offer is pickup-only for a small pizza. Upgrade to a larger size to unlock delivery, or switch to pickup.",
       );
       return;
     }
@@ -751,10 +754,10 @@ export function CheckoutForm({
             pickup.
           </p>
         ) : null}
-        {deliveryType === "delivery" && isFreeOrder ? (
+        {deliveryType === "delivery" && rewardPickupOnly ? (
           <p className="mt-3 text-xs text-flag-red">
-            Your free pizza is pickup-only. Upgrade to a larger pizza (or add an
-            item) to unlock delivery, or switch to pickup.
+            Your free pizza offer is pickup-only for a small pizza. Upgrade to a
+            larger size to unlock delivery, or switch to pickup.
           </p>
         ) : null}
         <div className="mt-4">

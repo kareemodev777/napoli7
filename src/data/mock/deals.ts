@@ -10,11 +10,12 @@ export const WELCOME_OFFER: Deal = {
   slug: "first-pizza-on-us",
   title: "Your first small Margherita is on us",
   description:
-    "Sign up at Napoli 7 and your first small Margherita is complimentary — for pickup. Want a larger size or a different pizza? Just pay the price difference, and delivery unlocks.",
+    "Sign up at Napoli 7 and your first small Margherita is complimentary — for pickup. Prefer another pizza? The 19 AED comes off any small pizza, you just pay the difference (still pickup). Size up to a larger pizza and delivery unlocks too.",
   conditions: [
     "Free small Margherita, for pickup.",
-    "One per person.",
-    "Exclusively via napoli7.com signup.",
+    "The 19 AED applies to any small pizza — just pay the difference.",
+    "Size up to a larger pizza to unlock delivery.",
+    "One per person, via napoli7.com signup.",
     "Available for the first 1,000 who sign up ONLY!",
   ],
   cta: { label: "Create your account", href: "/register" },

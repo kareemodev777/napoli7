@@ -37,7 +37,11 @@ export function PromoField() {
         setError(result.error ?? "That promo code isn't valid.");
         return;
       }
-      setPromo({ code: result.code, amount: result.amount });
+      setPromo({
+        code: result.code,
+        amount: result.amount,
+        isReward: result.isReward,
+      });
       setCode("");
     });
   }
