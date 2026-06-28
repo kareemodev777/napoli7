@@ -1,5 +1,9 @@
-export const SITE_URL =
-  process.env["NEXT_PUBLIC_SITE_URL"] ?? "https://napoli7.com";
+// Trailing slashes are stripped so string-concatenated paths (e.g. Stripe's
+// success_url, `${SITE_URL}/order/...`) can never produce a double slash like
+// `napoli7.com//order/...`, which doesn't match the route and fails to load.
+export const SITE_URL = (
+  process.env["NEXT_PUBLIC_SITE_URL"] ?? "https://napoli7.com"
+).replace(/\/+$/, "");
 
 export const HAS_SUPABASE = Boolean(
   process.env["NEXT_PUBLIC_SUPABASE_URL"] &&
