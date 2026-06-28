@@ -8,10 +8,11 @@ export interface Deal {
 
 export const WELCOME_OFFER: Deal = {
   slug: "first-pizza-on-us",
-  title: "Your first Neapolitan pizza is on us",
+  title: "Your first small Margherita is on us",
   description:
-    "Sign up at Napoli 7 and your first Margherita is complimentary for pickup. Upgrade to any other pizza by paying the price difference.",
+    "Sign up at Napoli 7 and your first small Margherita is complimentary — for pickup. Want a larger size or a different pizza? Just pay the price difference, and delivery unlocks.",
   conditions: [
+    "Free small Margherita, for pickup.",
     "One per person.",
     "Exclusively via napoli7.com signup.",
     "Available for the first 1,000 who sign up ONLY!",

@@ -22,7 +22,7 @@ const blocks: Block[] = [
     title: "Great pizza brings great people together.",
     body: [
       "Create your Napoli 7 account and become part of our community.",
-      "The first 1,000 members receive a free Margherita pizza on us. Prefer another pizza? We'll deduct the value of your free Margherita from any pizza on our menu — so don't miss out.",
+      "The first 1,000 members receive a free small Margherita on us, for pickup. Prefer a larger size or another pizza? We'll deduct the value of your free small Margherita from any pizza on our menu — so don't miss out.",
     ],
     cta: { label: "Deal", href: "/deals" },
   },

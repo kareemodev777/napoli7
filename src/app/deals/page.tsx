@@ -10,12 +10,12 @@ export const revalidate = 86400;
 export const metadata: Metadata = {
   title: "Deals",
   description:
-    "Welcome offers and seasonal deals from Napoli 7 — your first Margherita on us, weekday lunch sets, and family bundles.",
+    "Welcome offers and seasonal deals from Napoli 7 — your first small Margherita on us for pickup, weekday lunch sets, and family bundles.",
   alternates: { canonical: "/deals" },
   openGraph: {
     title: "Deals · Napoli 7",
     description:
-      "Your first Margherita on us. Weekday lunch sets. Family bundles.",
+      "Your first small Margherita on us, for pickup. Weekday lunch sets. Family bundles.",
   },
 };
 

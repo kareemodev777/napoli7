@@ -80,7 +80,7 @@ export function Hero({
       {/* Welcome offer sticker — bottom-right, brand azure */}
       <Link
         href="/deals"
-        aria-label="First Margherita on us — sign up to claim"
+        aria-label="Your first small Margherita on us for pickup — sign up to claim"
         className="absolute right-2 sm:right-6 md:right-12 bottom-2 sm:bottom-8 md:bottom-12 z-10 w-[88px] h-[88px] sm:w-[140px] sm:h-[140px] md:w-[170px] md:h-[170px] grid place-items-center text-white font-display hover:rotate-0 -rotate-[8deg] transition-transform duration-500"
         style={{
           background: "var(--color-brand)",
