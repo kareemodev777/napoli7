@@ -5,7 +5,8 @@ import { AccountNav } from "@/components/account/AccountNav";
 import { StatusBadge } from "@/components/account/StatusBadge";
 import { requireCustomerAccount } from "@/lib/auth/require-auth";
 import { createClient } from "@/lib/supabase/server";
-import { HAS_SUPABASE } from "@/lib/env";
+import { createServiceRoleClient } from "@/lib/supabase/service";
+import { HAS_SUPABASE, HAS_SUPABASE_SERVICE } from "@/lib/env";
 
 export const metadata: Metadata = {
   title: "Account",
@@ -45,13 +46,55 @@ async function loadRecentOrders(userId: string): Promise<RecentOrder[]> {
   }));
 }
 
+interface CustomerReward {
+  code: string;
+  discountAed: number;
+  /** True while the code is still active and unredeemed. */
+  available: boolean;
+}
+
+/**
+ * The signed-in customer's launch free-pizza reward, if they claimed one — so
+ * they can find the code in their account instead of digging through email.
+ * Read via the service role (free_pizza_claims isn't exposed to the customer
+ * client), scoped strictly to their own user id.
+ */
+async function loadReward(userId: string): Promise<CustomerReward | null> {
+  if (!HAS_SUPABASE_SERVICE) return null;
+  const supabase = createServiceRoleClient();
+  const { data: claim } = await supabase
+    .from("free_pizza_claims")
+    .select("code")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!claim) return null;
+
+  const { data: promo } = await supabase
+    .from("promo_codes")
+    .select("discount_aed, max_uses, times_used, active")
+    .eq("code", claim.code)
+    .maybeSingle();
+  if (!promo) return null;
+
+  const used =
+    promo.max_uses != null && Number(promo.times_used) >= Number(promo.max_uses);
+  return {
+    code: claim.code,
+    discountAed: Number(promo.discount_aed ?? 0),
+    available: Boolean(promo.active) && !used,
+  };
+}
+
 export default async function AccountPage() {
   const user = await requireCustomerAccount("/account");
   const firstName =
     (user?.user_metadata?.first_name as string | undefined) ??
     user.email?.split("@")[0] ??
     "there";
-  const recent = await loadRecentOrders(user.id);
+  const [recent, reward] = await Promise.all([
+    loadRecentOrders(user.id),
+    loadReward(user.id),
+  ]);
 
   return (
     <SiteShell>
@@ -65,6 +108,38 @@ export default async function AccountPage() {
             <h1 className="font-display text-3xl md:text-4xl leading-tight">
               Hello, {firstName}.
             </h1>
+
+            {reward ? (
+              <section className="mt-10">
+                {reward.available ? (
+                  <div className="rounded-md border border-brand/40 bg-brand/5 p-6">
+                    <p className="font-display text-xs uppercase tracking-[0.24em] text-brand">
+                      Your reward
+                    </p>
+                    <p className="mt-2 text-base text-foreground">
+                      Free pizza — {reward.discountAed.toFixed(0)} AED off your
+                      order.
+                    </p>
+                    <p className="mt-3 font-mono text-2xl tracking-[0.12em] text-foreground">
+                      {reward.code}
+                    </p>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Apply this code at checkout while signed in. It works once
+                      and is tied to your account.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="rounded-md border border-border bg-card p-6">
+                    <p className="font-display text-xs uppercase tracking-[0.24em] text-muted-foreground">
+                      Your reward
+                    </p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      You&rsquo;ve used your free-pizza reward. Buon appetito! 🍕
+                    </p>
+                  </div>
+                )}
+              </section>
+            ) : null}
 
             <section className="mt-12">
               <h2 className="font-display text-xs tracking-[0.25em] uppercase mb-4">

@@ -217,14 +217,21 @@ describe("orderRowToWooOrder — card delivery, with promo + customization", () 
     expect(body.billing.city).toBe("Al Jurf");
   });
 
-  test("shipping_lines and totals reflect the delivery fee and discount", () => {
-    expect(body.shipping_lines).toHaveLength(1);
-    expect(body.shipping_lines[0]).toEqual({
-      method_id: "flat_rate",
-      method_title: "Delivery",
+  test("delivery fee is a printable line item; shipping is zeroed", () => {
+    // Delivery is carried as a line item so the POS receipt prints it; shipping
+    // is zeroed to avoid double-counting.
+    const delivery = body.line_items.find((li) => li.name === "Delivery");
+    expect(delivery).toEqual({
+      name: "Delivery",
+      quantity: 1,
+      price: "15.00",
+      subtotal: "15.00",
       total: "15.00",
+      sku: "",
+      meta_data: [{ key: "line_type", value: "delivery_fee" }],
     });
-    expect(body.shipping_total).toBe("15.00");
+    expect(body.shipping_lines).toHaveLength(0);
+    expect(body.shipping_total).toBe("0.00");
     expect(body.discount_total).toBe("10.00");
   });
 

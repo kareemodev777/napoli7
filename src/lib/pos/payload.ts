@@ -28,6 +28,7 @@ export interface PosOrderItemRow {
   quantity: number;
   line_total_aed: number | string;
   customizations: PosCustomization[] | null;
+  size_label?: string | null;
 }
 
 export interface PosDeliveryAddress {
@@ -213,15 +214,40 @@ function lineItem(row: PosOrderItemRow): WooLineItem {
     meta.push({ key: "product_id", value: row.product_id });
   }
   meta.push(...customizationMeta(row.customizations));
+  // SKU stays keyed on the clean product name + price; the size is appended to
+  // the display name only, so it prints on the receipt without breaking lookup.
   const sku = resolvePosSku(row.product_name, row.base_price_aed) ?? "";
+  const displayName = row.size_label
+    ? `${row.product_name} (${row.size_label})`
+    : row.product_name;
   return {
-    name: row.product_name,
+    name: displayName,
     quantity: row.quantity,
     price: money(lineTotal / qty),
     subtotal: money(lineTotal),
     total: money(lineTotal),
     sku,
     meta_data: meta,
+  };
+}
+
+/**
+ * Delivery fee as a line item. The POS receipt only renders the line-items
+ * table (not Woo shipping_lines), so sending the fee as shipping made the total
+ * look wrong on the print-out (e.g. 28 subtotal → 40 total with no 12 delivery
+ * line). As a line item it prints, and we zero shipping_total so the total can't
+ * be double-counted. SKU is blank — a custom (non-catalog) line, which the POS
+ * already accepts for unmapped products.
+ */
+function deliveryLineItem(fee: number): WooLineItem {
+  return {
+    name: "Delivery",
+    quantity: 1,
+    price: money(fee),
+    subtotal: money(fee),
+    total: money(fee),
+    sku: "",
+    meta_data: [{ key: "line_type", value: "delivery_fee" }],
   };
 }
 
@@ -235,6 +261,14 @@ export function orderRowToWooOrder(order: PosOrderRow): WooOrderBody {
   const isDelivery = order.delivery_type === "delivery";
   const isCard = order.payment_method === "card";
   const addr = order.delivery_address ?? {};
+  const deliveryFee = Number(order.delivery_fee_aed);
+
+  // Items + delivery as a printable line. Delivery moves OUT of shipping_total
+  // (set to 0 below) so the receipt itemises it without double-counting.
+  const lineItems = (order.order_items ?? []).map(lineItem);
+  if (deliveryFee > 0) {
+    lineItems.push(deliveryLineItem(deliveryFee));
+  }
 
   const billing: WooAddress = {
     first_name: name.first_name,
@@ -262,7 +296,9 @@ export function orderRowToWooOrder(order: PosOrderRow): WooOrderBody {
     total: money(order.total_aed),
     discount_total: money(order.discount_aed),
     discount_tax: "0.00",
-    shipping_total: money(order.delivery_fee_aed),
+    // Delivery is carried as a line item (see lineItems above), not shipping, so
+    // it prints on the POS receipt. Keep this 0 to avoid double-counting.
+    shipping_total: "0.00",
     shipping_tax: "0.00",
     cart_tax: "0.00",
     total_tax: "0.00",
@@ -304,7 +340,7 @@ export function orderRowToWooOrder(order: PosOrderRow): WooOrderBody {
           postcode: "",
           country: "AE",
         },
-    line_items: (order.order_items ?? []).map(lineItem),
+    line_items: lineItems,
     tax_lines: [],
     shipping_lines: [],
     fee_lines: [],
@@ -329,16 +365,6 @@ export function orderRowToWooOrder(order: PosOrderRow): WooOrderBody {
   // transaction_id: card only.
   if (isCard && order.stripe_payment_intent) {
     body.transaction_id = order.stripe_payment_intent;
-  }
-
-  // One flat_rate shipping line when a delivery fee was charged.
-  const deliveryFee = Number(order.delivery_fee_aed);
-  if (deliveryFee > 0) {
-    body.shipping_lines.push({
-      method_id: "flat_rate",
-      method_title: "Delivery",
-      total: money(deliveryFee),
-    });
   }
 
   // Discount: prefer a coupon_line carrying the code when one was applied.

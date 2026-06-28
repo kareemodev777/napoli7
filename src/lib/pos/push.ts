@@ -5,22 +5,16 @@
 // response, the admin status change, or the kitchen alerts.
 
 import { createServiceRoleClient } from "@/lib/supabase/service";
-import {
-  HAS_POS,
-  HAS_SUPABASE_SERVICE,
-  POS_WEBHOOK_URL,
-  POS_PRODUCT_WEBHOOK_URL,
-} from "@/lib/env";
+import { HAS_POS, HAS_SUPABASE_SERVICE, POS_WEBHOOK_URL } from "@/lib/env";
 import { postToPos, type PosPostResult } from "./client";
 import {
   orderRowToWooOrder,
-  statusToWooUpdate,
   type PosOrderRow,
   type SiteOrderStatus,
 } from "./payload";
 
 const ORDER_SELECT =
-  "id, order_number, status, customer_name, customer_phone, customer_email, delivery_type, delivery_address, delivery_slot, order_notes, pizza_cut, payment_method, payment_status, stripe_payment_intent, subtotal_aed, delivery_fee_aed, discount_aed, promo_code, total_aed, created_at, order_items(product_id, product_name, base_price_aed, quantity, line_total_aed, customizations)";
+  "id, order_number, status, pos_sync_status, customer_name, customer_phone, customer_email, delivery_type, delivery_address, delivery_slot, order_notes, pizza_cut, payment_method, payment_status, stripe_payment_intent, subtotal_aed, delivery_fee_aed, discount_aed, promo_code, total_aed, created_at, order_items(product_id, product_name, base_price_aed, quantity, line_total_aed, customizations, size_label)";
 
 /** Persist the attempt outcome. Logging the push must itself never throw. */
 async function recordPush(args: {
@@ -72,6 +66,14 @@ export async function pushOrderToPos(orderId: string): Promise<void> {
       return;
     }
 
+    // Already synced — don't re-create it on the POS (their voucher numbers
+    // aren't idempotent, so a second create duplicates). A failed/pending order
+    // can still be (re)pushed.
+    if (order.pos_sync_status === "sent") {
+      console.info(`[pos] order ${order.order_number} already synced; skipping`);
+      return;
+    }
+
     const body = orderRowToWooOrder(order as unknown as PosOrderRow);
     const result = await postToPos(POS_WEBHOOK_URL, body, {
       idempotencyKey: order.order_number,
@@ -113,15 +115,15 @@ export async function pushOrderStatusToPos(
   orderId: string,
   status: SiteOrderStatus,
 ): Promise<void> {
-  if (!HAS_POS || !HAS_SUPABASE_SERVICE || !POS_PRODUCT_WEBHOOK_URL) {
-    console.info("[pos] disabled (missing POS status endpoint); skipping status push");
+  if (!HAS_POS || !HAS_SUPABASE_SERVICE) {
+    console.info("[pos] disabled; skipping status push");
     return;
   }
   try {
     const supabase = createServiceRoleClient();
     const { data: order, error } = await supabase
       .from("orders")
-      .select("id, order_number")
+      .select(ORDER_SELECT)
       .eq("id", orderId)
       .maybeSingle();
 
@@ -134,8 +136,15 @@ export async function pushOrderStatusToPos(
       return;
     }
 
-    const body = statusToWooUpdate(order.order_number, status);
-    const result = await postToPos(POS_PRODUCT_WEBHOOK_URL, body, {
+    // Send the FULL order (with line items + SKUs) carrying the new status to the
+    // ORDER webhook — the same endpoint as create. The previous product-webhook
+    // target rejected the minimal body with "Undefined array key sku"; and a
+    // duplicate voucher there is now treated as already-synced.
+    const body = orderRowToWooOrder({
+      ...(order as unknown as PosOrderRow),
+      status,
+    });
+    const result = await postToPos(POS_WEBHOOK_URL, body, {
       idempotencyKey: `${order.order_number}:${status}`,
     });
 
@@ -143,7 +152,7 @@ export async function pushOrderStatusToPos(
       orderId: order.id,
       orderNumber: order.order_number,
       kind: "status_update",
-      endpoint: POS_PRODUCT_WEBHOOK_URL,
+      endpoint: POS_WEBHOOK_URL,
       result,
       payload: body,
     });

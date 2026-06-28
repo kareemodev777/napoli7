@@ -40,6 +40,8 @@ export interface CanonicalOrderItem {
   quantity: number;
   customizations: CheckoutCustomizationInput[];
   lineTotalAed: number;
+  /** The chosen size's label (e.g. "Small"). Null for single-size products. */
+  sizeLabel: string | null;
 }
 
 export type CanonicalCartResult =
@@ -148,6 +150,8 @@ export function canonicalizeCheckoutCart(
       quantity: item.quantity,
       customizations: canonicalCustomizations,
       lineTotalAed: money(canonicalUnit * item.quantity),
+      // Only meaningful when the product actually offers a choice of sizes.
+      sizeLabel: product.sizes.length > 1 ? size.label : null,
     });
   }
 

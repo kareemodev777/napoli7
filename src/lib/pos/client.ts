@@ -42,6 +42,23 @@ export function shouldRetry(outcome: {
   return false;
 }
 
+/**
+ * Some POS errors mean the order was ALREADY accepted on a previous attempt —
+ * most notably a duplicate voucher/invoice unique-constraint violation. Our
+ * retries (and multiple push triggers) then keep re-failing on a record that
+ * actually exists. Detect that and treat it as success so we stop retrying and
+ * mark the order synced. Pure for tests.
+ */
+export function isAlreadyAccepted(body: string): boolean {
+  const b = (body ?? "").toLowerCase();
+  return (
+    b.includes("duplicate entry") ||
+    b.includes("voucher_no_unique") ||
+    b.includes("already exists") ||
+    b.includes("already processed")
+  );
+}
+
 /** Auth headers from env. Bearer + X-API-Key when POS_API_KEY is set; an
  *  optional custom header name overrides X-API-Key. Empty when unconfigured. */
 export function buildAuthHeaders(): Record<string, string> {
@@ -106,6 +123,12 @@ export async function postToPos(
 
       lastStatus = res.status;
       lastError = await res.text().catch(() => "");
+
+      // The order is already in the POS (duplicate voucher / "already exists").
+      // Retrying just re-fails; the correct outcome is "synced".
+      if (isAlreadyAccepted(lastError)) {
+        return { ok: true, status: res.status, attempts: attempt };
+      }
 
       if (!shouldRetry({ status: res.status }) || attempt === maxAttempts) {
         console.error(

@@ -1,5 +1,23 @@
 import { test, expect, describe } from "bun:test";
-import { shouldRetry } from "./client";
+import { shouldRetry, isAlreadyAccepted } from "./client";
+
+describe("isAlreadyAccepted — POS already-synced detection", () => {
+  test("treats a duplicate voucher / invoice as already accepted", () => {
+    expect(
+      isAlreadyAccepted(
+        "SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'INV-71' for key 'vouchers_voucher_no_unique'",
+      ),
+    ).toBe(true);
+    expect(isAlreadyAccepted("Order already exists")).toBe(true);
+    expect(isAlreadyAccepted("already processed")).toBe(true);
+  });
+
+  test("does NOT treat a genuine error as accepted", () => {
+    expect(isAlreadyAccepted('Undefined array key "sku"')).toBe(false);
+    expect(isAlreadyAccepted("Internal Server Error")).toBe(false);
+    expect(isAlreadyAccepted("")).toBe(false);
+  });
+});
 
 describe("shouldRetry — POS push retry decision", () => {
   test("retries on a thrown/aborted request (no HTTP status)", () => {

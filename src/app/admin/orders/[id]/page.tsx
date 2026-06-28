@@ -47,7 +47,7 @@ async function loadOrder(id: string) {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, order_number, customer_name, customer_phone, customer_email, status, payment_method, payment_status, pos_sync_status, delivery_type, delivery_address, delivery_slot, pizza_cut, subtotal_aed, delivery_fee_aed, discount_aed, total_aed, promo_code, order_notes, admin_notes, assigned_rider_id, created_at, order_items(id, product_name, base_price_aed, quantity, customizations, line_total_aed)",
+      "id, order_number, customer_name, customer_phone, customer_email, status, payment_method, payment_status, pos_sync_status, delivery_type, delivery_address, delivery_slot, pizza_cut, subtotal_aed, delivery_fee_aed, discount_aed, total_aed, promo_code, order_notes, admin_notes, assigned_rider_id, created_at, order_items(id, product_name, base_price_aed, quantity, customizations, line_total_aed, size_label)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -146,9 +146,12 @@ export default async function AdminOrderEditPage({
       quantity: number;
       customizations: OrderItemCustomization[] | null;
       line_total_aed: number | string;
+      size_label: string | null;
     }) => ({
       id: it.id,
-      productName: it.product_name,
+      productName: it.size_label
+        ? `${it.product_name} (${it.size_label})`
+        : it.product_name,
       basePriceAed: Number(it.base_price_aed),
       quantity: it.quantity,
       lineTotalAed: Number(it.line_total_aed),

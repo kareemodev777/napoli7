@@ -9,7 +9,10 @@ import {
   getDeliveryMinimumSubtotalAed,
   meetsDeliveryMinimumAed,
 } from "@/lib/delivery-settings";
-import { canonicalizeCheckoutCart } from "@/lib/checkout-pricing";
+import {
+  canonicalizeCheckoutCart,
+  type CanonicalOrderItem,
+} from "@/lib/checkout-pricing";
 import { isWithinAjmanDeliveryArea } from "@/lib/delivery-map";
 import { planAddressSave, type AddressLike } from "@/lib/saved-address";
 import { sendKitchenNotificationsForOrder } from "@/lib/notifications/kitchen";
@@ -112,13 +115,15 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     };
   }
 
-  let canonicalItems = data.items.map((item) => ({
+  let canonicalItems: CanonicalOrderItem[] = data.items.map((item) => ({
     productId: item.productId,
     productName: item.productName,
     basePriceAed: item.basePriceAed,
     quantity: item.quantity,
     customizations: item.customizations,
     lineTotalAed: item.lineTotalAed,
+    // Dev/no-Supabase fallback: keep the client size id as the label.
+    sizeLabel: item.sizeId,
   }));
   let subtotal = canonicalItems.reduce((s, i) => s + i.lineTotalAed, 0);
 
@@ -222,6 +227,15 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   // never charged a default fee — mirroring the client-side guard (UC-45).
   let deliveryFee = 0;
   if (data.deliveryType === "delivery" && data.deliveryAddress) {
+    // A fully-discounted (free) order — e.g. the free small-pizza reward alone —
+    // is pickup-only. Once the items cost more than the discount (an upgrade or
+    // an extra item), delivery is allowed.
+    if (subtotal > 0 && discount >= subtotal) {
+      return {
+        error:
+          "Your free pizza is pickup-only. Upgrade to a larger pizza or add an item to unlock delivery, or switch to pickup.",
+      };
+    }
     // The customer must drop a GPS pin, and it must fall inside Ajman. This is
     // the authoritative out-of-zone guard: the area dropdown alone can be paired
     // with a Sharjah street, but the pin can't be faked past the bounding box.
@@ -316,6 +330,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     quantity: item.quantity,
     customizations: item.customizations,
     line_total_aed: item.lineTotalAed,
+    size_label: item.sizeLabel,
   }));
   const { error: itemsError } = await supabase
     .from("order_items")

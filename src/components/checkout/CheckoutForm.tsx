@@ -230,7 +230,13 @@ export function CheckoutForm({
   const pinInAjman =
     deliveryType !== "delivery" ||
     (coords !== null && isWithinAjmanDeliveryArea(coords.lat, coords.lng));
-  const canSubmit = areaSupported && meetsDeliveryMin && hasPin && pinInAjman;
+  // A fully-discounted (free) order — e.g. the free small-pizza reward on its
+  // own — is pickup-only. Upgrading to a larger pizza makes subtotal exceed the
+  // discount, which unlocks delivery.
+  const isFreeOrder = subtotal > 0 && discount >= subtotal;
+  const deliveryAllowed = deliveryType !== "delivery" || !isFreeOrder;
+  const canSubmit =
+    areaSupported && meetsDeliveryMin && hasPin && pinInAjman && deliveryAllowed;
 
   if (!hydrated) {
     return <p className="text-sm text-muted-foreground">Loading checkout…</p>;
@@ -265,6 +271,12 @@ export function CheckoutForm({
     if (!meetsDeliveryMin) {
       setError(
         `Delivery orders need at least ${formatAed(deliveryMinSubtotalAed)} in items (the delivery fee doesn't count). Add a little more, or switch to pickup.`,
+      );
+      return;
+    }
+    if (deliveryType === "delivery" && isFreeOrder) {
+      setError(
+        "Your free pizza is pickup-only. Upgrade to a larger pizza (or add an item) to unlock delivery, or switch to pickup.",
       );
       return;
     }
@@ -737,6 +749,12 @@ export function CheckoutForm({
             fee excluded). Add{" "}
             {formatAed(Math.max(0, deliveryMinSubtotalAed - subtotal))} more, or switch to
             pickup.
+          </p>
+        ) : null}
+        {deliveryType === "delivery" && isFreeOrder ? (
+          <p className="mt-3 text-xs text-flag-red">
+            Your free pizza is pickup-only. Upgrade to a larger pizza (or add an
+            item) to unlock delivery, or switch to pickup.
           </p>
         ) : null}
         <div className="mt-4">

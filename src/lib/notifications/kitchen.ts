@@ -11,6 +11,7 @@ interface OrderItemRow {
   quantity: number;
   customizations: KitchenNotificationInput["items"][number]["customizations"];
   line_total_aed: number | string;
+  size_label: string | null;
 }
 
 /**
@@ -28,7 +29,7 @@ export async function sendKitchenNotificationsForOrder(
   const { data: order, error } = await supabase
     .from("orders")
     .select(
-      "id, order_number, customer_name, customer_phone, customer_email, delivery_type, delivery_address, delivery_slot, pizza_cut, payment_method, total_aed, order_items(product_name, quantity, customizations, line_total_aed)",
+      "id, order_number, customer_name, customer_phone, customer_email, delivery_type, delivery_address, delivery_slot, pizza_cut, payment_method, total_aed, order_items(product_name, quantity, customizations, line_total_aed, size_label)",
     )
     .eq("id", orderId)
     .maybeSingle();
@@ -55,7 +56,9 @@ export async function sendKitchenNotificationsForOrder(
     paymentMethod: order.payment_method as "card" | "cod",
     totalAed: Number(order.total_aed),
     items: (order.order_items ?? []).map((it: OrderItemRow) => ({
-      name: it.product_name,
+      name: it.size_label
+        ? `${it.product_name} (${it.size_label})`
+        : it.product_name,
       quantity: it.quantity,
       customizations: it.customizations ?? [],
       lineTotalAed: Number(it.line_total_aed),
