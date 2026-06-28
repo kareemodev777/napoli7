@@ -24,7 +24,7 @@ export function NotificationBell() {
   const ringing = snapshot.orders > 0 && !silenced;
 
   return (
-    <Popover.Root>
+    <Popover.Root onOpenChange={(open) => open && silence()}>
       <Popover.Trigger asChild>
         <button
           type="button"

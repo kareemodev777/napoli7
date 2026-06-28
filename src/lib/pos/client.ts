@@ -43,19 +43,18 @@ export function shouldRetry(outcome: {
 }
 
 /**
- * Some POS errors mean the order was ALREADY accepted on a previous attempt —
- * most notably a duplicate voucher/invoice unique-constraint violation. Our
- * retries (and multiple push triggers) then keep re-failing on a record that
- * actually exists. Detect that and treat it as success so we stop retrying and
- * mark the order synced. Pure for tests.
+ * Permanent POS errors that retrying can never fix — most notably a duplicate
+ * voucher/invoice unique-constraint violation, which means the POS could not
+ * assign a unique invoice number and so REJECTED the order (it did not sync).
+ * We stop retrying and report a real failure rather than masking it as success
+ * or hammering the POS. Pure for tests.
  */
-export function isAlreadyAccepted(body: string): boolean {
+export function isPermanentPosError(body: string): boolean {
   const b = (body ?? "").toLowerCase();
   return (
     b.includes("duplicate entry") ||
     b.includes("voucher_no_unique") ||
-    b.includes("already exists") ||
-    b.includes("already processed")
+    b.includes("integrity constraint")
   );
 }
 
@@ -124,13 +123,14 @@ export async function postToPos(
       lastStatus = res.status;
       lastError = await res.text().catch(() => "");
 
-      // The order is already in the POS (duplicate voucher / "already exists").
-      // Retrying just re-fails; the correct outcome is "synced".
-      if (isAlreadyAccepted(lastError)) {
-        return { ok: true, status: res.status, attempts: attempt };
-      }
-
-      if (!shouldRetry({ status: res.status }) || attempt === maxAttempts) {
+      // A permanent POS error (e.g. a duplicate voucher number — the POS could
+      // not assign a unique invoice no) will never succeed on retry, and the
+      // order did NOT sync. Stop and report it as a real failure.
+      if (
+        isPermanentPosError(lastError) ||
+        !shouldRetry({ status: res.status }) ||
+        attempt === maxAttempts
+      ) {
         console.error(
           "[pos] push FAILED",
           `attempt ${attempt}/${maxAttempts}`,

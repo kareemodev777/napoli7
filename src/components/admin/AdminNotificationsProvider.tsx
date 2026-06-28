@@ -7,6 +7,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { usePathname } from "next/navigation";
 import { getBrowserSupabase } from "@/lib/supabase/client";
 import { playAlarm, unlockAlarm } from "./alarm";
 import {
@@ -68,6 +69,12 @@ export function AdminNotificationsProvider({
   const [silenced, setSilenced] = useState(false);
   const prevOrders = useRef(initial.orders);
   const refreshRef = useRef<() => void>(() => {});
+
+  // Being on the order queue counts as acknowledging the alert — so does
+  // opening the notification dropdown (which calls silence()). Random clicks
+  // elsewhere on the page do NOT stop the alarm.
+  const pathname = usePathname();
+  const onOrdersPage = pathname?.startsWith("/admin/orders") ?? false;
 
   // Unlock audio on the admin's first interaction (browsers block autoplay).
   useEffect(() => {
@@ -131,14 +138,14 @@ export function AdminNotificationsProvider({
   }, []);
 
   // Continuous alarm: keep ringing while orders await acceptance, until the
-  // queue is cleared (count -> 0) or the admin silences it. Keyed on the count
-  // (a number) so it only re-arms when the count actually changes.
+  // queue is cleared (count -> 0), the admin opens notifications, or they're
+  // already on the orders page. A fresh order re-arms it (silenced reset above).
   useEffect(() => {
-    if (snapshot.orders <= 0 || silenced) return;
+    if (snapshot.orders <= 0 || silenced || onOrdersPage) return;
     playAlarm();
     const id = window.setInterval(() => playAlarm(), ALARM_REPEAT_MS);
     return () => window.clearInterval(id);
-  }, [snapshot.orders, silenced]);
+  }, [snapshot.orders, silenced, onOrdersPage]);
 
   const value: AdminNotificationsContextValue = {
     snapshot,
