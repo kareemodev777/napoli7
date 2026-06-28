@@ -24,11 +24,7 @@ function FlagDots() {
  * lives in AdminNav; this wraps it with the brand, notification surface, log
  * out, and the mobile open/close behaviour.
  */
-export function AdminSidebar({
-  actionableOrders,
-}: {
-  actionableOrders: number;
-}) {
+export function AdminSidebar() {
   const [open, setOpen] = useState(false);
 
   return (
@@ -42,7 +38,7 @@ export function AdminSidebar({
           Napoli 7 Admin
         </Link>
         <div className="flex items-center gap-2">
-          <NotificationBell initialCount={actionableOrders} />
+          <NotificationBell />
           <button
             type="button"
             onClick={() => setOpen(true)}

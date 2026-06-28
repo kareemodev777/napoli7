@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { HAS_SUPABASE_SERVICE } from "@/lib/env";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { ResendEmailCell } from "@/components/admin/ResendEmailCell";
+import { markAllMessagesRead } from "@/lib/admin/notifications";
 
 export const metadata: Metadata = {
   title: "Messages · Admin",
@@ -51,6 +52,8 @@ const DATE_FMT = new Intl.DateTimeFormat("en-GB", {
 
 export default async function AdminMessagesPage() {
   const messages = await loadMessages();
+  // Opening the inbox clears the unread badge.
+  await markAllMessagesRead();
 
   return (
     <section className="px-6 md:px-10 py-12">

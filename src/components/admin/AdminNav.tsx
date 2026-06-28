@@ -16,6 +16,7 @@ import {
   Users,
   type LucideIcon,
 } from "lucide-react";
+import { useAdminNotifications } from "./AdminNotificationsProvider";
 
 interface NavItem {
   label: string;
@@ -68,6 +69,14 @@ function isActive(pathname: string, href: string) {
 
 export function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = usePathname();
+  const { snapshot } = useAdminNotifications();
+
+  // Live badge counts for the operational nav items.
+  const badgeFor = (href: string): number => {
+    if (href === "/admin/orders") return snapshot.orders;
+    if (href === "/admin/messages") return snapshot.messages;
+    return 0;
+  };
 
   return (
     <nav aria-label="Admin navigation" className="flex flex-col gap-6">
@@ -79,6 +88,7 @@ export function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
           {group.items.map((link) => {
             const active = isActive(pathname, link.href);
             const Icon = link.icon;
+            const badge = badgeFor(link.href);
             return (
               <Link
                 key={link.href}
@@ -105,7 +115,7 @@ export function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
                   strokeWidth={1.7}
                   aria-hidden
                 />
-                <span className="min-w-0">
+                <span className="min-w-0 flex-1">
                   <span className="block font-display text-xs uppercase tracking-[0.14em]">
                     {link.label}
                   </span>
@@ -117,6 +127,11 @@ export function AdminNav({ onNavigate }: { onNavigate?: () => void }) {
                     {link.description}
                   </span>
                 </span>
+                {badge > 0 ? (
+                  <span className="ml-auto inline-flex min-w-[20px] shrink-0 items-center justify-center rounded-full bg-brand px-1.5 text-[10px] font-display leading-5 tabular-nums text-primary-foreground">
+                    {badge > 99 ? "99+" : badge}
+                  </span>
+                ) : null}
               </Link>
             );
           })}
