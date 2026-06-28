@@ -1,21 +1,47 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { trackOrder, type TrackOrderResult } from "@/app/track/actions";
 import { TrackStatus } from "./TrackStatus";
+import { useCart } from "@/store/cart";
 
 const initial: TrackOrderResult = {};
 
 export function TrackForm() {
   const params = useSearchParams();
   const [state, formAction, pending] = useActionState(trackOrder, initial);
+  const clearCart = useCart((s) => s.clear);
 
   const orderIdDefault = params.get("orderId") ?? "";
   const phoneDefault = params.get("phone") ?? "";
+  const justPlaced = params.get("placed") === "1";
+
+  // Arrived straight from checkout (`placed=1`): empty the cart once. The card
+  // path doesn't clear it client-side, so this is where a paid order's cart is
+  // emptied; COD already cleared it, making this a harmless no-op there.
+  const clearedRef = useRef(false);
+  useEffect(() => {
+    if (justPlaced && !clearedRef.current) {
+      clearedRef.current = true;
+      clearCart();
+    }
+  }, [justPlaced, clearCart]);
+
+  // Auto-run the lookup when an order id + phone are present so the customer
+  // lands straight on their live tracking without re-entering anything.
+  const lookedUpRef = useRef(false);
+  useEffect(() => {
+    if (lookedUpRef.current || !orderIdDefault || !phoneDefault) return;
+    lookedUpRef.current = true;
+    const fd = new FormData();
+    fd.set("orderId", orderIdDefault);
+    fd.set("phone", phoneDefault);
+    formAction(fd);
+  }, [orderIdDefault, phoneDefault, formAction]);
 
   return (
     <div className="space-y-10">

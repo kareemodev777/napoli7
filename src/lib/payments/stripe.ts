@@ -22,6 +22,8 @@ export function getStripe(): Stripe {
 interface CreateSessionInput {
   orderId: string;
   customerEmail: string;
+  /** Normalised order phone — lets the post-payment track page find the order. */
+  customerPhone: string;
   items: OrderItemAmount[];
   /** Authoritative order columns — the charge is reconciled against these. */
   deliveryFeeAed: number;
@@ -85,7 +87,9 @@ export async function createCheckoutSession(input: CreateSessionInput) {
       // fires with no session attached — without this the failed handler has no
       // way to find the order (Bug 1).
       payment_intent_data: { metadata: { orderId: input.orderId } },
-      success_url: `${SITE_URL}/order/${input.orderId}/confirmation?session_id={CHECKOUT_SESSION_ID}`,
+      // Land the paid customer straight on order tracking. `placed=1` tells the
+      // track page to clear the cart (the card path doesn't clear it client-side).
+      success_url: `${SITE_URL}/track?orderId=${input.orderId}&phone=${encodeURIComponent(input.customerPhone)}&placed=1`,
       cancel_url: `${SITE_URL}/checkout?canceled=1`,
     },
     { idempotencyKey: `session_${input.orderId}` },

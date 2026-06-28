@@ -29,7 +29,7 @@ export async function GET(req: Request) {
   const { data: order, error } = await supabase
     .from("orders")
     .select(
-      "id, status, payment_method, customer_email, payment_status, stripe_session_id, subtotal_aed, discount_aed, delivery_fee_aed, total_aed, promo_code, order_items(product_name, quantity, line_total_aed)",
+      "id, status, payment_method, customer_email, customer_phone, payment_status, stripe_session_id, subtotal_aed, discount_aed, delivery_fee_aed, total_aed, promo_code, order_items(product_name, quantity, line_total_aed)",
     )
     .eq("id", parsed.data.orderId)
     .maybeSingle();
@@ -90,6 +90,7 @@ export async function GET(req: Request) {
     session = await createCheckoutSession({
       orderId: order.id,
       customerEmail: order.customer_email,
+      customerPhone: order.customer_phone,
       items,
       deliveryFeeAed: Number(order.delivery_fee_aed),
       discountAed: Number(order.discount_aed),

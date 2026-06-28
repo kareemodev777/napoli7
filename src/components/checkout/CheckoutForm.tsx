@@ -357,7 +357,10 @@ export function CheckoutForm({
         }
         if (result.orderId) {
           clearCart();
-          router.push(`/order/${result.orderId}/confirmation`);
+          // Straight to live order tracking (COD is placed and confirmed).
+          router.push(
+            `/track?orderId=${result.orderId}&phone=${encodeURIComponent(payload.phone)}&placed=1`,
+          );
         }
       } catch (e) {
         console.error(e);
