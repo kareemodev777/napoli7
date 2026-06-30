@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
@@ -34,6 +34,10 @@ const EMPTY_FORM: FormState = {
   confirmPassword: "",
 };
 
+/** Seconds to wait before a resend is allowed, and how many resends total. */
+const RESEND_COOLDOWN_SECONDS = 30;
+const MAX_RESENDS = 3;
+
 export function RegisterForm({ otpEnabled = true }: { otpEnabled?: boolean }) {
   const router = useRouter();
   const [step, setStep] = useState<Step>("details");
@@ -43,10 +47,37 @@ export function RegisterForm({ otpEnabled = true }: { otpEnabled?: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [reward, setReward] = useState<SignupReward | null>(null);
+  const [resendCount, setResendCount] = useState(0);
+  const [cooldown, setCooldown] = useState(0);
   const [pending, startTransition] = useTransition();
 
   function update<K extends keyof FormState>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  // Tick the resend cooldown down to zero, one second at a time.
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const id = window.setTimeout(() => setCooldown((c) => c - 1), 1000);
+    return () => window.clearTimeout(id);
+  }, [cooldown]);
+
+  // Re-send a fresh code (Twilio Verify issues a new one). Gated by the cooldown
+  // and a max number of retries so it can't be spammed.
+  function resendCode() {
+    if (cooldown > 0 || resendCount >= MAX_RESENDS || pending) return;
+    setError(null);
+    setNotice(null);
+    startTransition(async () => {
+      const res = await sendRegistrationOtp(form);
+      if (res.error) {
+        setError(res.error);
+        return;
+      }
+      setResendCount((n) => n + 1);
+      setCooldown(RESEND_COOLDOWN_SECONDS);
+      setNotice("We sent a new code. Check your messages.");
+    });
   }
 
   // Step 1 → validate + anti-abuse checks server-side. When OTP is enabled we
@@ -80,6 +111,8 @@ export function RegisterForm({ otpEnabled = true }: { otpEnabled?: boolean }) {
       }
       setNotice("We texted a 6-digit code to your mobile. Enter it below.");
       setStep("code");
+      setResendCount(0);
+      setCooldown(RESEND_COOLDOWN_SECONDS);
     });
   }
 
@@ -291,18 +324,44 @@ export function RegisterForm({ otpEnabled = true }: { otpEnabled?: boolean }) {
       </button>
 
       {step === "code" ? (
-        <button
-          type="button"
-          onClick={() => {
-            setStep("details");
-            setCode("");
-            setError(null);
-            setNotice(null);
-          }}
-          className="block w-full text-center text-sm text-muted-foreground hover:underline underline-offset-4"
-        >
-          Use a different number
-        </button>
+        <div className="space-y-2 text-center text-sm">
+          {resendCount >= MAX_RESENDS ? (
+            <p className="text-muted-foreground">
+              Still no code? Use a different number, or contact us on +971 6 534
+              5772.
+            </p>
+          ) : cooldown > 0 ? (
+            <p className="text-muted-foreground">
+              Didn&rsquo;t get the code? You can resend in {cooldown}s.
+            </p>
+          ) : (
+            <button
+              type="button"
+              onClick={resendCode}
+              disabled={pending}
+              className="text-foreground hover:underline underline-offset-4 disabled:opacity-50"
+            >
+              Resend code
+              {resendCount > 0
+                ? ` · ${MAX_RESENDS - resendCount} left`
+                : ""}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setStep("details");
+              setCode("");
+              setError(null);
+              setNotice(null);
+              setCooldown(0);
+              setResendCount(0);
+            }}
+            className="block w-full text-muted-foreground hover:underline underline-offset-4"
+          >
+            Use a different number
+          </button>
+        </div>
       ) : null}
 
       <p className="text-sm text-center text-muted-foreground">

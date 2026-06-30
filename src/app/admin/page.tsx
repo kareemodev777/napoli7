@@ -69,7 +69,7 @@ async function loadSmsLogs(): Promise<SmsLogRow[]> {
     .from("sms_logs")
     .select("id, phone, kind, ok, detail, created_at")
     .order("created_at", { ascending: false })
-    .limit(50);
+    .limit(5);
   return (data ?? []).map((r) => ({
     id: r.id,
     phone: r.phone,
