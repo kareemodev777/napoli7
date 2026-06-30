@@ -10,16 +10,11 @@ import {
   SITE_URL,
 } from "@/lib/env";
 import { buildEmailVerificationRedirect } from "@/lib/auth/registration";
-import { isLikelyFakePhone, normalizePhone } from "@/lib/auth/phone";
+import { isLikelyFakePhone } from "@/lib/auth/phone";
 import {
-  OTP_MAX_ATTEMPTS,
-  OTP_RESEND_COOLDOWN_MS,
-  OTP_TTL_MS,
-  generateOtpCode,
-  hashOtpCode,
-  verifyOtpHash,
-} from "@/lib/auth/otp";
-import { sendSms } from "@/lib/notifications/sms";
+  startPhoneVerification,
+  checkPhoneVerification,
+} from "@/lib/notifications/verify";
 import { claimSignupFreePizza, type SignupReward } from "@/lib/signup-reward";
 import { notifyFreePizzaRewardEmail } from "@/lib/notifications/email";
 
@@ -116,42 +111,16 @@ export async function sendRegistrationOtp(
   const blocked = await screenIdentity(parsed.data);
   if (blocked) return blocked;
 
-  const phoneNorm = normalizePhone(parsed.data.mobile);
-  const service = createServiceRoleClient();
-
-  // Anti-spam cooldown: don't text the same number again within the window.
-  const { data: existing } = await service
-    .from("phone_otps")
-    .select("last_sent_at")
-    .eq("phone_norm", phoneNorm)
-    .maybeSingle();
-  if (
-    existing &&
-    Date.now() - new Date(existing.last_sent_at).getTime() <
-      OTP_RESEND_COOLDOWN_MS
-  ) {
-    return { error: "Please wait a minute before requesting another code." };
-  }
-
-  const code = generateOtpCode();
-  const { error: upsertError } = await service.from("phone_otps").upsert({
-    phone_norm: phoneNorm,
-    code_hash: hashOtpCode(phoneNorm, code),
-    expires_at: new Date(Date.now() + OTP_TTL_MS).toISOString(),
-    attempts: 0,
-    last_sent_at: new Date().toISOString(),
-  });
-  if (upsertError) {
-    console.error("[register] OTP store failed", upsertError);
-    return { error: "Could not start verification. Please try again." };
-  }
-
-  const sms = await sendSms(
-    parsed.data.mobile,
-    `Your Napoli 7 verification code is ${code}. It expires in 10 minutes.`,
-  );
-  if (!sms.sent && HAS_TWILIO) {
-    return { error: "We couldn't text that number. Check it and try again." };
+  // Twilio Verify owns the code, its TTL, and resend rate-limiting, and routes
+  // through senders that reach UAE numbers. When Twilio isn't configured this
+  // is a dev no-op (the form would use registerDirect anyway).
+  if (HAS_TWILIO) {
+    const started = await startPhoneVerification(parsed.data.mobile);
+    if (!started.sent) {
+      return {
+        error: started.reason ?? "We couldn't text that number. Check it and try again.",
+      };
+    }
   }
   return { ok: true };
 }
@@ -178,36 +147,14 @@ export async function verifyAndRegister(
     };
   }
 
-  const phoneNorm = normalizePhone(parsed.data.mobile);
-  const service = createServiceRoleClient();
-
-  const { data: otp } = await service
-    .from("phone_otps")
-    .select("code_hash, expires_at, attempts")
-    .eq("phone_norm", phoneNorm)
-    .maybeSingle();
-
-  if (!otp) {
-    return { error: "Request a verification code first." };
+  // Verify the texted code with Twilio Verify (single-use, attempt-limited and
+  // expiry all enforced by Twilio). Skipped when Twilio isn't configured (dev).
+  if (HAS_TWILIO) {
+    const check = await checkPhoneVerification(parsed.data.mobile, code);
+    if (!check.approved) {
+      return { error: check.reason ?? "That code didn't match. Request a new one." };
+    }
   }
-  if (new Date(otp.expires_at).getTime() < Date.now()) {
-    await service.from("phone_otps").delete().eq("phone_norm", phoneNorm);
-    return { error: "That code expired. Request a new one." };
-  }
-  if (otp.attempts >= OTP_MAX_ATTEMPTS) {
-    await service.from("phone_otps").delete().eq("phone_norm", phoneNorm);
-    return { error: "Too many wrong attempts. Request a new code." };
-  }
-  if (!verifyOtpHash(phoneNorm, (code ?? "").trim(), otp.code_hash)) {
-    await service
-      .from("phone_otps")
-      .update({ attempts: otp.attempts + 1 })
-      .eq("phone_norm", phoneNorm);
-    return { error: "That code didn't match. Check it and try again." };
-  }
-
-  // Valid — burn the code so it can't be replayed.
-  await service.from("phone_otps").delete().eq("phone_norm", phoneNorm);
 
   return createAccountAndClaim(parsed.data);
 }
