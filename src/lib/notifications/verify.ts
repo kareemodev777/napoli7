@@ -1,5 +1,6 @@
 import twilio from "twilio";
-import { HAS_TWILIO } from "@/lib/env";
+import { HAS_TWILIO, HAS_SUPABASE_SERVICE } from "@/lib/env";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 
 export interface VerifyStartResult {
   sent: boolean;
@@ -17,6 +18,23 @@ function verifyService() {
     process.env.TWILIO_AUTH_TOKEN!,
   );
   return client.verify.v2.services(process.env.TWILIO_VERIFY_SERVICE_SID!);
+}
+
+/** Record an OTP send/check outcome for the admin dashboard. Best-effort. */
+async function logSms(
+  phone: string,
+  kind: "send" | "check",
+  ok: boolean,
+  detail?: string,
+): Promise<void> {
+  if (!HAS_SUPABASE_SERVICE) return;
+  try {
+    await createServiceRoleClient()
+      .from("sms_logs")
+      .insert({ phone, kind, ok, detail: detail ?? null });
+  } catch (e) {
+    console.error("[verify] could not write sms_logs:", e);
+  }
 }
 
 /**
@@ -39,13 +57,13 @@ export async function startPhoneVerification(
       channel: "sms",
       locale: "en",
     });
+    await logSms(to, "send", true);
     return { sent: true };
   } catch (e) {
     console.error("[verify] start failed:", e);
-    return {
-      sent: false,
-      reason: e instanceof Error ? e.message : "Could not send the code.",
-    };
+    const reason = e instanceof Error ? e.message : "Could not send the code.";
+    await logSms(to, "send", false, reason);
+    return { sent: false, reason };
   }
 }
 
@@ -64,10 +82,15 @@ export async function checkPhoneVerification(
       to,
       code: (code ?? "").trim(),
     });
-    if (check.status === "approved") return { approved: true };
+    if (check.status === "approved") {
+      await logSms(to, "check", true);
+      return { approved: true };
+    }
+    await logSms(to, "check", false, `status: ${check.status}`);
     return { approved: false, reason: "That code didn't match. Try again." };
   } catch (e) {
     console.error("[verify] check failed:", e);
+    await logSms(to, "check", false, "expired or already used");
     return {
       approved: false,
       reason: "That code didn't match or expired. Request a new one.",

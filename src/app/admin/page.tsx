@@ -12,6 +12,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { HAS_SUPABASE_SERVICE } from "@/lib/env";
+import { createServiceRoleClient } from "@/lib/supabase/service";
 import { DashboardDateFilter } from "@/components/admin/DashboardDateFilter";
 import { DashboardChart } from "@/components/admin/DashboardChart";
 import { loadDashboard, loadLiveSnapshot } from "@/lib/admin/dashboard-data";
@@ -42,6 +43,48 @@ const DATE_FMT = new Intl.DateTimeFormat("en-GB", {
   month: "long",
   timeZone: "Asia/Dubai",
 });
+
+const SMS_DATE_FMT = new Intl.DateTimeFormat("en-GB", {
+  day: "2-digit",
+  month: "short",
+  hour: "2-digit",
+  minute: "2-digit",
+  timeZone: "Asia/Dubai",
+});
+
+interface SmsLogRow {
+  id: string;
+  phone: string;
+  kind: string;
+  ok: boolean;
+  detail: string | null;
+  createdAt: string;
+}
+
+/** Recent OTP (Twilio Verify) sends/checks for the dashboard log. */
+async function loadSmsLogs(): Promise<SmsLogRow[]> {
+  if (!HAS_SUPABASE_SERVICE) return [];
+  const supabase = createServiceRoleClient();
+  const { data } = await supabase
+    .from("sms_logs")
+    .select("id, phone, kind, ok, detail, created_at")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  return (data ?? []).map((r) => ({
+    id: r.id,
+    phone: r.phone,
+    kind: r.kind,
+    ok: r.ok,
+    detail: r.detail,
+    createdAt: r.created_at,
+  }));
+}
+
+/** Mask the middle digits of a phone for the log (admin-only, light privacy). */
+function maskPhone(phone: string): string {
+  if (phone.length <= 8) return phone;
+  return `${phone.slice(0, 6)}${"•".repeat(phone.length - 8)}${phone.slice(-2)}`;
+}
 
 function DeltaBadge({ kpi }: { kpi: Kpi }) {
   if (kpi.deltaPct === null) {
@@ -163,9 +206,10 @@ export default async function AdminPage({
   const { range: rangeParam } = await searchParams;
   const range = parseDashboardRange(rangeParam);
 
-  const [data, live] = await Promise.all([
+  const [data, live, smsLogs] = await Promise.all([
     loadDashboard(range),
     loadLiveSnapshot(),
+    loadSmsLogs(),
   ]);
   const urgent = live.actionableOrders > 0;
   const today = DATE_FMT.format(new Date());
@@ -370,6 +414,61 @@ export default async function AdminPage({
               </Link>
             );
           })}
+        </div>
+
+        {/* SMS / OTP verification log — sends + errors, newest first. */}
+        <div className="mt-8 rounded-md border border-border bg-card p-5">
+          <h2 className="font-display text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+            SMS verification log
+          </h2>
+          {smsLogs.length === 0 ? (
+            <p className="mt-4 text-sm text-muted-foreground">
+              No verification SMS yet. Sends and any errors will appear here.
+            </p>
+          ) : (
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left font-display text-[10px] uppercase tracking-[0.18em] text-muted-foreground">
+                    <th className="py-2 pr-4">When</th>
+                    <th className="py-2 pr-4">Phone</th>
+                    <th className="py-2 pr-4">Type</th>
+                    <th className="py-2 pr-4">Result</th>
+                    <th className="py-2 pr-4">Detail</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {smsLogs.map((l) => (
+                    <tr key={l.id} className="border-t border-border align-top">
+                      <td className="py-2 pr-4 whitespace-nowrap text-xs text-muted-foreground">
+                        {SMS_DATE_FMT.format(new Date(l.createdAt))}
+                      </td>
+                      <td className="py-2 pr-4 tabular-nums">
+                        {maskPhone(l.phone)}
+                      </td>
+                      <td className="py-2 pr-4">
+                        {l.kind === "send" ? "Code sent" : "Code check"}
+                      </td>
+                      <td className="py-2 pr-4">
+                        <span
+                          className={`inline-flex items-center rounded-full px-2 py-0.5 font-display text-[10px] uppercase tracking-[0.12em] ${
+                            l.ok
+                              ? "bg-flag-green/15 text-flag-green"
+                              : "bg-flag-red/15 text-flag-red"
+                          }`}
+                        >
+                          {l.ok ? "OK" : "Failed"}
+                        </span>
+                      </td>
+                      <td className="max-w-md py-2 pr-4 text-xs text-muted-foreground">
+                        {l.detail ?? "—"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </section>
