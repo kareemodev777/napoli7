@@ -12,7 +12,7 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { HAS_SUPABASE_SERVICE } from "@/lib/env";
-import { createServiceRoleClient } from "@/lib/supabase/service";
+import { loadSmsLogs, maskPhone } from "@/lib/admin/sms-logs";
 import { DashboardDateFilter } from "@/components/admin/DashboardDateFilter";
 import { DashboardChart } from "@/components/admin/DashboardChart";
 import { loadDashboard, loadLiveSnapshot } from "@/lib/admin/dashboard-data";
@@ -52,39 +52,6 @@ const SMS_DATE_FMT = new Intl.DateTimeFormat("en-GB", {
   timeZone: "Asia/Dubai",
 });
 
-interface SmsLogRow {
-  id: string;
-  phone: string;
-  kind: string;
-  ok: boolean;
-  detail: string | null;
-  createdAt: string;
-}
-
-/** Recent OTP (Twilio Verify) sends/checks for the dashboard log. */
-async function loadSmsLogs(): Promise<SmsLogRow[]> {
-  if (!HAS_SUPABASE_SERVICE) return [];
-  const supabase = createServiceRoleClient();
-  const { data } = await supabase
-    .from("sms_logs")
-    .select("id, phone, kind, ok, detail, created_at")
-    .order("created_at", { ascending: false })
-    .limit(5);
-  return (data ?? []).map((r) => ({
-    id: r.id,
-    phone: r.phone,
-    kind: r.kind,
-    ok: r.ok,
-    detail: r.detail,
-    createdAt: r.created_at,
-  }));
-}
-
-/** Mask the middle digits of a phone for the log (admin-only, light privacy). */
-function maskPhone(phone: string): string {
-  if (phone.length <= 8) return phone;
-  return `${phone.slice(0, 6)}${"•".repeat(phone.length - 8)}${phone.slice(-2)}`;
-}
 
 function DeltaBadge({ kpi }: { kpi: Kpi }) {
   if (kpi.deltaPct === null) {
@@ -416,11 +383,20 @@ export default async function AdminPage({
           })}
         </div>
 
-        {/* SMS / OTP verification log — sends + errors, newest first. */}
+        {/* SMS / OTP verification log — last 5 sends + errors, newest first. */}
         <div className="mt-8 rounded-md border border-border bg-card p-5">
-          <h2 className="font-display text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-            SMS verification log
-          </h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+              SMS verification log
+            </h2>
+            <Link
+              href="/admin/sms"
+              className="inline-flex items-center gap-0.5 font-display text-[11px] uppercase tracking-[0.12em] text-muted-foreground hover:text-foreground"
+            >
+              View all
+              <ChevronRight className="h-3.5 w-3.5" strokeWidth={1.7} aria-hidden />
+            </Link>
+          </div>
           {smsLogs.length === 0 ? (
             <p className="mt-4 text-sm text-muted-foreground">
               No verification SMS yet. Sends and any errors will appear here.
