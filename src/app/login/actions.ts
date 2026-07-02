@@ -69,7 +69,7 @@ export async function loginWithPassword(
     redirect(isAdminPath(requestedNext) ? requestedNext! : "/admin");
   }
 
-  redirect(requestedNext && !isAdminPath(requestedNext) ? requestedNext : "/account");
+  redirect(requestedNext && !isAdminPath(requestedNext) ? requestedNext : "/");
 }
 
 export async function sendMagicLink(

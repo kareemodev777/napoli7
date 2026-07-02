@@ -26,7 +26,7 @@ export default async function LoginPage({
     if (await isAdminUser(user)) {
       redirect(isAdminPath(next) ? next! : "/admin");
     }
-    redirect(next && !isAdminPath(next) ? next : "/account");
+    redirect(next && !isAdminPath(next) ? next : "/");
   }
 
   return (

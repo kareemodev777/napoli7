@@ -19,7 +19,7 @@ const initial: AuthResult = {};
 
 export function LoginForm() {
   const params = useSearchParams();
-  const next = params.get("next") ?? "/account";
+  const next = params.get("next") ?? "/";
   const confirmed = params.get("confirmed") === "true";
   const passwordReset = params.get("password-reset") === "true";
 
