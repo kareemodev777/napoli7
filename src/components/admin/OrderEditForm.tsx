@@ -124,7 +124,11 @@ export function OrderEditForm(props: OrderEditFormProps) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-8 lg:grid-cols-[1.5fr_1fr]">
+    <form
+      id="order-edit-form"
+      onSubmit={onSubmit}
+      className="grid gap-8 lg:grid-cols-[1.5fr_1fr]"
+    >
       <input type="hidden" name="orderId" value={props.orderId} />
 
       <div className="space-y-8">
@@ -172,7 +176,7 @@ export function OrderEditForm(props: OrderEditFormProps) {
           </p>
         </section>
 
-        <section className="border border-border bg-card p-4">
+        <section>
           <h2 className="font-display text-xs uppercase tracking-[0.25em] text-foreground mb-4 border-b border-border pb-2">
             Add item
           </h2>
@@ -272,8 +276,8 @@ export function OrderEditForm(props: OrderEditFormProps) {
         </section>
       </div>
 
-      <aside className="space-y-5 border border-border bg-card p-6 lg:sticky lg:top-6 h-fit">
-        <h2 className="font-display text-xs uppercase tracking-[0.25em] text-azure-deep">
+      <aside className="space-y-5 lg:sticky lg:top-24 h-fit lg:border-l lg:border-border lg:pl-8">
+        <h2 className="font-display text-xs uppercase tracking-[0.25em] text-azure-deep border-b border-border pb-2">
           Payment difference
         </h2>
         <dl className="space-y-2 text-sm">

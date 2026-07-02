@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { StatusBadge } from "@/components/account/StatusBadge";
+import { Pizza } from "lucide-react";
 import { MapEmbed } from "@/components/site/MapEmbed";
 import { buildDeliveryMapQuery, buildGpsMapsUrl } from "@/lib/delivery-map";
 import { HAS_SUPABASE, HAS_SUPABASE_SERVICE } from "@/lib/env";
@@ -53,7 +53,7 @@ async function loadOrder(id: string) {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, order_number, customer_name, customer_phone, customer_email, status, payment_method, payment_status, pos_sync_status, pos_invoice_number, delivery_type, delivery_address, delivery_slot, pizza_cut, subtotal_aed, delivery_fee_aed, discount_aed, total_aed, promo_code, order_notes, admin_notes, assigned_rider_id, created_at, order_items(id, product_name, base_price_aed, quantity, customizations, line_total_aed, size_label)",
+      "id, order_number, customer_name, customer_phone, customer_email, status, payment_method, payment_status, pos_sync_status, pos_invoice_number, delivery_type, delivery_address, delivery_slot, pizza_cut, subtotal_aed, delivery_fee_aed, discount_aed, total_aed, promo_code, order_notes, admin_notes, assigned_rider_id, created_at, order_items(id, product_id, product_name, base_price_aed, quantity, customizations, line_total_aed, size_label)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -69,10 +69,17 @@ async function loadOrder(id: string) {
 
   const { data: products } = await supabase
     .from("products")
-    .select("id, name, price_aed")
+    .select("id, name, price_aed, image_url")
     .eq("is_active", true)
     .order("category_id")
     .order("position");
+
+  // order_items.product_id has no FK to products, so PostgREST can't embed the
+  // product row directly — look images up separately by product id.
+  const imageByProductId = new Map<string, string>();
+  (products ?? []).forEach((product) => {
+    if (product.image_url) imageByProductId.set(product.id, product.image_url);
+  });
 
   // Active riders, plus this order's currently assigned rider even if it has
   // since been deactivated, so the selection always shows who it's assigned to.
@@ -85,6 +92,7 @@ async function loadOrder(id: string) {
   return {
     order: data,
     edits: (edits ?? []) as OrderEditRow[],
+    imageByProductId,
     products: (products ?? []).map((product) => ({
       id: product.id,
       name: product.name,
@@ -106,7 +114,7 @@ export default async function AdminOrderEditPage({
   const { id } = await params;
   const loaded = await loadOrder(id);
   if (!loaded) notFound();
-  const { order, edits, products, riders } = loaded;
+  const { order, edits, products, riders, imageByProductId } = loaded;
 
   const deliveryAddress = order.delivery_address as
     | {
@@ -147,6 +155,7 @@ export default async function AdminOrderEditPage({
   const summaryItems = (order.order_items ?? []).map(
     (it: {
       id: string;
+      product_id: string | null;
       product_name: string;
       base_price_aed: number | string;
       quantity: number;
@@ -158,6 +167,9 @@ export default async function AdminOrderEditPage({
       productName: it.size_label
         ? `${it.product_name} (${it.size_label})`
         : it.product_name,
+      imageUrl: it.product_id
+        ? imageByProductId.get(it.product_id) ?? null
+        : null,
       basePriceAed: Number(it.base_price_aed),
       quantity: it.quantity,
       lineTotalAed: Number(it.line_total_aed),
@@ -186,262 +198,326 @@ export default async function AdminOrderEditPage({
           ← Back to orders
         </Link>
 
-        <div className="mt-3 flex flex-wrap items-center gap-3">
-          <h1 className="font-display text-3xl uppercase tracking-[1.5px] md:text-4xl">
-            {order.order_number}
-          </h1>
-          <StatusBadge status={order.status} />
-          <span className="rounded-md border border-border bg-card px-2 py-1 font-display text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-            {order.payment_method} · {order.payment_status}
-          </span>
+        {/* Sticky action bar — order id + live status + Save, always in reach. */}
+        <div className="sticky top-0 z-20 -mx-4 mt-3 flex flex-wrap items-center justify-between gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur md:-mx-10 md:px-10">
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <h1 className="font-display text-2xl uppercase tracking-[1.5px] md:text-3xl">
+              {order.order_number}
+            </h1>
+            <span className="rounded-md border border-border bg-card px-2 py-1 font-display text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+              {order.payment_method} · {order.payment_status}
+            </span>
+            <span className="text-xs text-muted-foreground">{placedAt}</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-3">
+            <OrderStatusPanel
+              orderId={order.id as string}
+              current={order.status as OrderStatus}
+              deliveryType={order.delivery_type as FulfillmentType}
+              bare
+            />
+            <button
+              type="submit"
+              form="order-edit-form"
+              className="inline-flex items-center bg-brand px-5 py-2.5 font-display text-xs uppercase tracking-[0.2em] text-primary-foreground hover:bg-brand-hover"
+            >
+              Save changes
+            </button>
+          </div>
         </div>
-        <p className="mt-2 text-sm text-muted-foreground">
-          {order.customer_name} · {order.customer_phone}
-        </p>
 
-        <OrderStatusPanel
-          orderId={order.id as string}
-          current={order.status as OrderStatus}
-          deliveryType={order.delivery_type as FulfillmentType}
-        />
+        {/* Shopify-style split: a wide main column and a details sidebar. */}
+        <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
+          {/* ---- Main: items, totals, edit, history ---- */}
+          <div className="space-y-6">
+            <div className="rounded-md border border-border bg-card p-5">
+              <div className="flex items-center justify-between">
+                <h2 className="font-display text-xs uppercase tracking-[0.25em] text-muted-foreground">
+                  Items
+                </h2>
+                <span className="font-display text-[11px] uppercase tracking-[0.14em] capitalize text-muted-foreground">
+                  {order.delivery_type} · {order.delivery_slot}
+                </span>
+              </div>
 
-        {order.delivery_type === "delivery" && deliveryAddress ? (
-          <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_minmax(0,420px)]">
-            <div className="rounded-md border border-border bg-card p-5 text-sm space-y-2">
-              <p className="font-display text-xs tracking-[0.25em] uppercase text-muted-foreground">
-                Delivery details
-              </p>
-              <p>{deliveryAddress.street ?? ""}</p>
-              <p>
-                {[deliveryAddress.flat ? `Flat ${deliveryAddress.flat}` : null, deliveryAddress.area]
-                  .filter(Boolean)
-                  .join(", ")}
-              </p>
-              {deliveryAddress.notes ? (
-                <p className="text-muted-foreground">Notes: {deliveryAddress.notes}</p>
-              ) : null}
-              <p className="pt-2 font-medium">
-                Pizza cut: {order.pizza_cut ? "Yes" : "No"}
-              </p>
-              {hasGps ? (
-                <a
-                  href={buildGpsMapsUrl(deliveryAddress!.lat!, deliveryAddress!.lng!)}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="inline-block text-xs uppercase tracking-[0.18em] text-azure-deep underline underline-offset-2"
-                >
-                  Open GPS pin: {deliveryAddress!.lat!.toFixed(5)},{" "}
-                  {deliveryAddress!.lng!.toFixed(5)}
-                </a>
-              ) : deliveryMapQuery ? (
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
-                  Pin: {deliveryMapQuery}
+              <ul className="mt-4 divide-y divide-border border-y border-border">
+                {summaryItems.map((it) => (
+                  <li key={it.id} className="flex items-start gap-3 py-3 text-sm">
+                    {/* Wrapper is NOT clipped so the quantity badge can overflow. */}
+                    <span className="relative shrink-0">
+                      <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
+                        {it.imageUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={it.imageUrl}
+                            alt=""
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <Pizza
+                            className="h-5 w-5 text-muted-foreground"
+                            strokeWidth={1.7}
+                            aria-hidden
+                          />
+                        )}
+                      </span>
+                      <span className="absolute -right-1.5 -top-1.5 z-10 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-brand px-1 font-display text-[10px] leading-none text-primary-foreground ring-2 ring-card">
+                        {it.quantity}
+                      </span>
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium">{it.productName}</p>
+                      {it.extras.length > 0 || it.removed.length > 0 ? (
+                        <p className="mt-0.5 text-xs text-muted-foreground">
+                          {[...it.extras, ...it.removed].join(" · ")}
+                        </p>
+                      ) : null}
+                      <p className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">
+                        {it.quantity} × {it.basePriceAed.toFixed(2)} AED
+                      </p>
+                    </div>
+                    <span className="shrink-0 font-display tabular-nums">
+                      {it.lineTotalAed.toFixed(2)} AED
+                    </span>
+                  </li>
+                ))}
+              </ul>
+
+              <dl className="mt-4 space-y-1 text-sm tabular-nums">
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Subtotal</dt>
+                  <dd>{Number(order.subtotal_aed).toFixed(2)} AED</dd>
+                </div>
+                {Number(order.delivery_fee_aed) > 0 ? (
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Delivery fee</dt>
+                    <dd>{Number(order.delivery_fee_aed).toFixed(2)} AED</dd>
+                  </div>
+                ) : null}
+                {Number(order.discount_aed ?? 0) > 0 ? (
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">
+                      Discount{order.promo_code ? ` (${order.promo_code})` : ""}
+                    </dt>
+                    <dd>−{Number(order.discount_aed).toFixed(2)} AED</dd>
+                  </div>
+                ) : null}
+                <div className="flex justify-between border-t border-border pt-2 font-display text-base">
+                  <dt>Total</dt>
+                  <dd>{Number(order.total_aed).toFixed(2)} AED</dd>
+                </div>
+              </dl>
+
+              {order.order_notes ? (
+                <p className="mt-4 border-t border-border pt-4 text-sm">
+                  <span className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                    Customer notes:{" "}
+                  </span>
+                  {order.order_notes}
                 </p>
               ) : null}
-              <div className="mt-3 border-t border-border pt-3">
-                <AssignRiderForm
+            </div>
+
+            <OrderEditForm
+              orderId={order.id}
+              orderNumber={order.order_number}
+              paymentMethod={order.payment_method}
+              paymentStatus={order.payment_status}
+              oldTotalAed={Number(order.total_aed)}
+              deliveryFeeAed={Number(order.delivery_fee_aed)}
+              discountAed={Number(order.discount_aed ?? 0)}
+              orderNotes={order.order_notes ?? ""}
+              items={items}
+              products={products}
+            />
+
+            {edits.length > 0 ? (
+              <div>
+                <h2 className="font-display text-xs uppercase tracking-[0.25em] text-muted-foreground">
+                  Edit history
+                </h2>
+                <ul className="mt-3 space-y-2">
+                  {edits.map((edit) => (
+                    <li
+                      key={edit.id}
+                      className="rounded-md border border-border bg-card p-4 text-sm"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <span className="tabular-nums">
+                          {Number(edit.old_total_aed).toFixed(2)} →{" "}
+                          {Number(edit.new_total_aed).toFixed(2)} AED (
+                          {Number(edit.difference_aed) >= 0 ? "+" : ""}
+                          {Number(edit.difference_aed).toFixed(2)})
+                        </span>
+                        <span className="text-xs text-muted-foreground">
+                          {formatDateTime(edit.created_at)}
+                        </span>
+                      </div>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {labelForHandling(
+                          edit.payment_handling as PaymentHandling,
+                        )}
+                        {edit.note ? ` · ${edit.note}` : ""}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+
+          {/* ---- Sidebar: customer, fulfilment, POS ---- */}
+          <aside className="space-y-6">
+            <div className="rounded-md border border-border bg-card p-5">
+              <h3 className="font-display text-xs uppercase tracking-[0.25em] text-muted-foreground">
+                Customer
+              </h3>
+              <p className="mt-3 font-medium">{order.customer_name}</p>
+              <a
+                href={`tel:${order.customer_phone}`}
+                className="mt-1 block text-sm text-azure-deep hover:underline"
+              >
+                {order.customer_phone}
+              </a>
+              {order.customer_email ? (
+                <a
+                  href={`mailto:${order.customer_email}`}
+                  className="block break-all text-sm text-azure-deep hover:underline"
+                >
+                  {order.customer_email}
+                </a>
+              ) : null}
+            </div>
+
+            <div className="rounded-md border border-border bg-card p-5 text-sm">
+              <h3 className="font-display text-xs uppercase tracking-[0.25em] text-muted-foreground">
+                {order.delivery_type === "delivery" ? "Delivery" : "Pickup"}
+              </h3>
+              <p className="mt-3">Slot: {order.delivery_slot}</p>
+              <p className="mt-1">Pizza cut: {order.pizza_cut ? "Yes" : "No"}</p>
+
+              {order.delivery_type === "delivery" && deliveryAddress ? (
+                <div className="mt-3 space-y-1 border-t border-border pt-3">
+                  <p>{deliveryAddress.street ?? ""}</p>
+                  <p>
+                    {[
+                      deliveryAddress.flat ? `Flat ${deliveryAddress.flat}` : null,
+                      deliveryAddress.area,
+                    ]
+                      .filter(Boolean)
+                      .join(", ")}
+                  </p>
+                  {deliveryAddress.notes ? (
+                    <p className="text-muted-foreground">
+                      Notes: {deliveryAddress.notes}
+                    </p>
+                  ) : null}
+                  {hasGps ? (
+                    <a
+                      href={buildGpsMapsUrl(
+                        deliveryAddress!.lat!,
+                        deliveryAddress!.lng!,
+                      )}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-block text-xs uppercase tracking-[0.18em] text-azure-deep underline underline-offset-2"
+                    >
+                      Open GPS pin
+                    </a>
+                  ) : deliveryMapQuery ? (
+                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">
+                      Pin: {deliveryMapQuery}
+                    </p>
+                  ) : null}
+                  {hasGps ? (
+                    <div className="mt-2">
+                      <MapEmbed
+                        lat={deliveryAddress!.lat!}
+                        lng={deliveryAddress!.lng!}
+                        title={`Delivery pin for ${order.order_number}`}
+                      />
+                    </div>
+                  ) : deliveryMapQuery ? (
+                    <div className="mt-2">
+                      <MapEmbed
+                        query={deliveryMapQuery}
+                        title={`Delivery pin for ${order.order_number}`}
+                      />
+                    </div>
+                  ) : null}
+                  <div className="mt-3 border-t border-border pt-3">
+                    <AssignRiderForm
+                      orderId={order.id}
+                      riders={riders}
+                      currentRiderId={
+                        (order.assigned_rider_id as string | null) ?? null
+                      }
+                    />
+                  </div>
+                </div>
+              ) : null}
+            </div>
+
+            <div className="rounded-md border border-border bg-card p-5">
+              <h3 className="font-display text-xs uppercase tracking-[0.25em] text-muted-foreground">
+                POS
+              </h3>
+              {order.pos_invoice_number ? (
+                <p className="mt-3 text-sm">
+                  <span className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                    Invoice:{" "}
+                  </span>
+                  <span className="font-mono tabular-nums">
+                    {order.pos_invoice_number as string}
+                  </span>
+                </p>
+              ) : (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Not yet synced. Push manually if the automatic sync failed.
+                </p>
+              )}
+              <div className="mt-3">
+                <SyncPosButton
                   orderId={order.id}
-                  riders={riders}
-                  currentRiderId={
-                    (order.assigned_rider_id as string | null) ?? null
+                  initialStatus={(order.pos_sync_status as string) ?? "pending"}
+                  payable={
+                    order.status !== "cancelled" &&
+                    (order.payment_method === "cod" ||
+                      order.payment_status === "paid")
                   }
                 />
               </div>
             </div>
-            {hasGps ? (
-              <MapEmbed
-                lat={deliveryAddress!.lat!}
-                lng={deliveryAddress!.lng!}
-                title={`Delivery pin for ${order.order_number}`}
-              />
-            ) : deliveryMapQuery ? (
-              <MapEmbed query={deliveryMapQuery} title={`Delivery pin for ${order.order_number}`} />
-            ) : null}
-          </div>
-        ) : null}
 
-        <div className="mt-8 rounded-md border border-border bg-card p-5">
-          <h2 className="font-display text-xs uppercase tracking-[0.25em] text-muted-foreground">
-            Order summary
-          </h2>
-
-          <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-4">
-            <div>
-              <dt className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                Placed
-              </dt>
-              <dd>{placedAt}</dd>
-            </div>
-            <div>
-              <dt className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                Fulfilment
-              </dt>
-              <dd className="capitalize">
-                {order.delivery_type} · {order.delivery_slot}
-              </dd>
-            </div>
-            <div>
-              <dt className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                Payment
-              </dt>
-              <dd>
-                {order.payment_method} · {order.payment_status}
-              </dd>
-            </div>
-            <div className="min-w-0">
-              <dt className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                Email
-              </dt>
-              <dd className="truncate">{order.customer_email ?? "—"}</dd>
-            </div>
-          </dl>
-
-          <ul className="mt-5 divide-y divide-border border-t border-border">
-            {summaryItems.map((it) => (
-              <li key={it.id} className="flex justify-between gap-4 py-3 text-sm">
-                <div className="min-w-0">
-                  <p className="font-medium">
-                    {it.quantity} × {it.productName}
-                  </p>
-                  {it.extras.length > 0 || it.removed.length > 0 ? (
-                    <p className="mt-0.5 text-xs text-muted-foreground">
-                      {[...it.extras, ...it.removed].join(" · ")}
-                    </p>
-                  ) : null}
-                  <p className="mt-0.5 text-[11px] text-muted-foreground tabular-nums">
-                    {it.basePriceAed.toFixed(2)} AED each
-                  </p>
-                </div>
-                <span className="shrink-0 font-display tabular-nums">
-                  {it.lineTotalAed.toFixed(2)} AED
-                </span>
-              </li>
-            ))}
-          </ul>
-
-          <dl className="mt-4 space-y-1 border-t border-border pt-4 text-sm tabular-nums">
-            <div className="flex justify-between">
-              <dt className="text-muted-foreground">Subtotal</dt>
-              <dd>{Number(order.subtotal_aed).toFixed(2)} AED</dd>
-            </div>
-            {Number(order.delivery_fee_aed) > 0 ? (
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">Delivery fee</dt>
-                <dd>{Number(order.delivery_fee_aed).toFixed(2)} AED</dd>
+            {order.admin_notes ? (
+              <div className="rounded-md border border-border bg-card p-5">
+                <h3 className="font-display text-xs uppercase tracking-[0.25em] text-muted-foreground">
+                  Admin notes
+                </h3>
+                <pre className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">
+                  {order.admin_notes}
+                </pre>
               </div>
             ) : null}
-            {Number(order.discount_aed ?? 0) > 0 ? (
-              <div className="flex justify-between">
-                <dt className="text-muted-foreground">
-                  Discount{order.promo_code ? ` (${order.promo_code})` : ""}
-                </dt>
-                <dd>−{Number(order.discount_aed).toFixed(2)} AED</dd>
-              </div>
-            ) : null}
-            <div className="flex justify-between border-t border-border pt-2 font-display text-base">
-              <dt>Total</dt>
-              <dd>{Number(order.total_aed).toFixed(2)} AED</dd>
-            </div>
-          </dl>
-
-          {order.order_notes ? (
-            <p className="mt-4 border-t border-border pt-4 text-sm">
-              <span className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                Customer notes:{" "}
-              </span>
-              {order.order_notes}
-            </p>
-          ) : null}
+          </aside>
         </div>
 
-        <div className="mt-8 flex flex-wrap items-center justify-between gap-4 rounded-md border border-border bg-card p-5">
-          <div>
-            <h2 className="font-display text-xs uppercase tracking-[0.25em] text-muted-foreground">
-              POS
-            </h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Send this order to the POS (xtbooks). Use this if the automatic
-              push failed or the order was paid before the POS was connected.
-            </p>
-            {order.pos_invoice_number ? (
-              <p className="mt-2 text-sm">
-                <span className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-                  Invoice:{" "}
-                </span>
-                <span className="font-mono tabular-nums">
-                  {order.pos_invoice_number as string}
-                </span>
-              </p>
-            ) : null}
-          </div>
-          <SyncPosButton
-            orderId={order.id}
-            initialStatus={(order.pos_sync_status as string) ?? "pending"}
-            payable={
-              order.status !== "cancelled" &&
-              (order.payment_method === "cod" ||
-                order.payment_status === "paid")
-            }
+        {/* Bottom action bar — repeats the key actions after a long scroll. */}
+        <div className="mt-8 flex flex-wrap items-center justify-between gap-3 border-t border-border pt-6">
+          <OrderStatusPanel
+            orderId={order.id as string}
+            current={order.status as OrderStatus}
+            deliveryType={order.delivery_type as FulfillmentType}
+            bare
           />
+          <button
+            type="submit"
+            form="order-edit-form"
+            className="inline-flex items-center bg-brand px-5 py-2.5 font-display text-xs uppercase tracking-[0.2em] text-primary-foreground hover:bg-brand-hover"
+          >
+            Save changes
+          </button>
         </div>
-
-        <div className="mt-8">
-          <OrderEditForm
-            orderId={order.id}
-            orderNumber={order.order_number}
-            paymentMethod={order.payment_method}
-            paymentStatus={order.payment_status}
-            oldTotalAed={Number(order.total_aed)}
-            deliveryFeeAed={Number(order.delivery_fee_aed)}
-            discountAed={Number(order.discount_aed ?? 0)}
-            orderNotes={order.order_notes ?? ""}
-            items={items}
-            products={products}
-          />
-        </div>
-
-        {order.admin_notes ? (
-          <div className="mt-10">
-            <h2 className="font-display text-xs uppercase tracking-[0.25em] text-muted-foreground">
-              Admin notes
-            </h2>
-            <pre className="mt-3 whitespace-pre-wrap rounded-md border border-border bg-card p-4 text-sm leading-relaxed">
-              {order.admin_notes}
-            </pre>
-          </div>
-        ) : null}
-
-        {edits.length > 0 ? (
-          <div className="mt-10">
-            <h2 className="font-display text-xs uppercase tracking-[0.25em] text-muted-foreground">
-              Edit history
-            </h2>
-            <ul className="mt-3 space-y-2">
-              {edits.map((edit) => (
-                <li
-                  key={edit.id}
-                  className="rounded-md border border-border bg-card p-4 text-sm"
-                >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="tabular-nums">
-                      {Number(edit.old_total_aed).toFixed(2)} →{" "}
-                      {Number(edit.new_total_aed).toFixed(2)} AED (
-                      {Number(edit.difference_aed) >= 0 ? "+" : ""}
-                      {Number(edit.difference_aed).toFixed(2)})
-                    </span>
-                    <span className="text-xs text-muted-foreground">
-                      {formatDateTime(edit.created_at)}
-                    </span>
-                  </div>
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {labelForHandling(edit.payment_handling as PaymentHandling)}
-                    {edit.note ? ` · ${edit.note}` : ""}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
       </div>
     </section>
   );
