@@ -7,6 +7,7 @@ import { requireCustomerAccount } from "@/lib/auth/require-auth";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { HAS_SUPABASE, HAS_SUPABASE_SERVICE } from "@/lib/env";
+import { formatDateTime } from "@/lib/format-date";
 
 export const metadata: Metadata = {
   title: "Account",
@@ -168,7 +169,7 @@ export default async function AccountPage() {
                         {o.orderNumber}
                       </span>
                       <span className="text-sm text-muted-foreground">
-                        {new Date(o.createdAt).toLocaleString("en-AE", {
+                        {formatDateTime(o.createdAt, {
                           dateStyle: "medium",
                           timeStyle: "short",
                         })}

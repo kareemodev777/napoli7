@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { HAS_SUPABASE_SERVICE } from "@/lib/env";
+import { DISPLAY_TIME_ZONE } from "@/lib/format-date";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { ResendEmailCell } from "@/components/admin/ResendEmailCell";
 import { MessageReadCell } from "@/components/admin/MessageReadCell";
@@ -50,6 +51,7 @@ const DATE_FMT = new Intl.DateTimeFormat("en-GB", {
   month: "short",
   hour: "2-digit",
   minute: "2-digit",
+  timeZone: DISPLAY_TIME_ZONE,
 });
 
 export default async function AdminMessagesPage() {

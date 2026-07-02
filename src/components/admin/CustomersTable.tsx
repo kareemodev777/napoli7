@@ -3,14 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import type { DerivedCustomer } from "@/lib/admin/customers";
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("en-AE", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
+import { formatDate } from "@/lib/format-date";
 
 export function CustomersTable({ customers }: { customers: DerivedCustomer[] }) {
   const [open, setOpen] = useState<Set<string>>(new Set());
@@ -111,7 +104,11 @@ function CustomerRows({
           {customer.totalSpentAed.toFixed(2)} AED
         </td>
         <td className="px-4 py-3 text-muted-foreground">
-          {formatDate(customer.lastOrderAt)}
+          {formatDate(customer.lastOrderAt, {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+          })}
         </td>
       </tr>
       {isOpen ? (
@@ -141,7 +138,11 @@ function CustomerRows({
                       </Link>
                     </td>
                     <td className="py-1.5 pr-4 text-muted-foreground">
-                      {formatDate(o.createdAt)}
+                      {formatDate(o.createdAt, {
+                        day: "2-digit",
+                        month: "short",
+                        year: "numeric",
+                      })}
                     </td>
                     <td className="py-1.5 pr-4 capitalize">
                       {o.status?.replace(/_/g, " ") ?? "—"}

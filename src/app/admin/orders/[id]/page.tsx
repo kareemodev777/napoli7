@@ -5,6 +5,7 @@ import { StatusBadge } from "@/components/account/StatusBadge";
 import { MapEmbed } from "@/components/site/MapEmbed";
 import { buildDeliveryMapQuery, buildGpsMapsUrl } from "@/lib/delivery-map";
 import { HAS_SUPABASE, HAS_SUPABASE_SERVICE } from "@/lib/env";
+import { formatDateTime } from "@/lib/format-date";
 import {
   OrderEditForm,
   type EditOrderItem,
@@ -168,7 +169,7 @@ export default async function AdminOrderEditPage({
     }),
   );
 
-  const placedAt = new Date(order.created_at as string).toLocaleString("en-AE");
+  const placedAt = formatDateTime(order.created_at as string);
 
   return (
     <section className="px-4 py-8 md:px-10">
@@ -408,7 +409,7 @@ export default async function AdminOrderEditPage({
                       {Number(edit.difference_aed).toFixed(2)})
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(edit.created_at).toLocaleString("en-AE")}
+                      {formatDateTime(edit.created_at)}
                     </span>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">

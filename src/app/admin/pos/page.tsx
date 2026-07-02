@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { HAS_SUPABASE_SERVICE } from "@/lib/env";
+import { DISPLAY_TIME_ZONE } from "@/lib/format-date";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { verifyPosCatalog, type CatalogIssue } from "@/lib/pos/catalog";
 import { RetryPosButton } from "@/components/admin/RetryPosButton";
@@ -48,6 +49,7 @@ const DATE_FMT = new Intl.DateTimeFormat("en-GB", {
   month: "short",
   hour: "2-digit",
   minute: "2-digit",
+  timeZone: DISPLAY_TIME_ZONE,
 });
 
 async function countFailedSyncs(): Promise<number> {

@@ -7,6 +7,7 @@ import { Badge, PromoForm, money } from "./form-components";
 import type { PromoCodeRow } from "./types";
 import { AdminModal } from "@/components/admin/AdminModal";
 import { HAS_SUPABASE_SERVICE } from "@/lib/env";
+import { formatDate } from "@/lib/format-date";
 import { getSignupCampaign } from "@/lib/signup-reward";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 
@@ -125,12 +126,8 @@ function usageLabel(promo: PromoCodeRow) {
 
 function windowLabel(promo: PromoCodeRow) {
   if (!promo.valid_from && !promo.valid_until) return "Always valid";
-  const from = promo.valid_from
-    ? new Date(promo.valid_from).toLocaleDateString("en-AE")
-    : "now";
-  const until = promo.valid_until
-    ? new Date(promo.valid_until).toLocaleDateString("en-AE")
-    : "no expiry";
+  const from = promo.valid_from ? formatDate(promo.valid_from) : "now";
+  const until = promo.valid_until ? formatDate(promo.valid_until) : "no expiry";
   return `${from} → ${until}`;
 }
 
