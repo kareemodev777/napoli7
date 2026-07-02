@@ -9,16 +9,15 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import { getBrowserSupabase } from "@/lib/supabase/client";
-import { playAlarm, unlockAlarm } from "./alarm";
+import { startAlarm, stopAlarm, unlockAlarm } from "./alarm";
 import {
   EMPTY_SNAPSHOT,
   type AdminNotificationSnapshot,
 } from "@/lib/admin/notifications";
 
 // Realtime is the primary signal; the slow poll is a safety net for a dropped
-// socket. The alarm re-fires on this cadence while orders await acceptance.
+// socket.
 const FALLBACK_POLL_MS = 30_000;
-const ALARM_REPEAT_MS = 4_000;
 
 const SUPABASE_CONFIGURED = Boolean(
   process.env.NEXT_PUBLIC_SUPABASE_URL &&
@@ -137,14 +136,17 @@ export function AdminNotificationsProvider({
     };
   }, []);
 
-  // Continuous alarm: keep ringing while orders await acceptance, until the
-  // queue is cleared (count -> 0), the admin opens notifications, or they're
-  // already on the orders page. A fresh order re-arms it (silenced reset above).
+  // Continuous alarm: loop the sound while orders await acceptance, and stop it
+  // when the queue is cleared (count -> 0, i.e. the order was accepted), the
+  // admin opens notifications, or they're on the orders page. A fresh order
+  // re-arms it (silenced reset above).
   useEffect(() => {
-    if (snapshot.orders <= 0 || silenced || onOrdersPage) return;
-    playAlarm();
-    const id = window.setInterval(() => playAlarm(), ALARM_REPEAT_MS);
-    return () => window.clearInterval(id);
+    if (snapshot.orders > 0 && !silenced && !onOrdersPage) {
+      startAlarm();
+    } else {
+      stopAlarm();
+    }
+    return () => stopAlarm();
   }, [snapshot.orders, silenced, onOrdersPage]);
 
   const value: AdminNotificationsContextValue = {
