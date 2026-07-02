@@ -5,13 +5,14 @@ import {
   MapContainer,
   TileLayer,
   Marker,
+  Circle,
   useMap,
   useMapEvents,
 } from "react-leaflet";
 import { LocateFixed } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { SHOP_LOCATION } from "@/lib/delivery-map";
+import { SHOP_LOCATION, DELIVERY_RADIUS_KM } from "@/lib/delivery-map";
 
 export interface PickedLocation {
   lat: number;
@@ -66,6 +67,27 @@ function ClickCapture({ onPick }: { onPick: (loc: PickedLocation) => void }) {
       onPick({ lat: e.latlng.lat, lng: e.latlng.lng });
     },
   });
+  return null;
+}
+
+/** Frame the whole delivery circle once on mount (when no pin is set yet). */
+function FitRadius() {
+  const map = useMap();
+  const done = useRef(false);
+  useEffect(() => {
+    if (done.current) return;
+    done.current = true;
+    const dLat = DELIVERY_RADIUS_KM / 111;
+    const dLng =
+      DELIVERY_RADIUS_KM / (111 * Math.cos((SHOP_LOCATION.lat * Math.PI) / 180));
+    map.fitBounds(
+      [
+        [SHOP_LOCATION.lat - dLat, SHOP_LOCATION.lng - dLng],
+        [SHOP_LOCATION.lat + dLat, SHOP_LOCATION.lng + dLng],
+      ],
+      { padding: [16, 16] },
+    );
+  }, [map]);
   return null;
 }
 
@@ -143,7 +165,20 @@ export default function DeliveryMapPicker({
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
+          {/* Delivery zone — the straight-line radius the courier covers. */}
+          <Circle
+            center={[SHOP_LOCATION.lat, SHOP_LOCATION.lng]}
+            radius={DELIVERY_RADIUS_KM * 1000}
+            pathOptions={{
+              color: "#1d4ed8",
+              weight: 2,
+              dashArray: "6 6",
+              fillColor: "#1d4ed8",
+              fillOpacity: 0.06,
+            }}
+          />
           <ClickCapture onPick={handlePick} />
+          {value ? null : <FitRadius />}
           <FlyTo to={flyTo} />
           {value ? (
             <Marker
@@ -178,7 +213,8 @@ export default function DeliveryMapPicker({
         <p className="text-xs text-flag-red">{geoError}</p>
       ) : (
         <p className="text-xs text-muted-foreground">
-          Tap “Use my location” (allow the permission), or tap/drag the pin to
+          The shaded circle is our {DELIVERY_RADIUS_KM} km delivery zone — your
+          pin must be inside it. Tap “Use my location”, or tap/drag the pin to
           your exact spot.
         </p>
       )}

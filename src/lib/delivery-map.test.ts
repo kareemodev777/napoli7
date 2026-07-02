@@ -10,7 +10,7 @@ import {
   SHOP_LOCATION,
 } from "./delivery-map";
 
-describe("delivery radius (7 km straight-line)", () => {
+describe("delivery radius (8 km straight-line)", () => {
   test("the shop itself is 0 km away and in range", () => {
     expect(distanceFromShopKm(SHOP_LOCATION.lat, SHOP_LOCATION.lng)).toBeCloseTo(
       0,
