@@ -23,6 +23,7 @@ interface RecentOrder {
   status:
     | "received"
     | "preparing"
+    | "ready"
     | "out_for_delivery"
     | "delivered"
     | "cancelled";

@@ -19,6 +19,11 @@ import { createServiceRoleClient } from "@/lib/supabase/service";
 import { createClient } from "@/lib/supabase/server";
 import { labelForHandling, type PaymentHandling } from "@/lib/admin/order-edit";
 import { SyncPosButton } from "@/components/admin/SyncPosButton";
+import { OrderStatusPanel } from "@/components/admin/OrderStatusPanel";
+import type {
+  OrderStatus,
+  FulfillmentType,
+} from "@/lib/notifications/status-updates";
 
 export const metadata: Metadata = {
   title: "Edit order · Admin",
@@ -193,6 +198,12 @@ export default async function AdminOrderEditPage({
         <p className="mt-2 text-sm text-muted-foreground">
           {order.customer_name} · {order.customer_phone}
         </p>
+
+        <OrderStatusPanel
+          orderId={order.id as string}
+          current={order.status as OrderStatus}
+          deliveryType={order.delivery_type as FulfillmentType}
+        />
 
         {order.delivery_type === "delivery" && deliveryAddress ? (
           <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_minmax(0,420px)]">
