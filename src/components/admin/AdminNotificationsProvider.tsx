@@ -9,6 +9,7 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import { getBrowserSupabase } from "@/lib/supabase/client";
+import { useAdminAlarm } from "@/store/admin-alarm";
 import { startAlarm, stopAlarm, unlockAlarm } from "./alarm";
 import {
   EMPTY_SNAPSHOT,
@@ -65,15 +66,22 @@ export function AdminNotificationsProvider({
 }) {
   const [snapshot, setSnapshot] = useState(initial);
   const [pulse, setPulse] = useState(false);
-  const [silenced, setSilenced] = useState(false);
-  const prevOrders = useRef(initial.orders);
   const refreshRef = useRef<() => void>(() => {});
+
+  // Acknowledge state lives in a global store so it survives navigation/re-mount.
+  const silenced = useAdminAlarm((s) => s.silenced);
 
   // Being on the order queue counts as acknowledging the alert — so does
   // opening the notification dropdown (which calls silence()). Random clicks
   // elsewhere on the page do NOT stop the alarm.
   const pathname = usePathname();
   const onOrdersPage = pathname?.startsWith("/admin/orders") ?? false;
+
+  // Visiting the orders page is a persistent acknowledge (not just while there),
+  // so leaving it for the dashboard doesn't re-ring.
+  useEffect(() => {
+    if (onOrdersPage) useAdminAlarm.getState().silence();
+  }, [onOrdersPage]);
 
   // Unlock audio on the admin's first interaction (browsers block autoplay).
   useEffect(() => {
@@ -92,13 +100,12 @@ export function AdminNotificationsProvider({
         if (!res.ok) return;
         const data = (await res.json()) as AdminNotificationSnapshot;
         if (cancelled || typeof data.orders !== "number") return;
-        if (data.orders > prevOrders.current) {
-          // A fresh order — flash and re-arm the alarm even if it was silenced.
+        // A rise in the count re-arms the alarm (in the global store) even if it
+        // was silenced; flash the bell for the fresh order.
+        if (useAdminAlarm.getState().reconcile(data.orders)) {
           setPulse(true);
-          setSilenced(false);
           window.setTimeout(() => setPulse(false), 2000);
         }
-        prevOrders.current = data.orders;
         setSnapshot(data);
       } catch {
         // Keep the last snapshot; try again next tick.
@@ -153,7 +160,7 @@ export function AdminNotificationsProvider({
     snapshot,
     pulse,
     silenced,
-    silence: () => setSilenced(true),
+    silence: () => useAdminAlarm.getState().silence(),
     refresh: () => refreshRef.current(),
   };
 
