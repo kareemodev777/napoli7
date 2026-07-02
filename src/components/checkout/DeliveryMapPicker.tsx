@@ -11,14 +11,19 @@ import {
 import { LocateFixed } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { SHOP_LOCATION } from "@/lib/delivery-map";
 
 export interface PickedLocation {
   lat: number;
   lng: number;
 }
 
-// Shop location — used as the initial map center before the customer drops a pin.
-const AJMAN_CENTER: PickedLocation = { lat: 25.4002327, lng: 55.5033167 };
+// Shop location — the initial map center before the customer drops a pin, and
+// the centre of the delivery radius.
+const AJMAN_CENTER: PickedLocation = {
+  lat: SHOP_LOCATION.lat,
+  lng: SHOP_LOCATION.lng,
+};
 
 // Leaflet's default marker images break under bundlers, so point the icon at the
 // pinned CDN assets explicitly.

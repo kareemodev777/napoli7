@@ -4,21 +4,41 @@ import {
   buildGoogleMapsEmbedUrl,
   buildGoogleMapsSearchUrl,
   buildGpsMapsUrl,
-  isWithinAjmanDeliveryArea,
+  distanceFromShopKm,
+  haversineKm,
+  isWithinDeliveryRadius,
+  SHOP_LOCATION,
 } from "./delivery-map";
 
-describe("Ajman delivery bounds", () => {
-  test("accepts a pin inside Ajman (the shop)", () => {
-    expect(isWithinAjmanDeliveryArea(25.4002327, 55.5033167)).toBe(true);
+describe("delivery radius (7 km straight-line)", () => {
+  test("the shop itself is 0 km away and in range", () => {
+    expect(distanceFromShopKm(SHOP_LOCATION.lat, SHOP_LOCATION.lng)).toBeCloseTo(
+      0,
+      5,
+    );
+    expect(isWithinDeliveryRadius(SHOP_LOCATION.lat, SHOP_LOCATION.lng)).toBe(
+      true,
+    );
   });
 
-  test("rejects a pin in Sharjah (south of the box)", () => {
-    // Ajmal Makan / Sharjah Waterfront sits south of Ajman.
-    expect(isWithinAjmanDeliveryArea(25.3, 55.45)).toBe(false);
+  test("haversine matches a known distance (~1.11 km per 0.01° latitude)", () => {
+    const d = haversineKm(25.4, 55.5, 25.41, 55.5);
+    expect(d).toBeGreaterThan(1.0);
+    expect(d).toBeLessThan(1.2);
+  });
+
+  test("a point just inside the radius is accepted, just outside is rejected", () => {
+    // ~0.05° north ≈ 5.5 km (in range); ~0.08° north ≈ 8.9 km (out of range).
+    expect(
+      isWithinDeliveryRadius(SHOP_LOCATION.lat + 0.05, SHOP_LOCATION.lng),
+    ).toBe(true);
+    expect(
+      isWithinDeliveryRadius(SHOP_LOCATION.lat + 0.08, SHOP_LOCATION.lng),
+    ).toBe(false);
   });
 
   test("rejects non-finite coordinates", () => {
-    expect(isWithinAjmanDeliveryArea(Number.NaN, 55.5)).toBe(false);
+    expect(isWithinDeliveryRadius(Number.NaN, 55.5)).toBe(false);
   });
 
   test("builds a driver GPS maps link", () => {

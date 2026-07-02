@@ -5,7 +5,12 @@ import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type DeliveryZone } from "@/lib/checkout";
 import { chooseCheckoutArea, type CheckoutInitialDetails } from "@/lib/checkout-prefill";
-import { buildDeliveryMapQuery, isWithinAjmanDeliveryArea } from "@/lib/delivery-map";
+import {
+  buildDeliveryMapQuery,
+  isWithinDeliveryRadius,
+  distanceFromShopKm,
+  DELIVERY_RADIUS_KM,
+} from "@/lib/delivery-map";
 import type { PickedLocation } from "@/components/checkout/DeliveryMapPicker";
 
 // Leaflet touches `window`, so load the picker client-side only.
@@ -225,11 +230,12 @@ export function CheckoutForm({
       discountAed: discount,
       minimumAed: deliveryMinSubtotalAed,
     });
-  // Delivery requires a pin, and that pin must sit inside Ajman's delivery area.
+  // Delivery requires a pin, and that pin must sit within the delivery radius of
+  // the shop (straight-line distance).
   const hasPin = deliveryType !== "delivery" || coords !== null;
-  const pinInAjman =
+  const pinInRange =
     deliveryType !== "delivery" ||
-    (coords !== null && isWithinAjmanDeliveryArea(coords.lat, coords.lng));
+    (coords !== null && isWithinDeliveryRadius(coords.lat, coords.lng));
   // The signup free-pizza reward is for a SMALL pizza, pickup-only — and that
   // holds for any small pizza it's applied to (Margherita or another). Delivery
   // unlocks only when the customer upgrades to a non-small (e.g. Medium) size.
@@ -239,7 +245,7 @@ export function CheckoutForm({
     items.every((it) => it.sizeId === "small");
   const deliveryAllowed = deliveryType !== "delivery" || !rewardPickupOnly;
   const canSubmit =
-    areaSupported && meetsDeliveryMin && hasPin && pinInAjman && deliveryAllowed;
+    areaSupported && meetsDeliveryMin && hasPin && pinInRange && deliveryAllowed;
 
   if (!hydrated) {
     return <p className="text-sm text-muted-foreground">Loading checkout…</p>;
@@ -292,10 +298,10 @@ export function CheckoutForm({
     if (
       deliveryType === "delivery" &&
       coords &&
-      !isWithinAjmanDeliveryArea(coords.lat, coords.lng)
+      !isWithinDeliveryRadius(coords.lat, coords.lng)
     ) {
       setError(
-        "Your map pin is outside our Ajman delivery area. Move it inside Ajman, or switch to pickup.",
+        `That location is ${distanceFromShopKm(coords.lat, coords.lng).toFixed(1)} km from the shop — outside our ${DELIVERY_RADIUS_KM} km delivery range. Move the pin closer, or switch to pickup.`,
       );
       return;
     }
@@ -558,14 +564,17 @@ export function CheckoutForm({
                 </div>
                 <DeliveryMapPicker value={coords} onChange={handlePinChange} />
                 {coords ? (
-                  isWithinAjmanDeliveryArea(coords.lat, coords.lng) ? (
+                  isWithinDeliveryRadius(coords.lat, coords.lng) ? (
                     <p className="text-xs text-muted-foreground">
-                      Pin set at {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}.
+                      Pin set · {distanceFromShopKm(coords.lat, coords.lng).toFixed(1)}{" "}
+                      km from the shop — within our {DELIVERY_RADIUS_KM} km range. ✓
                     </p>
                   ) : (
                     <p className="text-xs text-flag-red">
-                      That pin is outside our Ajman delivery area. Move it inside
-                      Ajman, or switch to pickup.
+                      That pin is{" "}
+                      {distanceFromShopKm(coords.lat, coords.lng).toFixed(1)} km from
+                      the shop — outside our {DELIVERY_RADIUS_KM} km delivery range.
+                      Move it closer, or switch to pickup.
                     </p>
                   )
                 ) : (
@@ -712,8 +721,8 @@ export function CheckoutForm({
             `Minimum ${formatAed(deliveryMinSubtotalAed)} in items for delivery`
           ) : !hasPin ? (
             "Drop your delivery pin on the map"
-          ) : !pinInAjman ? (
-            "Move your pin inside Ajman"
+          ) : !pinInRange ? (
+            `Pin is outside our ${DELIVERY_RADIUS_KM} km delivery range`
           ) : (
             paymentMethod === "cod" && deliveryType === "pickup"
               ? "Place pickup order"

@@ -19,7 +19,9 @@ mock.module("@/lib/delivery-settings", () => ({
   meetsDeliveryMinimumAed: () => true,
 }));
 mock.module("@/lib/delivery-map", () => ({
-  isWithinAjmanDeliveryArea: () => true,
+  isWithinDeliveryRadius: () => true,
+  distanceFromShopKm: () => 0,
+  DELIVERY_RADIUS_KM: 7,
 }));
 mock.module("@/lib/saved-address", () => ({
   planAddressSave: () => ({ shouldSave: false, makeDefault: false }),

@@ -13,7 +13,11 @@ import {
   canonicalizeCheckoutCart,
   type CanonicalOrderItem,
 } from "@/lib/checkout-pricing";
-import { isWithinAjmanDeliveryArea } from "@/lib/delivery-map";
+import {
+  isWithinDeliveryRadius,
+  distanceFromShopKm,
+  DELIVERY_RADIUS_KM,
+} from "@/lib/delivery-map";
 import { planAddressSave, type AddressLike } from "@/lib/saved-address";
 import { sendKitchenNotificationsForOrder } from "@/lib/notifications/kitchen";
 import { pushOrderToPos } from "@/lib/pos/push";
@@ -250,10 +254,10 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
           "Drop a pin on the map so the driver can find your exact location.",
       };
     }
-    if (!isWithinAjmanDeliveryArea(lat, lng)) {
+    if (!isWithinDeliveryRadius(lat, lng)) {
+      const km = distanceFromShopKm(lat, lng);
       return {
-        error:
-          "Your delivery pin is outside our Ajman delivery area. Move it inside Ajman, or switch to pickup.",
+        error: `That location is ${km.toFixed(1)} km from the shop — outside our ${DELIVERY_RADIUS_KM} km delivery range. Move the pin closer, or switch to pickup.`,
       };
     }
     const zone = await resolveDeliveryFee(data.deliveryAddress.area);

@@ -26,25 +26,45 @@ export function buildGpsMapsUrl(lat: number, lng: number): string {
   return `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 }
 
-// Approximate bounding box covering Ajman's delivery footprint. It is generous
-// enough to include the outer zones (Al Mowaihat, Al Yasmeen) while excluding
-// neighbouring Sharjah, so a pin dropped on a Sharjah address is rejected even
-// when the customer picked a valid Ajman area in the dropdown.
-export const AJMAN_DELIVERY_BOUNDS = {
-  latMin: 25.36,
-  latMax: 25.48,
-  lngMin: 55.42,
-  lngMax: 55.6,
-} as const;
+// Shop location (Al Jurf 2, Ajman) — the centre of the delivery radius. Keep in
+// sync with the map centre in DeliveryMapPicker.
+export const SHOP_LOCATION = { lat: 25.4002327, lng: 55.5033167 } as const;
 
-export function isWithinAjmanDeliveryArea(lat: number, lng: number): boolean {
+// Delivery is available only within this straight-line ("as the crow flies")
+// radius of the shop — the courier partner's hard limit. Change this one number
+// to widen/narrow the delivery range.
+export const DELIVERY_RADIUS_KM = 7;
+
+const EARTH_RADIUS_KM = 6371;
+const toRad = (deg: number): number => (deg * Math.PI) / 180;
+
+/**
+ * Great-circle ("as the crow flies") distance in km between two lat/lng points,
+ * via the haversine formula. Straight-line, NOT driving distance.
+ */
+export function haversineKm(
+  lat1: number,
+  lng1: number,
+  lat2: number,
+  lng2: number,
+): number {
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return 2 * EARTH_RADIUS_KM * Math.asin(Math.min(1, Math.sqrt(a)));
+}
+
+/** Straight-line distance (km) from the shop to a dropped pin. */
+export function distanceFromShopKm(lat: number, lng: number): number {
+  return haversineKm(SHOP_LOCATION.lat, SHOP_LOCATION.lng, lat, lng);
+}
+
+/** Whether a pin is within the delivery radius (≤ DELIVERY_RADIUS_KM of the shop). */
+export function isWithinDeliveryRadius(lat: number, lng: number): boolean {
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
-  return (
-    lat >= AJMAN_DELIVERY_BOUNDS.latMin &&
-    lat <= AJMAN_DELIVERY_BOUNDS.latMax &&
-    lng >= AJMAN_DELIVERY_BOUNDS.lngMin &&
-    lng <= AJMAN_DELIVERY_BOUNDS.lngMax
-  );
+  return distanceFromShopKm(lat, lng) <= DELIVERY_RADIUS_KM;
 }
 
 export function buildGoogleMapsEmbedUrl(query: string): string {
