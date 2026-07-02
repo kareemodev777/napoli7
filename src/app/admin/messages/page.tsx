@@ -4,6 +4,7 @@ import { DISPLAY_TIME_ZONE } from "@/lib/format-date";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 import { ResendEmailCell } from "@/components/admin/ResendEmailCell";
 import { MessageReadCell } from "@/components/admin/MessageReadCell";
+import { MessageCell } from "@/components/admin/MessageCell";
 
 export const metadata: Metadata = {
   title: "Messages · Admin",
@@ -110,10 +111,11 @@ export default async function AdminMessagesPage() {
                       {m.email}
                     </a>
                   </td>
-                  <td className="py-4 pr-4 max-w-md">
-                    <p className="whitespace-pre-wrap text-sm leading-relaxed">
-                      {m.message}
-                    </p>
+                  <td className="py-4 pr-4">
+                    <MessageCell
+                      message={m.message}
+                      from={`${m.name} · ${m.email}`}
+                    />
                   </td>
                   <td className="py-4 pr-4">
                     <ResendEmailCell
