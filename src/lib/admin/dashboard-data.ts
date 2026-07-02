@@ -56,7 +56,7 @@ export async function loadLiveSnapshot(): Promise<LiveSnapshot> {
     supabase
       .from("orders")
       .select("id", { count: "exact", head: true })
-      .in("status", ["received", "preparing", "out_for_delivery"]),
+      .in("status", ["received", "preparing", "ready", "out_for_delivery"]),
     supabase.from("products").select("id", { count: "exact", head: true }),
     supabase
       .from("promo_codes")

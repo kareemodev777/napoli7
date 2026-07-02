@@ -68,7 +68,7 @@ export function TrackStatus({ order }: { order: TrackedOrder }) {
       <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep">
         Order {order.orderNumber}
       </p>
-      <StatusTimeline status={status} />
+      <StatusTimeline status={status} deliveryType={order.deliveryType} />
       <p className="text-sm text-muted-foreground">
         {order.deliveryType === "delivery" ? "Delivery" : "Pickup"} ·{" "}
         {order.deliverySlot}

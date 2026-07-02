@@ -18,6 +18,7 @@ const updateStatusSchema = z.object({
   status: z.enum([
     "received",
     "preparing",
+    "ready",
     "out_for_delivery",
     "delivered",
     "cancelled",
@@ -65,6 +66,7 @@ export async function updateOrderStatus(
   // failure never blocks the status change (UC-92, UC-99).
   if (
     parsed.data.status === "preparing" ||
+    parsed.data.status === "ready" ||
     parsed.data.status === "out_for_delivery" ||
     parsed.data.status === "delivered" ||
     parsed.data.status === "cancelled"

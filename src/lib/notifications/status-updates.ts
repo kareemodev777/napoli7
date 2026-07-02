@@ -7,6 +7,7 @@
 export type OrderStatus =
   | "received"
   | "preparing"
+  | "ready"
   | "out_for_delivery"
   | "delivered"
   | "cancelled";
@@ -14,10 +15,57 @@ export type OrderStatus =
 export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   received: "Received",
   preparing: "Preparing",
+  ready: "Ready for pickup",
   out_for_delivery: "Out for delivery",
   delivered: "Delivered",
   cancelled: "Cancelled",
 };
+
+export type FulfillmentType = "delivery" | "pickup";
+
+/** The ordered lane of statuses an order moves through, by fulfilment type. */
+export function orderStatusLane(type: FulfillmentType): OrderStatus[] {
+  return type === "delivery"
+    ? ["received", "preparing", "out_for_delivery", "delivered"]
+    : ["received", "preparing", "ready", "delivered"];
+}
+
+/** The natural next status to advance to, or null when terminal. */
+export function nextOrderStatus(
+  current: OrderStatus,
+  type: FulfillmentType,
+): OrderStatus | null {
+  switch (current) {
+    case "received":
+      return "preparing";
+    case "preparing":
+      return type === "delivery" ? "out_for_delivery" : "ready";
+    case "out_for_delivery":
+    case "ready":
+      return "delivered";
+    default:
+      return null; // delivered / cancelled are terminal
+  }
+}
+
+/** Verb-first label for the button that advances TO `next`. */
+export function nextStatusActionLabel(
+  next: OrderStatus,
+  type: FulfillmentType,
+): string {
+  switch (next) {
+    case "preparing":
+      return "Start preparing";
+    case "ready":
+      return "Mark ready for pickup";
+    case "out_for_delivery":
+      return "Out for delivery";
+    case "delivered":
+      return type === "delivery" ? "Mark delivered" : "Mark collected";
+    default:
+      return ORDER_STATUS_LABELS[next];
+  }
+}
 
 /** Human-readable label for a status. Falls back to the raw value if unknown. */
 export function statusLabel(status: string): string {

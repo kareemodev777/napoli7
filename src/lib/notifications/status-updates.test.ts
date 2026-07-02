@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test";
 import {
   diffOrderStatuses,
+  nextOrderStatus,
+  orderStatusLane,
   statusChangeMessage,
   statusLabel,
   type OrderStatusSnapshot,
@@ -83,5 +85,36 @@ describe("diffOrderStatuses", () => {
       { id: "a", orderNumber: "N7-1", status: "received" },
     ];
     expect(diffOrderStatuses(base, next)).toEqual([]);
+  });
+});
+
+describe("order status workflow lanes", () => {
+  test("delivery lane advances received → preparing → out_for_delivery → delivered", () => {
+    expect(orderStatusLane("delivery")).toEqual([
+      "received",
+      "preparing",
+      "out_for_delivery",
+      "delivered",
+    ]);
+    expect(nextOrderStatus("received", "delivery")).toBe("preparing");
+    expect(nextOrderStatus("preparing", "delivery")).toBe("out_for_delivery");
+    expect(nextOrderStatus("out_for_delivery", "delivery")).toBe("delivered");
+    expect(nextOrderStatus("delivered", "delivery")).toBeNull();
+  });
+
+  test("pickup lane advances received → preparing → ready → delivered", () => {
+    expect(orderStatusLane("pickup")).toEqual([
+      "received",
+      "preparing",
+      "ready",
+      "delivered",
+    ]);
+    expect(nextOrderStatus("preparing", "pickup")).toBe("ready");
+    expect(nextOrderStatus("ready", "pickup")).toBe("delivered");
+  });
+
+  test("cancelled is terminal", () => {
+    expect(nextOrderStatus("cancelled", "delivery")).toBeNull();
+    expect(nextOrderStatus("cancelled", "pickup")).toBeNull();
   });
 });

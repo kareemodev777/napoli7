@@ -11,6 +11,7 @@ export { resolvePosSku } from "./sku-map";
 export type SiteOrderStatus =
   | "received"
   | "preparing"
+  | "ready"
   | "out_for_delivery"
   | "delivered"
   | "cancelled";
@@ -175,6 +176,8 @@ export function siteStatusToWoo(status: SiteOrderStatus): string {
     case "received":
       return "processing";
     case "preparing":
+      return "processing";
+    case "ready":
       return "processing";
     case "out_for_delivery":
       return "on-hold";

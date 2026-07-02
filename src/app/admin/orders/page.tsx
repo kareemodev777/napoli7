@@ -24,6 +24,7 @@ interface AdminOrderRow {
   status:
     | "received"
     | "preparing"
+    | "ready"
     | "out_for_delivery"
     | "delivered"
     | "cancelled";
@@ -146,7 +147,11 @@ export default async function AdminOrdersPage() {
                   <td className="py-4 pr-4 text-xs">{o.deliverySlot}</td>
                   {/* Renders both the live status badge cell and the
                       update-select cell, kept in sync optimistically. */}
-                  <StatusSelect orderId={o.id} current={o.status} />
+                  <StatusSelect
+                    orderId={o.id}
+                    current={o.status}
+                    deliveryType={o.deliveryType}
+                  />
                   <td className="py-4 pr-4">
                     <Link
                       href={`/admin/orders/${o.id}`}

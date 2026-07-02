@@ -35,7 +35,7 @@ export interface KitchenNotificationInput {
 export interface CustomerNotificationInput {
   to: string;
   orderNumber: string;
-  status: "preparing" | "out_for_delivery" | "delivered" | "cancelled";
+  status: "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
 }
 
 function escapeHtml(value: string) {
@@ -241,32 +241,41 @@ ${pinText ? `${pinText}
 export async function notifyCustomerStatusEmail(
   input: CustomerNotificationInput,
 ): Promise<EmailSendResult> {
-  const subject =
-    input.status === "preparing"
-      ? `Your Napoli 7 order ${input.orderNumber} is being prepared`
-      : input.status === "out_for_delivery"
-      ? `Your Napoli 7 order ${input.orderNumber} is on its way`
-      : input.status === "delivered"
-        ? `Your Napoli 7 order ${input.orderNumber} was delivered`
-        : `Your Napoli 7 order ${input.orderNumber} was cancelled`;
-  const body =
-    input.status === "preparing"
-      ? `Your order ${input.orderNumber} is now being prepared in the Napoli 7 kitchen.`
-      : input.status === "out_for_delivery"
-      ? `Your order ${input.orderNumber} just left the kitchen. Estimated arrival: 30 minutes.`
-      : input.status === "delivered"
-        ? `Your order ${input.orderNumber} was marked delivered. Thank you for ordering from Napoli 7.`
-        : `Your order ${input.orderNumber} was cancelled. If this is unexpected, please call +971 6 534 5772.`;
+  const n = input.orderNumber;
+  const copy: Record<
+    CustomerNotificationInput["status"],
+    { subject: string; heading: string; body: string }
+  > = {
+    preparing: {
+      subject: `Your Napoli 7 order ${n} is being prepared`,
+      heading: "Your order is being prepared",
+      body: `Your order ${n} is now being prepared in the Napoli 7 kitchen.`,
+    },
+    ready: {
+      subject: `Your Napoli 7 order ${n} is ready for pickup`,
+      heading: "Your order is ready for pickup",
+      body: `Your order ${n} is ready — come collect it at Napoli 7. Buon appetito!`,
+    },
+    out_for_delivery: {
+      subject: `Your Napoli 7 order ${n} is on its way`,
+      heading: "Your order is on its way",
+      body: `Your order ${n} just left the kitchen. Estimated arrival: 30 minutes.`,
+    },
+    delivered: {
+      subject: `Your Napoli 7 order ${n} was delivered`,
+      heading: "Your order was delivered",
+      body: `Your order ${n} was marked delivered. Thank you for ordering from Napoli 7.`,
+    },
+    cancelled: {
+      subject: `Your Napoli 7 order ${n} was cancelled`,
+      heading: "Your order was cancelled",
+      body: `Your order ${n} was cancelled. If this is unexpected, please call +971 6 534 5772.`,
+    },
+  };
+  const { subject, heading, body } = copy[input.status];
   const html = brandEmailHtml({
     eyebrow: "Order update",
-    heading:
-      input.status === "preparing"
-        ? "Your order is being prepared"
-        : input.status === "out_for_delivery"
-        ? "Your order is on its way"
-        : input.status === "delivered"
-          ? "Your order was delivered"
-          : "Your order was cancelled",
+    heading,
     intro: body,
     children: `<table role="presentation" width="100%" cellspacing="0" cellpadding="0">
       ${detailRow("Order", input.orderNumber)}

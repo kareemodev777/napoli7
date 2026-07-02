@@ -1,6 +1,7 @@
 type Status =
   | "received"
   | "preparing"
+  | "ready"
   | "out_for_delivery"
   | "delivered"
   | "cancelled";
@@ -8,6 +9,7 @@ type Status =
 const LABELS: Record<Status, string> = {
   received: "Received",
   preparing: "Preparing",
+  ready: "Ready for pickup",
   out_for_delivery: "Out for delivery",
   delivered: "Delivered",
   cancelled: "Cancelled",
@@ -16,6 +18,7 @@ const LABELS: Record<Status, string> = {
 const CLASSES: Record<Status, string> = {
   received: "bg-brand-soft text-brand-deep",
   preparing: "bg-azure-soft text-azure-deep",
+  ready: "bg-azure text-primary-foreground",
   out_for_delivery: "bg-brand text-primary-foreground",
   delivered: "bg-flag-green/15 text-flag-green",
   cancelled: "bg-flag-red/10 text-flag-red",

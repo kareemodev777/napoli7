@@ -24,6 +24,8 @@ export function customerStatusMessage(
   switch (input.status) {
     case "preparing":
       return `Napoli 7: your order ${input.orderNumber} is now being prepared in the kitchen 🍕`;
+    case "ready":
+      return `Napoli 7: your order ${input.orderNumber} is ready for pickup 🍕 — come collect it. See you soon!`;
     case "out_for_delivery":
       return `Napoli 7: your order ${input.orderNumber} is on its way 🛵 — about 30 minutes.`;
     case "delivered":

@@ -1,20 +1,23 @@
+import {
+  orderStatusLane,
+  ORDER_STATUS_LABELS,
+  type OrderStatus,
+  type FulfillmentType,
+} from "@/lib/notifications/status-updates";
+
 interface StatusTimelineProps {
-  status:
-    | "received"
-    | "preparing"
-    | "out_for_delivery"
-    | "delivered"
-    | "cancelled";
+  status: OrderStatus;
+  deliveryType: FulfillmentType;
 }
 
-const STEPS = [
-  { id: "received", label: "Order received" },
-  { id: "preparing", label: "Preparing" },
-  { id: "out_for_delivery", label: "Out for delivery" },
-  { id: "delivered", label: "Delivered" },
-] as const;
+export function StatusTimeline({ status, deliveryType }: StatusTimelineProps) {
+  // Steps follow the order's lane: pickup shows "Ready for pickup" instead of
+  // "Out for delivery".
+  const STEPS = orderStatusLane(deliveryType).map((id) => ({
+    id,
+    label: id === "received" ? "Order received" : ORDER_STATUS_LABELS[id],
+  }));
 
-export function StatusTimeline({ status }: StatusTimelineProps) {
   if (status === "cancelled") {
     return (
       <div className="border border-flag-red bg-background p-6 text-center">
