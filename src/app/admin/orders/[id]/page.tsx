@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { Pizza } from "lucide-react";
+import type { ReactNode } from "react";
+import { Pizza, ChevronDown } from "lucide-react";
 import { MapEmbed } from "@/components/site/MapEmbed";
 import { buildDeliveryMapQuery, buildGpsMapsUrl } from "@/lib/delivery-map";
 import { HAS_SUPABASE, HAS_SUPABASE_SERVICE } from "@/lib/env";
@@ -84,7 +85,10 @@ async function loadOrder(id: string) {
   // Active riders, plus this order's currently assigned rider even if it has
   // since been deactivated, so the selection always shows who it's assigned to.
   const assignedRiderId = data.assigned_rider_id as string | null;
-  const ridersQuery = supabase.from("riders").select("id, name, phone").order("name");
+  const ridersQuery = supabase
+    .from("riders")
+    .select("id, name, phone")
+    .order("name");
   const { data: riders } = await (assignedRiderId
     ? ridersQuery.or(`is_active.eq.true,id.eq.${assignedRiderId}`)
     : ridersQuery.eq("is_active", true));
@@ -106,6 +110,48 @@ async function loadOrder(id: string) {
   };
 }
 
+/**
+ * Collapsible card (native <details>, no client JS). Progressive disclosure keeps
+ * the page short: the receipt + status stay open, while the heavy edit form and
+ * history collapse so an admin can take in the whole order without scrolling.
+ */
+function Panel({
+  title,
+  meta,
+  defaultOpen = false,
+  children,
+}: {
+  title: string;
+  meta?: ReactNode;
+  defaultOpen?: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <details
+      open={defaultOpen || undefined}
+      className="group rounded-md border border-border bg-card"
+    >
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 p-5 [&::-webkit-details-marker]:hidden">
+        <div className="flex items-center gap-2.5">
+          <ChevronDown
+            className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-open:rotate-180"
+            aria-hidden
+          />
+          <h2 className="font-display text-xs uppercase tracking-[0.25em] text-muted-foreground">
+            {title}
+          </h2>
+        </div>
+        {meta ? (
+          <span className="font-display text-[11px] uppercase tracking-[0.14em] capitalize text-muted-foreground">
+            {meta}
+          </span>
+        ) : null}
+      </summary>
+      <div className="border-t border-border p-5">{children}</div>
+    </details>
+  );
+}
+
 export default async function AdminOrderEditPage({
   params,
 }: {
@@ -116,18 +162,17 @@ export default async function AdminOrderEditPage({
   if (!loaded) notFound();
   const { order, edits, products, riders, imageByProductId } = loaded;
 
-  const deliveryAddress = order.delivery_address as
-    | {
-        street?: string;
-        area?: string;
-        flat?: string;
-        notes?: string;
-        mapQuery?: string;
-        lat?: number;
-        lng?: number;
-      }
-    | null;
-  const deliveryMapQuery = deliveryAddress?.mapQuery ?? buildDeliveryMapQuery(deliveryAddress);
+  const deliveryAddress = order.delivery_address as {
+    street?: string;
+    area?: string;
+    flat?: string;
+    notes?: string;
+    mapQuery?: string;
+    lat?: number;
+    lng?: number;
+  } | null;
+  const deliveryMapQuery =
+    deliveryAddress?.mapQuery ?? buildDeliveryMapQuery(deliveryAddress);
   const hasGps = deliveryAddress?.lat != null && deliveryAddress?.lng != null;
 
   const items: EditOrderItem[] = (order.order_items ?? []).map(
@@ -168,7 +213,7 @@ export default async function AdminOrderEditPage({
         ? `${it.product_name} (${it.size_label})`
         : it.product_name,
       imageUrl: it.product_id
-        ? imageByProductId.get(it.product_id) ?? null
+        ? (imageByProductId.get(it.product_id) ?? null)
         : null,
       basePriceAed: Number(it.base_price_aed),
       quantity: it.quantity,
@@ -230,19 +275,17 @@ export default async function AdminOrderEditPage({
         <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_340px]">
           {/* ---- Main: items, totals, edit, history ---- */}
           <div className="space-y-6">
-            <div className="rounded-md border border-border bg-card p-5">
-              <div className="flex items-center justify-between">
-                <h2 className="font-display text-xs uppercase tracking-[0.25em] text-muted-foreground">
-                  Items
-                </h2>
-                <span className="font-display text-[11px] uppercase tracking-[0.14em] capitalize text-muted-foreground">
-                  {order.delivery_type} · {order.delivery_slot}
-                </span>
-              </div>
-
-              <ul className="mt-4 divide-y divide-border border-y border-border">
+            <Panel
+              title="Items"
+              meta={`${order.delivery_type} · ${order.delivery_slot}`}
+              defaultOpen
+            >
+              <ul className="divide-y divide-border border-y border-border">
                 {summaryItems.map((it) => (
-                  <li key={it.id} className="flex items-start gap-3 py-3 text-sm">
+                  <li
+                    key={it.id}
+                    className="flex items-start gap-3 py-3 text-sm"
+                  >
                     {/* Wrapper is NOT clipped so the quantity badge can overflow. */}
                     <span className="relative shrink-0">
                       <span className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-md border border-border bg-muted">
@@ -316,27 +359,29 @@ export default async function AdminOrderEditPage({
                   {order.order_notes}
                 </p>
               ) : null}
-            </div>
+            </Panel>
 
-            <OrderEditForm
-              orderId={order.id}
-              orderNumber={order.order_number}
-              paymentMethod={order.payment_method}
-              paymentStatus={order.payment_status}
-              oldTotalAed={Number(order.total_aed)}
-              deliveryFeeAed={Number(order.delivery_fee_aed)}
-              discountAed={Number(order.discount_aed ?? 0)}
-              orderNotes={order.order_notes ?? ""}
-              items={items}
-              products={products}
-            />
+            <Panel title="Edit order" meta="items · fees · discount">
+              <OrderEditForm
+                orderId={order.id}
+                orderNumber={order.order_number}
+                paymentMethod={order.payment_method}
+                paymentStatus={order.payment_status}
+                oldTotalAed={Number(order.total_aed)}
+                deliveryFeeAed={Number(order.delivery_fee_aed)}
+                discountAed={Number(order.discount_aed ?? 0)}
+                orderNotes={order.order_notes ?? ""}
+                items={items}
+                products={products}
+              />
+            </Panel>
 
             {edits.length > 0 ? (
-              <div>
-                <h2 className="font-display text-xs uppercase tracking-[0.25em] text-muted-foreground">
-                  Edit history
-                </h2>
-                <ul className="mt-3 space-y-2">
+              <Panel
+                title="Edit history"
+                meta={`${edits.length} change${edits.length > 1 ? "s" : ""}`}
+              >
+                <ul className="space-y-2">
                   {edits.map((edit) => (
                     <li
                       key={edit.id}
@@ -362,7 +407,7 @@ export default async function AdminOrderEditPage({
                     </li>
                   ))}
                 </ul>
-              </div>
+              </Panel>
             ) : null}
           </div>
 
@@ -394,14 +439,18 @@ export default async function AdminOrderEditPage({
                 {order.delivery_type === "delivery" ? "Delivery" : "Pickup"}
               </h3>
               <p className="mt-3">Slot: {order.delivery_slot}</p>
-              <p className="mt-1">Pizza cut: {order.pizza_cut ? "Yes" : "No"}</p>
+              <p className="mt-1">
+                Pizza cut: {order.pizza_cut ? "Yes" : "No"}
+              </p>
 
               {order.delivery_type === "delivery" && deliveryAddress ? (
                 <div className="mt-3 space-y-1 border-t border-border pt-3">
                   <p>{deliveryAddress.street ?? ""}</p>
                   <p>
                     {[
-                      deliveryAddress.flat ? `Flat ${deliveryAddress.flat}` : null,
+                      deliveryAddress.flat
+                        ? `Flat ${deliveryAddress.flat}`
+                        : null,
                       deliveryAddress.area,
                     ]
                       .filter(Boolean)

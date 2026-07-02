@@ -124,234 +124,244 @@ export function OrderEditForm(props: OrderEditFormProps) {
   }
 
   return (
-    <form
-      id="order-edit-form"
-      onSubmit={onSubmit}
-      className="grid gap-8 lg:grid-cols-[1.5fr_1fr]"
-    >
+    <form id="order-edit-form" onSubmit={onSubmit} className="space-y-8">
       <input type="hidden" name="orderId" value={props.orderId} />
 
-      <div className="space-y-8">
-        <section>
-          <h2 className="font-display text-xs uppercase tracking-[0.25em] text-foreground mb-4 border-b border-border pb-2">
-            Items
-          </h2>
-          <ul className="divide-y divide-border">
-            {props.items.map((item) => {
-              const qty = quantities[item.id] ?? 0;
-              const removed = qty <= 0;
-              return (
-                <li
-                  key={item.id}
-                  className="flex items-center justify-between gap-4 py-3"
-                >
-                  <div className={removed ? "opacity-50 line-through" : ""}>
-                    <p className="text-sm">{item.productName}</p>
-                    <p className="text-xs text-muted-foreground tabular-nums">
-                      {money(unitPrices[item.id] ?? 0)} each
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <input
-                      type="number"
-                      name={`qty_${item.id}`}
-                      min={0}
-                      max={50}
-                      value={qty}
-                      onChange={(e) => setQty(item.id, Number(e.target.value))}
-                      className="w-20 border border-border bg-background px-3 py-2 text-sm tabular-nums focus:border-brand focus:outline-none"
-                      aria-label={`Quantity for ${item.productName}`}
-                    />
-                    <span className="w-24 text-right text-sm tabular-nums">
-                      {money((unitPrices[item.id] ?? 0) * qty)}
-                    </span>
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
-          <p className="mt-2 text-xs text-muted-foreground">
-            Set a quantity to 0 to remove a line. Increase a quantity to add more
-            of an item already in the order.
-          </p>
-        </section>
+      <section>
+        <h2 className="font-display text-xs uppercase tracking-[0.25em] text-foreground mb-4 border-b border-border pb-2">
+          Adjust quantities
+        </h2>
+        <ul className="divide-y divide-border">
+          {props.items.map((item) => {
+            const qty = quantities[item.id] ?? 0;
+            const removed = qty <= 0;
+            return (
+              <li
+                key={item.id}
+                className="flex items-center justify-between gap-4 py-3"
+              >
+                <div className={removed ? "opacity-50 line-through" : ""}>
+                  <p className="text-sm">{item.productName}</p>
+                  <p className="text-xs text-muted-foreground tabular-nums">
+                    {money(unitPrices[item.id] ?? 0)} each
+                  </p>
+                </div>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="number"
+                    name={`qty_${item.id}`}
+                    min={0}
+                    max={50}
+                    value={qty}
+                    onChange={(e) => setQty(item.id, Number(e.target.value))}
+                    className="w-20 border border-border bg-background px-3 py-2 text-sm tabular-nums focus:border-brand focus:outline-none"
+                    aria-label={`Quantity for ${item.productName}`}
+                  />
+                  <span className="w-24 text-right text-sm tabular-nums">
+                    {money((unitPrices[item.id] ?? 0) * qty)}
+                  </span>
+                </div>
+              </li>
+            );
+          })}
+        </ul>
+        <p className="mt-2 text-xs text-muted-foreground">
+          Set a quantity to 0 to remove a line. Increase a quantity to add more
+          of an item already in the order.
+        </p>
+      </section>
 
-        <section>
-          <h2 className="font-display text-xs uppercase tracking-[0.25em] text-foreground mb-4 border-b border-border pb-2">
-            Add item
-          </h2>
-          <div className="grid gap-4 sm:grid-cols-[1fr_120px]">
+      <section>
+        <h2 className="font-display text-xs uppercase tracking-[0.25em] text-foreground mb-4 border-b border-border pb-2">
+          Add item
+        </h2>
+        <div className="grid gap-4 sm:grid-cols-[1fr_120px]">
+          <label className="block text-sm">
+            <span className="font-display text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+              Menu item
+            </span>
+            <select
+              name="addProductId"
+              value={addProductId}
+              onChange={(e) => {
+                setAddProductId(e.target.value);
+                setAddQuantity(e.target.value ? Math.max(1, addQuantity) : 0);
+              }}
+              className="mt-2 w-full border border-border bg-background px-3 py-2.5 text-sm focus:border-brand focus:outline-none"
+            >
+              <option value="">No additional item</option>
+              {props.products.map((product) => (
+                <option key={product.id} value={product.id}>
+                  {product.name} — {money(product.priceAed)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block text-sm">
+            <span className="font-display text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+              Qty
+            </span>
+            <input
+              type="number"
+              name="addQuantity"
+              min={0}
+              max={50}
+              value={addQuantity}
+              onChange={(e) => setAddQuantity(Number(e.target.value))}
+              className="mt-2 w-full border border-border bg-background px-3 py-2.5 text-sm tabular-nums focus:border-brand focus:outline-none"
+            />
+          </label>
+        </div>
+        {addedProduct && addQuantity > 0 ? (
+          <p className="mt-3 text-xs text-muted-foreground tabular-nums">
+            Adds {addQuantity} × {addedProduct.name} ={" "}
+            {money(addedProduct.priceAed * addQuantity)}.
+          </p>
+        ) : (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Use this when a customer calls to add another menu item to an
+            existing order. Customizations can be noted in the audit note.
+          </p>
+        )}
+      </section>
+
+      <section className="grid gap-5 sm:grid-cols-2">
+        <label className="block text-sm">
+          <span className="font-display text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+            Delivery fee (AED)
+          </span>
+          <input
+            type="number"
+            name="deliveryFeeAed"
+            min={0}
+            step="0.01"
+            value={deliveryFee}
+            onChange={(e) => setDeliveryFee(Number(e.target.value))}
+            className="mt-2 w-full border border-border bg-background px-3 py-2.5 text-sm tabular-nums focus:border-brand focus:outline-none"
+          />
+        </label>
+        <label className="block text-sm">
+          <span className="font-display text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+            Discount (AED)
+          </span>
+          <input
+            type="number"
+            name="discountAed"
+            min={0}
+            step="0.01"
+            value={discount}
+            onChange={(e) => setDiscount(Number(e.target.value))}
+            className="mt-2 w-full border border-border bg-background px-3 py-2.5 text-sm tabular-nums focus:border-brand focus:outline-none"
+          />
+        </label>
+      </section>
+
+      <section>
+        <label className="block text-sm">
+          <span className="font-display text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+            Customer order notes
+          </span>
+          <textarea
+            name="orderNotes"
+            rows={2}
+            defaultValue={props.orderNotes}
+            maxLength={500}
+            className="mt-2 w-full resize-none border border-border bg-background px-3 py-2.5 text-sm focus:border-brand focus:outline-none"
+          />
+        </label>
+      </section>
+
+      <section className="space-y-5 rounded-md bg-muted/30 p-5">
+        <h2 className="font-display text-xs uppercase tracking-[0.25em] text-azure-deep">
+          Payment difference
+        </h2>
+        <div className="grid gap-5 md:grid-cols-2">
+          <div className="space-y-4">
+            <dl className="space-y-2 text-sm">
+              <Row label="New subtotal">{money(totals.subtotalAed)}</Row>
+              <Row label="Delivery fee">{money(totals.deliveryFeeAed)}</Row>
+              <Row label="Discount">−{money(totals.discountAed)}</Row>
+              <div className="border-t border-border pt-2">
+                <Row label="Old total">{money(props.oldTotalAed)}</Row>
+                <Row label="New total">
+                  <strong className="tabular-nums">
+                    {money(totals.totalAed)}
+                  </strong>
+                </Row>
+              </div>
+            </dl>
+
+            <div
+              className={`rounded-md border p-3 text-sm ${
+                diff.direction === "collect"
+                  ? "border-brand bg-brand/10"
+                  : diff.direction === "refund"
+                    ? "border-flag-red/50 bg-flag-red/10"
+                    : "border-border bg-background"
+              }`}
+            >
+              {diff.direction === "none" ? (
+                <span>No payment difference.</span>
+              ) : diff.direction === "collect" ? (
+                <span>
+                  Collect <strong>{money(Math.abs(diff.differenceAed))}</strong>{" "}
+                  from the customer.
+                </span>
+              ) : (
+                <span>
+                  Refund <strong>{money(Math.abs(diff.differenceAed))}</strong>{" "}
+                  to the customer.
+                </span>
+              )}
+              {props.paymentMethod === "card" &&
+              props.paymentStatus === "paid" ? (
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Card already charged {money(props.oldTotalAed)}. Settle any
+                  positive difference in cash or as a manual adjustment.
+                </p>
+              ) : null}
+            </div>
+          </div>
+          <div className="space-y-4">
             <label className="block text-sm">
               <span className="font-display text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                Menu item
+                How was the difference settled?
               </span>
               <select
-                name="addProductId"
-                value={addProductId}
-                onChange={(e) => {
-                  setAddProductId(e.target.value);
-                  setAddQuantity(e.target.value ? Math.max(1, addQuantity) : 0);
-                }}
+                name="paymentHandling"
+                defaultValue="none"
                 className="mt-2 w-full border border-border bg-background px-3 py-2.5 text-sm focus:border-brand focus:outline-none"
               >
-                <option value="">No additional item</option>
-                {props.products.map((product) => (
-                  <option key={product.id} value={product.id}>
-                    {product.name} — {money(product.priceAed)}
+                {HANDLING_OPTIONS.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
                   </option>
                 ))}
               </select>
             </label>
+
             <label className="block text-sm">
               <span className="font-display text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-                Qty
+                Audit note (optional)
               </span>
-              <input
-                type="number"
-                name="addQuantity"
-                min={0}
-                max={50}
-                value={addQuantity}
-                onChange={(e) => setAddQuantity(Number(e.target.value))}
-                className="mt-2 w-full border border-border bg-background px-3 py-2.5 text-sm tabular-nums focus:border-brand focus:outline-none"
+              <textarea
+                name="paymentNote"
+                rows={2}
+                maxLength={500}
+                placeholder="e.g. Added garlic bread, collected 12 AED cash."
+                className="mt-2 w-full resize-none border border-border bg-background px-3 py-2.5 text-sm focus:border-brand focus:outline-none"
               />
             </label>
           </div>
-          {addedProduct && addQuantity > 0 ? (
-            <p className="mt-3 text-xs text-muted-foreground tabular-nums">
-              Adds {addQuantity} × {addedProduct.name} = {money(addedProduct.priceAed * addQuantity)}.
-            </p>
-          ) : (
-            <p className="mt-3 text-xs text-muted-foreground">
-              Use this when a customer calls to add another menu item to an
-              existing order. Customizations can be noted in the audit note.
-            </p>
-          )}
-        </section>
-
-        <section className="grid gap-5 sm:grid-cols-2">
-          <label className="block text-sm">
-            <span className="font-display text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-              Delivery fee (AED)
-            </span>
-            <input
-              type="number"
-              name="deliveryFeeAed"
-              min={0}
-              step="0.01"
-              value={deliveryFee}
-              onChange={(e) => setDeliveryFee(Number(e.target.value))}
-              className="mt-2 w-full border border-border bg-background px-3 py-2.5 text-sm tabular-nums focus:border-brand focus:outline-none"
-            />
-          </label>
-          <label className="block text-sm">
-            <span className="font-display text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-              Discount (AED)
-            </span>
-            <input
-              type="number"
-              name="discountAed"
-              min={0}
-              step="0.01"
-              value={discount}
-              onChange={(e) => setDiscount(Number(e.target.value))}
-              className="mt-2 w-full border border-border bg-background px-3 py-2.5 text-sm tabular-nums focus:border-brand focus:outline-none"
-            />
-          </label>
-        </section>
-
-        <section>
-          <label className="block text-sm">
-            <span className="font-display text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-              Customer order notes
-            </span>
-            <textarea
-              name="orderNotes"
-              rows={2}
-              defaultValue={props.orderNotes}
-              maxLength={500}
-              className="mt-2 w-full resize-none border border-border bg-background px-3 py-2.5 text-sm focus:border-brand focus:outline-none"
-            />
-          </label>
-        </section>
-      </div>
-
-      <aside className="space-y-5 lg:sticky lg:top-24 h-fit lg:border-l lg:border-border lg:pl-8">
-        <h2 className="font-display text-xs uppercase tracking-[0.25em] text-azure-deep border-b border-border pb-2">
-          Payment difference
-        </h2>
-        <dl className="space-y-2 text-sm">
-          <Row label="New subtotal">{money(totals.subtotalAed)}</Row>
-          <Row label="Delivery fee">{money(totals.deliveryFeeAed)}</Row>
-          <Row label="Discount">−{money(totals.discountAed)}</Row>
-          <div className="border-t border-border pt-2">
-            <Row label="Old total">{money(props.oldTotalAed)}</Row>
-            <Row label="New total">
-              <strong className="tabular-nums">{money(totals.totalAed)}</strong>
-            </Row>
-          </div>
-        </dl>
-
-        <div
-          className={`rounded-md border p-3 text-sm ${
-            diff.direction === "collect"
-              ? "border-brand bg-brand/10"
-              : diff.direction === "refund"
-                ? "border-flag-red/50 bg-flag-red/10"
-                : "border-border bg-background"
-          }`}
-        >
-          {diff.direction === "none" ? (
-            <span>No payment difference.</span>
-          ) : diff.direction === "collect" ? (
-            <span>
-              Collect <strong>{money(Math.abs(diff.differenceAed))}</strong> from
-              the customer.
-            </span>
-          ) : (
-            <span>
-              Refund <strong>{money(Math.abs(diff.differenceAed))}</strong> to the
-              customer.
-            </span>
-          )}
-          {props.paymentMethod === "card" && props.paymentStatus === "paid" ? (
-            <p className="mt-1 text-xs text-muted-foreground">
-              Card already charged {money(props.oldTotalAed)}. Settle any positive
-              difference in cash or as a manual adjustment.
-            </p>
-          ) : null}
         </div>
 
-        <label className="block text-sm">
-          <span className="font-display text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-            How was the difference settled?
-          </span>
-          <select
-            name="paymentHandling"
-            defaultValue="none"
-            className="mt-2 w-full border border-border bg-background px-3 py-2.5 text-sm focus:border-brand focus:outline-none"
-          >
-            {HANDLING_OPTIONS.map((opt) => (
-              <option key={opt.value} value={opt.value}>
-                {opt.label}
-              </option>
-            ))}
-          </select>
-        </label>
-
-        <label className="block text-sm">
-          <span className="font-display text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
-            Audit note (optional)
-          </span>
-          <textarea
-            name="paymentNote"
-            rows={2}
-            maxLength={500}
-            placeholder="e.g. Added garlic bread, collected 12 AED cash."
-            className="mt-2 w-full resize-none border border-border bg-background px-3 py-2.5 text-sm focus:border-brand focus:outline-none"
-          />
-        </label>
-
+        {/* Save lives in the sticky top/bottom action bars (form="order-edit-form").
+            This just reflects the submit state. */}
+        {pending ? (
+          <p className="text-sm text-muted-foreground" role="status">
+            Saving…
+          </p>
+        ) : null}
         {error ? (
           <p className="text-sm text-flag-red" role="alert">
             {error}
@@ -362,16 +372,7 @@ export function OrderEditForm(props: OrderEditFormProps) {
             Order updated.
           </p>
         ) : null}
-
-        <button
-          type="submit"
-          disabled={pending}
-          aria-busy={pending}
-          className="w-full bg-brand py-3 font-display text-sm uppercase tracking-[0.2em] text-primary-foreground hover:bg-brand-hover disabled:opacity-50"
-        >
-          {pending ? "Saving…" : "Save changes"}
-        </button>
-      </aside>
+      </section>
     </form>
   );
 }
