@@ -11,6 +11,7 @@ import {
 } from "@/lib/delivery-settings";
 import {
   canonicalizeCheckoutCart,
+  isRewardPickupOnly,
   type CanonicalOrderItem,
 } from "@/lib/checkout-pricing";
 import {
@@ -112,10 +113,9 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   const orderingAvailability = await getOrderingAvailability();
   if (!orderingAvailability.isOpen) {
     return {
-      error:
-        orderingAvailability.nextOpenLabel
-          ? `We’re closed right now. Ordering opens again at ${orderingAvailability.nextOpenLabel}.`
-          : "We’re closed right now. Please check back when we reopen.",
+      error: orderingAvailability.nextOpenLabel
+        ? `We’re closed right now. Ordering opens again at ${orderingAvailability.nextOpenLabel}.`
+        : "We’re closed right now. Please check back when we reopen.",
     };
   }
 
@@ -163,7 +163,11 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
         priceAed: Number(product.price_aed),
         isActive: Boolean(product.is_active),
         sizes: (product.product_sizes ?? []).map(
-          (size: { size_id: string; label: string; price_aed: number | string }) => ({
+          (size: {
+            size_id: string;
+            label: string;
+            price_aed: number | string;
+          }) => ({
             sizeId: size.size_id,
             label: size.label,
             priceAed: Number(size.price_aed),
@@ -198,8 +202,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   let appliedPromoIsReward = false;
   if (data.promoCode) {
     let promoIdentity:
-      | { userId?: string | null; email?: string | null }
-      | undefined;
+      { userId?: string | null; email?: string | null } | undefined;
     if (HAS_SUPABASE) {
       try {
         const authClient = await createClient();
@@ -233,15 +236,13 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   // never charged a default fee — mirroring the client-side guard (UC-45).
   let deliveryFee = 0;
   if (data.deliveryType === "delivery" && data.deliveryAddress) {
-    // The signup free-pizza reward is for a SMALL pizza, pickup-only — for any
-    // small pizza it's applied to. Delivery unlocks only on a non-small upgrade.
-    if (
-      appliedPromoIsReward &&
-      data.items.every((it) => it.sizeId === "small")
-    ) {
+    // The signup free-pizza reward is pickup-only for the SINGLE free small
+    // pizza on its own. A second pizza, a larger quantity, or an upgrade to a
+    // non-small size makes it a normal delivery order and unlocks delivery.
+    if (isRewardPickupOnly(appliedPromoIsReward, data.items)) {
       return {
         error:
-          "Your free pizza offer is pickup-only for a small pizza. Upgrade to a larger size to unlock delivery, or switch to pickup.",
+          "Your free pizza offer is pickup-only on its own. Add a second pizza or upgrade to a larger size to unlock delivery, or switch to pickup.",
       };
     }
     // The customer must drop a GPS pin, and it must fall inside Ajman. This is
@@ -268,12 +269,14 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
       };
     }
     deliveryFee = zone.fee;
-    if (!meetsDeliveryMinimumAed({
-      subtotalAed: subtotal,
-      deliveryFeeAed: deliveryFee,
-      discountAed: discount,
-      minimumAed: deliveryMinSubtotalAed,
-    })) {
+    if (
+      !meetsDeliveryMinimumAed({
+        subtotalAed: subtotal,
+        deliveryFeeAed: deliveryFee,
+        discountAed: discount,
+        minimumAed: deliveryMinSubtotalAed,
+      })
+    ) {
       return {
         error: `Delivery orders need at least ${deliveryMinSubtotalAed} AED in items (the delivery fee doesn't count). Add a little more, or switch to pickup.`,
       };
@@ -394,7 +397,6 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     orderNumber: order.order_number,
     paymentUrl: `/api/checkout/create-session?orderId=${order.id}`,
   };
-
 }
 
 async function persistDeliveryAddress(
@@ -435,4 +437,3 @@ async function persistDeliveryAddress(
     console.error("[placeOrder] save address failed:", e);
   }
 }
-

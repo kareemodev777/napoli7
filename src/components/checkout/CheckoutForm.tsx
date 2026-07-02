@@ -4,7 +4,11 @@ import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import dynamic from "next/dynamic";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type DeliveryZone } from "@/lib/checkout";
-import { chooseCheckoutArea, type CheckoutInitialDetails } from "@/lib/checkout-prefill";
+import {
+  chooseCheckoutArea,
+  type CheckoutInitialDetails,
+} from "@/lib/checkout-prefill";
+import { isRewardPickupOnly } from "@/lib/checkout-pricing";
 import {
   buildDeliveryMapQuery,
   isWithinDeliveryRadius,
@@ -150,8 +154,9 @@ export function CheckoutForm({
     let tries = 0;
 
     const syncStreetFromDom = () => {
-      const streetInput =
-        document.getElementById("street") as HTMLInputElement | null;
+      const streetInput = document.getElementById(
+        "street",
+      ) as HTMLInputElement | null;
       const domStreet = streetInput?.value.trim() ?? "";
       if (domStreet && domStreet !== lastSeen) {
         lastSeen = domStreet;
@@ -184,9 +189,7 @@ export function CheckoutForm({
     setStreet(match.street);
     setFlat(match.flat ?? "");
     setAddressNotes(match.notes ?? "");
-    setArea(
-      chooseCheckoutArea({ zones, preferredArea: match.area }),
-    );
+    setArea(chooseCheckoutArea({ zones, preferredArea: match.area }));
   }
 
   function handlePinChange(loc: PickedLocation, address?: string) {
@@ -236,16 +239,17 @@ export function CheckoutForm({
   const pinInRange =
     deliveryType !== "delivery" ||
     (coords !== null && isWithinDeliveryRadius(coords.lat, coords.lng));
-  // The signup free-pizza reward is for a SMALL pizza, pickup-only — and that
-  // holds for any small pizza it's applied to (Margherita or another). Delivery
-  // unlocks only when the customer upgrades to a non-small (e.g. Medium) size.
-  const rewardPickupOnly =
-    Boolean(promo?.isReward) &&
-    items.length > 0 &&
-    items.every((it) => it.sizeId === "small");
+  // The signup free-pizza reward is pickup-only for the SINGLE free small pizza
+  // on its own; a second pizza, a larger quantity, or an upgrade to a non-small
+  // size unlocks a normal delivery order. Shared with the server guard.
+  const rewardPickupOnly = isRewardPickupOnly(Boolean(promo?.isReward), items);
   const deliveryAllowed = deliveryType !== "delivery" || !rewardPickupOnly;
   const canSubmit =
-    areaSupported && meetsDeliveryMin && hasPin && pinInRange && deliveryAllowed;
+    areaSupported &&
+    meetsDeliveryMin &&
+    hasPin &&
+    pinInRange &&
+    deliveryAllowed;
 
   if (!hydrated) {
     return <p className="text-sm text-muted-foreground">Loading checkout…</p>;
@@ -285,7 +289,7 @@ export function CheckoutForm({
     }
     if (deliveryType === "delivery" && rewardPickupOnly) {
       setError(
-        "Your free pizza offer is pickup-only for a small pizza. Upgrade to a larger size to unlock delivery, or switch to pickup.",
+        "Your free pizza offer is pickup-only on its own. Add a second pizza or upgrade to a larger size to unlock delivery, or switch to pickup.",
       );
       return;
     }
@@ -393,7 +397,8 @@ export function CheckoutForm({
             Taking you to secure payment…
           </p>
           <p className="text-sm text-muted-foreground max-w-xs">
-            Hang on — we’re opening the Stripe checkout. Don’t refresh or go back.
+            Hang on — we’re opening the Stripe checkout. Don’t refresh or go
+            back.
           </p>
         </div>
       ) : null}
@@ -557,8 +562,8 @@ export function CheckoutForm({
                       Drop your delivery pin
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      Tap the map to set your exact spot — the driver gets this GPS
-                      point. Drag the pin to fine-tune it.
+                      Tap the map to set your exact spot — the driver gets this
+                      GPS point. Drag the pin to fine-tune it.
                     </p>
                   </div>
                 </div>
@@ -566,20 +571,23 @@ export function CheckoutForm({
                 {coords ? (
                   isWithinDeliveryRadius(coords.lat, coords.lng) ? (
                     <p className="text-xs text-muted-foreground">
-                      Pin set · {distanceFromShopKm(coords.lat, coords.lng).toFixed(1)}{" "}
-                      km from the shop — within our {DELIVERY_RADIUS_KM} km range. ✓
+                      Pin set ·{" "}
+                      {distanceFromShopKm(coords.lat, coords.lng).toFixed(1)} km
+                      from the shop — within our {DELIVERY_RADIUS_KM} km range.
+                      ✓
                     </p>
                   ) : (
                     <p className="text-xs text-flag-red">
                       That pin is{" "}
-                      {distanceFromShopKm(coords.lat, coords.lng).toFixed(1)} km from
-                      the shop — outside our {DELIVERY_RADIUS_KM} km delivery range.
-                      Move it closer, or switch to pickup.
+                      {distanceFromShopKm(coords.lat, coords.lng).toFixed(1)} km
+                      from the shop — outside our {DELIVERY_RADIUS_KM} km
+                      delivery range. Move it closer, or switch to pickup.
                     </p>
                   )
                 ) : (
                   <p className="text-xs text-flag-red">
-                    Tap the map to drop your delivery pin before placing the order.
+                    Tap the map to drop your delivery pin before placing the
+                    order.
                   </p>
                 )}
               </div>
@@ -656,8 +664,8 @@ export function CheckoutForm({
                   </Toggle>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Card, Apple Pay, and Google Pay are still available. Cash on delivery
-                  is for pickup orders only.
+                  Card, Apple Pay, and Google Pay are still available. Cash on
+                  delivery is for pickup orders only.
                 </p>
               </>
             ) : (
@@ -666,8 +674,8 @@ export function CheckoutForm({
                   Card payment
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  We accept cards, Apple Pay, and Google Pay. Delivery orders can’t use
-                  cash on delivery.
+                  We accept cards, Apple Pay, and Google Pay. Delivery orders
+                  can’t use cash on delivery.
                 </p>
               </>
             )}
@@ -723,10 +731,10 @@ export function CheckoutForm({
             "Drop your delivery pin on the map"
           ) : !pinInRange ? (
             `Pin is outside our ${DELIVERY_RADIUS_KM} km delivery range`
+          ) : paymentMethod === "cod" && deliveryType === "pickup" ? (
+            "Place pickup order"
           ) : (
-            paymentMethod === "cod" && deliveryType === "pickup"
-              ? "Place pickup order"
-              : "Continue to secure payment"
+            "Continue to secure payment"
           )}
         </button>
       </div>
@@ -750,26 +758,26 @@ export function CheckoutForm({
         <dl className="mt-4 space-y-2 text-sm">
           <Row label="Subtotal">{formatAed(subtotal)}</Row>
           {promo ? (
-            <Row label={`Discount · ${promo.code}`}>
-              −{formatAed(discount)}
-            </Row>
+            <Row label={`Discount · ${promo.code}`}>−{formatAed(discount)}</Row>
           ) : null}
           <Row label="Delivery fee">
-            {deliveryType === "delivery" ? formatAed(deliveryFee) : "Free · pickup"}
+            {deliveryType === "delivery"
+              ? formatAed(deliveryFee)
+              : "Free · pickup"}
           </Row>
         </dl>
         {!meetsDeliveryMin ? (
           <p className="mt-3 text-xs text-flag-red">
-            Minimum {formatAed(deliveryMinSubtotalAed)} in items for delivery (delivery
-            fee excluded). Add{" "}
-            {formatAed(Math.max(0, deliveryMinSubtotalAed - subtotal))} more, or switch to
-            pickup.
+            Minimum {formatAed(deliveryMinSubtotalAed)} in items for delivery
+            (delivery fee excluded). Add{" "}
+            {formatAed(Math.max(0, deliveryMinSubtotalAed - subtotal))} more, or
+            switch to pickup.
           </p>
         ) : null}
         {deliveryType === "delivery" && rewardPickupOnly ? (
           <p className="mt-3 text-xs text-flag-red">
-            Your free pizza offer is pickup-only for a small pizza. Upgrade to a
-            larger size to unlock delivery, or switch to pickup.
+            Your free pizza offer is pickup-only on its own. Add a second pizza
+            or upgrade to a larger size to unlock delivery, or switch to pickup.
           </p>
         ) : null}
         <div className="mt-4">
