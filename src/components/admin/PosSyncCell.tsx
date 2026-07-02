@@ -20,10 +20,13 @@ const TAG: Record<string, { label: string; classes: string }> = {
 export function PosSyncCell({
   orderId,
   status: initialStatus,
+  invoiceNumber,
   payable,
 }: {
   orderId: string;
   status: string;
+  /** POS-assigned invoice number (e.g. "INV-46"), shown once synced. */
+  invoiceNumber?: string | null;
   payable: boolean;
 }) {
   const [status, setStatus] = useState(initialStatus);
@@ -47,7 +50,8 @@ export function PosSyncCell({
   }
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex flex-col gap-1">
+      <div className="flex items-center gap-2">
       <Popover.Root
         open={open}
         onOpenChange={(next) => {
@@ -111,6 +115,12 @@ export function PosSyncCell({
       >
         {tag.label}
       </span>
+      </div>
+      {invoiceNumber ? (
+        <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+          {invoiceNumber}
+        </span>
+      ) : null}
     </div>
   );
 }

@@ -13,7 +13,15 @@ export interface PosPostOptions {
 }
 
 export type PosPostResult =
-  | { ok: true; status: number; attempts: number }
+  | {
+      ok: true;
+      status: number;
+      attempts: number;
+      /** Raw success response body, kept for logging/diagnostics. */
+      response?: string;
+      /** POS-assigned invoice/voucher number (e.g. "INV-46"), if present. */
+      invoiceNumber?: string;
+    }
   | { ok: false; status?: number; error: string; attempts: number };
 
 const DEFAULT_MAX_ATTEMPTS = 3;
@@ -56,6 +64,39 @@ export function isPermanentPosError(body: string): boolean {
     b.includes("voucher_no_unique") ||
     b.includes("integrity constraint")
   );
+}
+
+/**
+ * Pull the POS invoice/voucher number (e.g. "INV-46") out of a POS response body.
+ * xtbooks stores each order as a "voucher" with a unique voucher_no formatted as
+ * INV-<n>. We match that distinctive shape wherever it appears in the body (raw
+ * text or JSON) — it can't collide with our own order_number (N7-xxxxx), so a
+ * whole-body scan is safe. Falls back to an explicit voucher/invoice JSON field
+ * if the value isn't in INV- form. Pure and exported for tests.
+ */
+export function extractInvoiceNumber(body: string): string | undefined {
+  if (!body) return undefined;
+
+  const match = body.match(/INV-\d+/i);
+  if (match) return match[0].toUpperCase();
+
+  try {
+    const json = JSON.parse(body) as unknown;
+    // Some webhooks nest the created order under `data` or `order`.
+    const scopes = [json, (json as Record<string, unknown>)?.["data"], (json as Record<string, unknown>)?.["order"]];
+    for (const scope of scopes) {
+      if (!scope || typeof scope !== "object") continue;
+      const record = scope as Record<string, unknown>;
+      for (const key of ["voucher_no", "invoice_no", "invoice_number"]) {
+        const value = record[key];
+        if (typeof value === "string" && value.trim()) return value.trim();
+        if (typeof value === "number") return String(value);
+      }
+    }
+  } catch {
+    // Body wasn't JSON — the regex above was our only shot.
+  }
+  return undefined;
 }
 
 /** Auth headers from env. Bearer + X-API-Key when POS_API_KEY is set; an
@@ -117,7 +158,16 @@ export async function postToPos(
       clearTimeout(timer);
 
       if (res.ok) {
-        return { ok: true, status: res.status, attempts: attempt };
+        // Read the success body so we can capture the POS-assigned invoice
+        // number (best-effort — a body we can't read just yields no invoice).
+        const response = await res.text().catch(() => "");
+        return {
+          ok: true,
+          status: res.status,
+          attempts: attempt,
+          response: response || undefined,
+          invoiceNumber: extractInvoiceNumber(response),
+        };
       }
 
       lastStatus = res.status;

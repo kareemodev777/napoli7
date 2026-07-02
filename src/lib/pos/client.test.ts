@@ -1,5 +1,47 @@
 import { test, expect, describe } from "bun:test";
-import { shouldRetry, isPermanentPosError } from "./client";
+import {
+  shouldRetry,
+  isPermanentPosError,
+  extractInvoiceNumber,
+} from "./client";
+
+describe("extractInvoiceNumber — POS invoice/voucher capture", () => {
+  test("finds an INV-<n> number in a JSON success body", () => {
+    expect(extractInvoiceNumber('{"success":true,"voucher_no":"INV-46"}')).toBe(
+      "INV-46",
+    );
+  });
+
+  test("finds an INV-<n> number nested anywhere / in plain text", () => {
+    expect(
+      extractInvoiceNumber('{"data":{"order":{"voucher_no":"INV-71"}}}'),
+    ).toBe("INV-71");
+    expect(extractInvoiceNumber("Created voucher INV-3 successfully")).toBe(
+      "INV-3",
+    );
+  });
+
+  test("normalises case", () => {
+    expect(extractInvoiceNumber('{"voucher_no":"inv-9"}')).toBe("INV-9");
+  });
+
+  test("falls back to a voucher/invoice field not in INV- form", () => {
+    expect(extractInvoiceNumber('{"invoice_no":"2026/0042"}')).toBe("2026/0042");
+    expect(extractInvoiceNumber('{"data":{"voucher_no":123}}')).toBe("123");
+  });
+
+  test("does NOT mistake our own order_number for an invoice", () => {
+    expect(
+      extractInvoiceNumber('{"success":true,"number":"N7-00004"}'),
+    ).toBeUndefined();
+  });
+
+  test("returns undefined for empty / invoice-less bodies", () => {
+    expect(extractInvoiceNumber("")).toBeUndefined();
+    expect(extractInvoiceNumber("OK")).toBeUndefined();
+    expect(extractInvoiceNumber('{"success":true}')).toBeUndefined();
+  });
+});
 
 describe("isPermanentPosError — non-retryable POS rejections", () => {
   test("flags a duplicate voucher / integrity violation (order did NOT sync)", () => {

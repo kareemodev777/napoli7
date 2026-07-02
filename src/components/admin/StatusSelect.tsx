@@ -53,36 +53,35 @@ export function StatusSelect({
   }
 
   return (
-    <>
-      <td className="py-4 pr-4">
+    <td className="py-4 pr-4">
+      <div className="flex items-center gap-2">
         <StatusBadge status={status} />
-        {status !== "cancelled" ? (
-          <div className="mt-2 flex items-center gap-1" aria-hidden>
-            {lane.map((s, i) => (
-              <span
-                key={s}
-                title={ORDER_STATUS_LABELS[s]}
-                className={`h-1.5 rounded-full transition-all ${
-                  i <= currentIndex ? "w-5 bg-brand" : "w-2.5 bg-muted"
-                }`}
-              />
-            ))}
-          </div>
-        ) : null}
-      </td>
-      <td className="py-4 pr-4">
         <OrderStatusActions
           status={status}
           deliveryType={deliveryType}
           pending={pending}
           onSet={setTo}
+          compact
         />
-        {error ? (
-          <span role="status" className="mt-1 block text-[11px] text-flag-red">
-            {error}
-          </span>
-        ) : null}
-      </td>
-    </>
+      </div>
+      {status !== "cancelled" ? (
+        <div className="mt-2 flex items-center gap-1" aria-hidden>
+          {lane.map((s, i) => (
+            <span
+              key={s}
+              title={ORDER_STATUS_LABELS[s]}
+              className={`h-1.5 rounded-full transition-all ${
+                i <= currentIndex ? "w-5 bg-brand" : "w-2.5 bg-muted"
+              }`}
+            />
+          ))}
+        </div>
+      ) : null}
+      {error ? (
+        <span role="status" className="mt-1 block text-[11px] text-flag-red">
+          {error}
+        </span>
+      ) : null}
+    </td>
   );
 }

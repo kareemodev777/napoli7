@@ -37,6 +37,7 @@ async function recordPush(args: {
       attempts: args.result.attempts,
       error: args.result.ok ? null : args.result.error,
       payload: args.payload,
+      response: args.result.ok ? args.result.response ?? null : null,
     });
   } catch (e) {
     console.error("[pos] could not write pos_push_log:", e);
@@ -98,8 +99,23 @@ export async function pushOrderToPos(orderId: string): Promise<void> {
       })
       .eq("id", order.id);
 
+    // Record the POS-assigned invoice number (e.g. INV-46) in its own update so a
+    // not-yet-migrated pos_invoice_number column can never break the sync stamp.
+    if (result.ok && result.invoiceNumber) {
+      const { error: invoiceError } = await supabase
+        .from("orders")
+        .update({ pos_invoice_number: result.invoiceNumber })
+        .eq("id", order.id);
+      if (invoiceError) {
+        console.error("[pos] could not store invoice number:", invoiceError);
+      }
+    }
+
     if (result.ok) {
-      console.info(`[pos] order ${order.order_number} pushed (create)`);
+      console.info(
+        `[pos] order ${order.order_number} pushed (create)`,
+        result.invoiceNumber ? `invoice ${result.invoiceNumber}` : "",
+      );
     }
   } catch (e) {
     // Defensive: even an unexpected error here must not propagate to callers.

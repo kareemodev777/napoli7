@@ -12,10 +12,9 @@ import {
 
 const ALL_STATUSES = Object.keys(ORDER_STATUS_LABELS) as OrderStatus[];
 
-const CONTENT =
-  "z-50 rounded-md border border-border bg-card p-3 shadow-xl";
+const CONTENT = "z-50 rounded-md border border-border bg-card shadow-xl";
 
-/** A button that opens a confirm popover before running its action. */
+/** A trigger that opens a confirm popover before running its action. */
 function ConfirmPopover({
   trigger,
   message,
@@ -33,7 +32,7 @@ function ConfirmPopover({
     <Popover.Root>
       <Popover.Trigger asChild>{trigger}</Popover.Trigger>
       <Popover.Portal>
-        <Popover.Content sideOffset={6} className={`${CONTENT} w-56`}>
+        <Popover.Content sideOffset={6} className={`${CONTENT} w-56 p-3`}>
           <p className="text-sm text-foreground">{message}</p>
           <div className="mt-3 flex justify-end gap-2">
             <Popover.Close asChild>
@@ -62,24 +61,112 @@ function ConfirmPopover({
   );
 }
 
+/** The "set any status" override — an overlay popover menu so it never grows the row. */
+function OverrideMenu({
+  current,
+  onSet,
+  disabled,
+  iconOnly,
+}: {
+  current: OrderStatus;
+  onSet: (s: OrderStatus) => void;
+  disabled: boolean;
+  iconOnly?: boolean;
+}) {
+  return (
+    <Popover.Root>
+      <Popover.Trigger asChild>
+        <button
+          type="button"
+          disabled={disabled}
+          title="Change status"
+          aria-label="Change status"
+          className={
+            iconOnly
+              ? "inline-flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
+              : "inline-flex items-center gap-0.5 rounded-md border border-border px-2 py-2 font-display text-[10px] uppercase tracking-[0.12em] text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
+          }
+        >
+          {!iconOnly ? "Change" : null}
+          <ChevronDown className="h-3.5 w-3.5" strokeWidth={2} aria-hidden />
+        </button>
+      </Popover.Trigger>
+      <Popover.Portal>
+        <Popover.Content align="end" sideOffset={6} className={`${CONTENT} w-44 p-1.5`}>
+          {ALL_STATUSES.map((s) => (
+            <Popover.Close asChild key={s}>
+              <button
+                type="button"
+                disabled={s === current}
+                onClick={() => onSet(s)}
+                className={`block w-full rounded px-2 py-1.5 text-left font-display text-[11px] uppercase tracking-[0.1em] disabled:opacity-40 ${
+                  s === "cancelled"
+                    ? "text-flag-red hover:bg-flag-red/10"
+                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                {ORDER_STATUS_LABELS[s]}
+              </button>
+            </Popover.Close>
+          ))}
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
+
 /**
- * Guided status actions shared by the orders table and the detail page: a
- * primary "next step" button (with a confirm popover), a Cancel action (confirm
- * popover), and a "Change" override rendered as an overlay popover menu so it
- * never grows the row. `onSet` runs the actual update.
+ * Guided status actions shared by the orders table and the detail page.
+ * `compact` renders icon-only controls (a → advance arrow with a tooltip +
+ * confirm popover, and a ▾ override menu) that sit inline on the status column
+ * without growing the row; the full form shows labelled buttons for the panel.
  */
 export function OrderStatusActions({
   status,
   deliveryType,
   pending,
   onSet,
+  compact,
 }: {
   status: OrderStatus;
   deliveryType: FulfillmentType;
   pending: boolean;
   onSet: (target: OrderStatus) => void;
+  compact?: boolean;
 }) {
   const next = nextOrderStatus(status, deliveryType);
+
+  if (compact) {
+    return (
+      <div className="inline-flex items-center gap-1 align-middle">
+        {next ? (
+          <ConfirmPopover
+            message={`Move this order to “${ORDER_STATUS_LABELS[next]}”?`}
+            confirmLabel="Confirm"
+            onConfirm={() => onSet(next)}
+            trigger={
+              <button
+                type="button"
+                disabled={pending}
+                title={`Next: ${nextStatusActionLabel(next, deliveryType)}`}
+                aria-label={`Next: ${nextStatusActionLabel(next, deliveryType)}`}
+                className="inline-flex h-7 w-7 items-center justify-center rounded-md bg-brand text-primary-foreground hover:bg-brand-hover disabled:opacity-50"
+              >
+                <ChevronRight className="h-4 w-4" strokeWidth={2.2} aria-hidden />
+              </button>
+            }
+          />
+        ) : status === "delivered" ? (
+          <Check
+            className="h-4 w-4 text-flag-green"
+            strokeWidth={2}
+            aria-label="Completed"
+          />
+        ) : null}
+        <OverrideMenu current={status} onSet={onSet} disabled={pending} iconOnly />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-wrap items-center gap-2">
@@ -132,43 +219,7 @@ export function OrderStatusActions({
         />
       ) : null}
 
-      {/* Override — overlay menu, never grows the row. */}
-      <Popover.Root>
-        <Popover.Trigger asChild>
-          <button
-            type="button"
-            disabled={pending}
-            className="inline-flex items-center gap-0.5 rounded-md border border-border px-2 py-2 font-display text-[10px] uppercase tracking-[0.12em] text-muted-foreground hover:bg-muted hover:text-foreground disabled:opacity-50"
-          >
-            Change
-            <ChevronDown className="h-3 w-3" strokeWidth={2} aria-hidden />
-          </button>
-        </Popover.Trigger>
-        <Popover.Portal>
-          <Popover.Content
-            align="end"
-            sideOffset={6}
-            className={`${CONTENT} w-44 p-1.5`}
-          >
-            {ALL_STATUSES.map((s) => (
-              <Popover.Close asChild key={s}>
-                <button
-                  type="button"
-                  disabled={s === status}
-                  onClick={() => onSet(s)}
-                  className={`block w-full rounded px-2 py-1.5 text-left font-display text-[11px] uppercase tracking-[0.1em] disabled:opacity-40 ${
-                    s === "cancelled"
-                      ? "text-flag-red hover:bg-flag-red/10"
-                      : "text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  {ORDER_STATUS_LABELS[s]}
-                </button>
-              </Popover.Close>
-            ))}
-          </Popover.Content>
-        </Popover.Portal>
-      </Popover.Root>
+      <OverrideMenu current={status} onSet={onSet} disabled={pending} />
     </div>
   );
 }

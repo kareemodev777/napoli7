@@ -31,6 +31,7 @@ interface AdminOrderRow {
   paymentMethod: string;
   paymentStatus: string;
   posSyncStatus: string;
+  posInvoiceNumber: string | null;
   createdAt: string;
   items: { product_name: string; quantity: number }[];
 }
@@ -41,7 +42,7 @@ async function loadOrders(): Promise<AdminOrderRow[]> {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, order_number, customer_name, customer_phone, total_aed, delivery_type, delivery_slot, status, payment_method, payment_status, pos_sync_status, created_at, order_items(product_name, quantity)",
+      "id, order_number, customer_name, customer_phone, total_aed, delivery_type, delivery_slot, status, payment_method, payment_status, pos_sync_status, pos_invoice_number, created_at, order_items(product_name, quantity)",
     )
     .order("created_at", { ascending: false })
     .limit(100);
@@ -57,6 +58,7 @@ async function loadOrders(): Promise<AdminOrderRow[]> {
     paymentMethod: row.payment_method,
     paymentStatus: row.payment_status,
     posSyncStatus: row.pos_sync_status,
+    posInvoiceNumber: row.pos_invoice_number ?? null,
     createdAt: row.created_at,
     items: row.order_items ?? [],
   }));
@@ -90,7 +92,6 @@ export default async function AdminOrdersPage() {
                 <th className="py-3 pr-4">Type</th>
                 <th className="py-3 pr-4">Slot</th>
                 <th className="py-3 pr-4">Status</th>
-                <th className="py-3 pr-4">Update</th>
                 <th className="py-3 pr-4">Edit</th>
               </tr>
             </thead>
@@ -134,6 +135,7 @@ export default async function AdminOrdersPage() {
                     <PosSyncCell
                       orderId={o.id}
                       status={o.posSyncStatus}
+                      invoiceNumber={o.posInvoiceNumber}
                       payable={
                         o.status !== "cancelled" &&
                         (o.paymentMethod === "cod" ||

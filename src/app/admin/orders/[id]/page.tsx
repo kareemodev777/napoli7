@@ -53,7 +53,7 @@ async function loadOrder(id: string) {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, order_number, customer_name, customer_phone, customer_email, status, payment_method, payment_status, pos_sync_status, delivery_type, delivery_address, delivery_slot, pizza_cut, subtotal_aed, delivery_fee_aed, discount_aed, total_aed, promo_code, order_notes, admin_notes, assigned_rider_id, created_at, order_items(id, product_name, base_price_aed, quantity, customizations, line_total_aed, size_label)",
+      "id, order_number, customer_name, customer_phone, customer_email, status, payment_method, payment_status, pos_sync_status, pos_invoice_number, delivery_type, delivery_address, delivery_slot, pizza_cut, subtotal_aed, delivery_fee_aed, discount_aed, total_aed, promo_code, order_notes, admin_notes, assigned_rider_id, created_at, order_items(id, product_name, base_price_aed, quantity, customizations, line_total_aed, size_label)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -363,6 +363,16 @@ export default async function AdminOrderEditPage({
               Send this order to the POS (xtbooks). Use this if the automatic
               push failed or the order was paid before the POS was connected.
             </p>
+            {order.pos_invoice_number ? (
+              <p className="mt-2 text-sm">
+                <span className="text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                  Invoice:{" "}
+                </span>
+                <span className="font-mono tabular-nums">
+                  {order.pos_invoice_number as string}
+                </span>
+              </p>
+            ) : null}
           </div>
           <SyncPosButton
             orderId={order.id}
