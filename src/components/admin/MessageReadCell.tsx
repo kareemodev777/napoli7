@@ -4,6 +4,7 @@ import { useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { markMessageRead } from "@/app/admin/messages/actions";
+import { useAdminNotifications } from "@/components/admin/AdminNotificationsProvider";
 
 /**
  * Per-message read control. Unread messages show a clickable "New" pill; tapping
@@ -19,6 +20,10 @@ export function MessageReadCell({
 }) {
   const [pending, startTransition] = useTransition();
   const router = useRouter();
+  // The sidebar Messages/Customers badges live in this client provider, so a
+  // plain router.refresh() (which re-renders the server tree) won't update them.
+  // Re-fetch the notification snapshot directly so the badge drops immediately.
+  const { refresh } = useAdminNotifications();
 
   if (read) {
     return (
@@ -36,6 +41,7 @@ export function MessageReadCell({
       onClick={() =>
         startTransition(async () => {
           await markMessageRead(messageId);
+          refresh();
           router.refresh();
         })
       }
