@@ -2,6 +2,7 @@
 
 import {
   createContext,
+  useCallback,
   useContext,
   useEffect,
   useRef,
@@ -9,6 +10,7 @@ import {
 } from "react";
 import { usePathname } from "next/navigation";
 import { getBrowserSupabase } from "@/lib/supabase/client";
+import { acknowledgeActionableOrders } from "@/app/admin/orders/ack-actions";
 import { useAdminAlarm } from "@/store/admin-alarm";
 import { startAlarm, stopAlarm, unlockAlarm } from "./alarm";
 import {
@@ -77,11 +79,21 @@ export function AdminNotificationsProvider({
   const pathname = usePathname();
   const onOrdersPage = pathname?.startsWith("/admin/orders") ?? false;
 
+  // Acknowledge the current alert: silence instantly on the client AND stamp the
+  // orders acknowledged in the DB so it stays silent across reloads/devices.
+  // Re-fetch the snapshot so the durable count catches up right away.
+  const acknowledge = useCallback(() => {
+    useAdminAlarm.getState().silence();
+    acknowledgeActionableOrders()
+      .then(() => refreshRef.current())
+      .catch((e) => console.error("[admin] acknowledge failed", e));
+  }, []);
+
   // Visiting the orders page is a persistent acknowledge (not just while there),
   // so leaving it for the dashboard doesn't re-ring.
   useEffect(() => {
-    if (onOrdersPage) useAdminAlarm.getState().silence();
-  }, [onOrdersPage]);
+    if (onOrdersPage) acknowledge();
+  }, [onOrdersPage, acknowledge]);
 
   // Unlock audio on the admin's first interaction (browsers block autoplay).
   useEffect(() => {
@@ -102,7 +114,7 @@ export function AdminNotificationsProvider({
         if (cancelled || typeof data.orders !== "number") return;
         // A rise in the count re-arms the alarm (in the global store) even if it
         // was silenced; flash the bell for the fresh order.
-        if (useAdminAlarm.getState().reconcile(data.orders)) {
+        if (useAdminAlarm.getState().reconcile(data.unacknowledgedOrders)) {
           setPulse(true);
           window.setTimeout(() => setPulse(false), 2000);
         }
@@ -148,19 +160,19 @@ export function AdminNotificationsProvider({
   // admin opens notifications, or they're on the orders page. A fresh order
   // re-arms it (silenced reset above).
   useEffect(() => {
-    if (snapshot.orders > 0 && !silenced && !onOrdersPage) {
+    if (snapshot.unacknowledgedOrders > 0 && !silenced && !onOrdersPage) {
       startAlarm();
     } else {
       stopAlarm();
     }
     return () => stopAlarm();
-  }, [snapshot.orders, silenced, onOrdersPage]);
+  }, [snapshot.unacknowledgedOrders, silenced, onOrdersPage]);
 
   const value: AdminNotificationsContextValue = {
     snapshot,
     pulse,
     silenced,
-    silence: () => useAdminAlarm.getState().silence(),
+    silence: acknowledge,
     refresh: () => refreshRef.current(),
   };
 

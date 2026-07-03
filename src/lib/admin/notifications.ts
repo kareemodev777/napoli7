@@ -1,6 +1,6 @@
 import { HAS_SUPABASE_SERVICE } from "@/lib/env";
 import { createServiceRoleClient } from "@/lib/supabase/service";
-import { countActionableOrders } from "./orders";
+import { countActionableOrders, countUnacknowledgedOrders } from "./orders";
 
 export interface AdminNotificationOrder {
   id: string;
@@ -20,6 +20,8 @@ export interface AdminNotificationMessage {
 export interface AdminNotificationSnapshot {
   /** Orders the kitchen still needs to accept (received + paid/COD). */
   orders: number;
+  /** Actionable orders the admin hasn't acknowledged yet — drives the alarm. */
+  unacknowledgedOrders: number;
   /** Contact messages not yet opened by the admin. */
   messages: number;
   recentOrders: AdminNotificationOrder[];
@@ -28,6 +30,7 @@ export interface AdminNotificationSnapshot {
 
 export const EMPTY_SNAPSHOT: AdminNotificationSnapshot = {
   orders: 0,
+  unacknowledgedOrders: 0,
   messages: 0,
   recentOrders: [],
   recentMessages: [],
@@ -53,9 +56,15 @@ export async function getAdminNotificationSnapshot(): Promise<AdminNotificationS
   if (!HAS_SUPABASE_SERVICE) return EMPTY_SNAPSHOT;
   const supabase = createServiceRoleClient();
 
-  const [orders, messages, recentOrdersRes, recentMessagesRes] =
-    await Promise.all([
+  const [
+    orders,
+    unacknowledgedOrders,
+    messages,
+    recentOrdersRes,
+    recentMessagesRes,
+  ] = await Promise.all([
       countActionableOrders(),
+      countUnacknowledgedOrders(),
       countUnreadMessages(),
       supabase
         .from("orders")
@@ -74,6 +83,7 @@ export async function getAdminNotificationSnapshot(): Promise<AdminNotificationS
 
   return {
     orders,
+    unacknowledgedOrders,
     messages,
     recentOrders: (recentOrdersRes.data ?? []).map((o) => ({
       id: o.id,

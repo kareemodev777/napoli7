@@ -21,7 +21,7 @@ import { formatAed } from "@/components/catalog/PriceBadge";
 export function NotificationBell() {
   const { snapshot, pulse, silenced, silence } = useAdminNotifications();
   const total = snapshot.orders + snapshot.messages;
-  const ringing = snapshot.orders > 0 && !silenced;
+  const ringing = snapshot.unacknowledgedOrders > 0 && !silenced;
 
   return (
     <Popover.Root onOpenChange={(open) => open && silence()}>
