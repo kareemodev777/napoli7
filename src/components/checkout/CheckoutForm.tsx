@@ -389,11 +389,13 @@ export function CheckoutForm({
       onSubmit={onSubmit}
       className="grid lg:grid-cols-[1.4fr_1fr] gap-10 items-start"
     >
+      {/* z-[2000] sits above Leaflet's map panes/controls (which reach ~1000)
+          so the delivery map never pokes through the payment-redirect overlay. */}
       {redirecting ? (
         <div
           role="status"
           aria-live="assertive"
-          className="fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-background/90 backdrop-blur-sm px-6 text-center"
+          className="fixed inset-0 z-[2000] flex flex-col items-center justify-center gap-5 bg-background/90 backdrop-blur-sm px-6 text-center"
         >
           <Spinner className="h-8 w-8" />
           <p className="font-display text-sm tracking-[0.2em] uppercase text-foreground">
