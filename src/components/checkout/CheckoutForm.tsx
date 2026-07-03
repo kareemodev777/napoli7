@@ -82,6 +82,7 @@ export function CheckoutForm({
   initialDetails = {},
   savedAddresses = [],
   preferredArea,
+  rewardCode = null,
 }: {
   zones: DeliveryZone[];
   defaultFee: number;
@@ -89,6 +90,8 @@ export function CheckoutForm({
   initialDetails?: CheckoutInitialDetails;
   savedAddresses?: CheckoutSavedAddress[];
   preferredArea?: string;
+  /** Auto-applied signup reward code for a signed-in customer who has one. */
+  rewardCode?: string | null;
 }) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -784,7 +787,7 @@ export function CheckoutForm({
           <p className="font-display text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-2">
             Promo code
           </p>
-          <PromoField />
+          <PromoField autoApplyCode={rewardCode} />
         </div>
         <div className="mt-4 border-t border-border pt-3 flex items-baseline justify-between">
           <span className="font-display text-xs tracking-[0.25em] uppercase">

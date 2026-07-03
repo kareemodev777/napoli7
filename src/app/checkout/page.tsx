@@ -14,6 +14,7 @@ import {
 } from "@/lib/checkout-prefill";
 import type { CheckoutSavedAddress } from "@/components/checkout/CheckoutForm";
 import { getOrderingAvailability } from "@/lib/ordering-hours";
+import { getCustomerAvailableRewardCode } from "@/lib/signup-reward";
 
 export const metadata: Metadata = {
   title: "Checkout",
@@ -24,17 +25,21 @@ export const metadata: Metadata = {
 interface CheckoutAccountData {
   initialDetails: CheckoutInitialDetails;
   savedAddresses: CheckoutSavedAddress[];
+  /** The customer's still-usable signup reward code, auto-applied at checkout. */
+  rewardCode: string | null;
 }
 
 async function loadCheckoutAccountData(): Promise<CheckoutAccountData> {
-  if (!HAS_SUPABASE) return { initialDetails: {}, savedAddresses: [] };
+  if (!HAS_SUPABASE)
+    return { initialDetails: {}, savedAddresses: [], rewardCode: null };
 
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { initialDetails: {}, savedAddresses: [] };
+  if (!user)
+    return { initialDetails: {}, savedAddresses: [], rewardCode: null };
 
   // Load every saved address (default first) so the customer can pick one.
   const { data: rows } = await supabase
@@ -55,8 +60,10 @@ async function loadCheckoutAccountData(): Promise<CheckoutAccountData> {
   }));
 
   const defaultAddress = savedAddresses[0];
+  const rewardCode = await getCustomerAvailableRewardCode(user.id);
 
   return {
+    rewardCode,
     initialDetails: buildCheckoutInitialDetails({
       email: user.email,
       metadata: user.user_metadata,
@@ -91,7 +98,7 @@ export default async function CheckoutPage({
     getOrderingAvailability(),
     getDeliveryMinimumSubtotalAed(),
   ]);
-  const { initialDetails, savedAddresses } = accountData;
+  const { initialDetails, savedAddresses, rewardCode } = accountData;
   const preferredArea = area?.trim() || undefined;
 
   return (
@@ -139,6 +146,7 @@ export default async function CheckoutPage({
                 initialDetails={initialDetails}
                 savedAddresses={savedAddresses}
                 preferredArea={preferredArea}
+                rewardCode={rewardCode}
               />
             </Suspense>
           )}

@@ -80,3 +80,33 @@ export async function getSignupCampaign(): Promise<SignupCampaign | null> {
     rewardProductId: data.reward_product_id,
   };
 }
+
+/**
+ * The signed-in customer's still-usable signup reward code, or null. Used to
+ * prefill/auto-apply the checkout promo field so they never have to remember or
+ * re-type the code. Returns null once the code is inactive or fully redeemed.
+ */
+export async function getCustomerAvailableRewardCode(
+  userId: string,
+): Promise<string | null> {
+  if (!HAS_SUPABASE_SERVICE) return null;
+
+  const supabase = createServiceRoleClient();
+  const { data: claim } = await supabase
+    .from("free_pizza_claims")
+    .select("code")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (!claim) return null;
+
+  const { data: promo } = await supabase
+    .from("promo_codes")
+    .select("max_uses, times_used, active")
+    .eq("code", claim.code)
+    .maybeSingle();
+  if (!promo || !promo.active) return null;
+
+  const used =
+    promo.max_uses != null && Number(promo.times_used) >= Number(promo.max_uses);
+  return used ? null : (claim.code as string);
+}

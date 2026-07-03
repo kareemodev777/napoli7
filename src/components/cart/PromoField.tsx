@@ -14,7 +14,13 @@ import { validatePromoCode } from "@/app/cart/actions";
  * code and recomputes the amount server-side, so a tampered client value can
  * never grant an unearned discount.
  */
-export function PromoField() {
+export function PromoField({
+  autoApplyCode,
+}: {
+  /** A code (e.g. the customer's signup reward) to apply automatically once, so
+   *  they don't have to remember or re-type it. */
+  autoApplyCode?: string | null;
+} = {}) {
   const subtotal = useCart((s) => s.subtotal());
   const promo = useCart((s) => s.promo);
   const setPromo = useCart((s) => s.setPromo);
@@ -59,6 +65,39 @@ export function PromoField() {
       cancelled = true;
     };
   }, [promo, subtotal, clearPromo, setPromo]);
+
+  // Auto-apply the customer's own code (e.g. their signup reward) once the cart
+  // has a subtotal — but only if no promo is applied yet, and only one attempt,
+  // so removing it (or an invalid code) doesn't re-trigger. Silent on failure:
+  // an auto-apply that doesn't fit (e.g. pickup-only on a delivery cart) simply
+  // leaves the field empty rather than showing an error the customer didn't ask
+  // for.
+  const autoAppliedRef = useRef(false);
+  useEffect(() => {
+    if (!autoApplyCode || promo || subtotal <= 0 || autoAppliedRef.current) {
+      return;
+    }
+    autoAppliedRef.current = true;
+    let cancelled = false;
+    validatePromoCode(autoApplyCode, subtotal)
+      .then((result) => {
+        if (cancelled || result.error || !result.code || result.amount == null) {
+          return;
+        }
+        setPromo({
+          code: result.code,
+          amount: result.amount,
+          isReward: result.isReward,
+        });
+      })
+      .catch(() => {
+        // Transient failure — allow one more attempt on a later render.
+        autoAppliedRef.current = false;
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [autoApplyCode, promo, subtotal, setPromo]);
 
   function apply() {
     setError(null);
