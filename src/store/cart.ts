@@ -47,6 +47,13 @@ interface CartState {
   total: () => number;
 }
 
+// Real menu products use UUID ids. A persisted cart item with a non-UUID id is
+// stale (from an older/demo menu) and can never be ordered — checkout rejects it
+// with "your cart is out of date". We drop such items on rehydrate so a stale
+// localStorage cart self-heals instead of dead-ending the customer at payment.
+const UUID_RE =
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/;
+
 function customizationKey(items: CartCustomization[]) {
   return items
     .map((c) => `${c.ingredient}:${c.choice}`)
@@ -110,12 +117,16 @@ export const useCart = create<CartState>()(
     {
       name: "napoli7-cart",
       storage: createJSONStorage(() => localStorage),
-      version: 3,
-      // v3 added promo state. Drop any persisted promo on upgrade so a stale
-      // discount can't survive a deploy; items are preserved.
+      version: 4,
+      // v3 added promo state; v4 drops stale (non-UUID) items left over from an
+      // older/demo menu. Reset promo on upgrade so a stale discount can't survive
+      // a deploy, and keep only orderable items so checkout never dead-ends.
       migrate: (persisted) => {
         const state = (persisted ?? {}) as Partial<CartState>;
-        return { ...state, promo: null } as CartState;
+        const items = (state.items ?? []).filter((it) =>
+          UUID_RE.test(it.productId),
+        );
+        return { ...state, items, promo: null } as CartState;
       },
     },
   ),
