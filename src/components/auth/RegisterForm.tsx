@@ -47,12 +47,28 @@ export function RegisterForm({ otpEnabled = true }: { otpEnabled?: boolean }) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [reward, setReward] = useState<SignupReward | null>(null);
+  // False once SMS OTP has verified the customer (account created confirmed +
+  // signed in) — drives whether we route to /verify-email or straight home.
+  const [emailConfirmationRequired, setEmailConfirmationRequired] =
+    useState(true);
   const [resendCount, setResendCount] = useState(0);
   const [cooldown, setCooldown] = useState(0);
   const [pending, startTransition] = useTransition();
 
   function update<K extends keyof FormState>(key: K, value: string) {
     setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  // After a successful signup: SMS-verified accounts are already confirmed and
+  // signed in, so go straight home; the email-confirm fallback goes to the
+  // verify-email screen.
+  function finishSignup(emailRequired: boolean) {
+    if (emailRequired) {
+      router.push(`/verify-email?email=${encodeURIComponent(form.email.trim())}`);
+    } else {
+      router.push("/");
+      router.refresh();
+    }
   }
 
   // Tick the resend cooldown down to zero, one second at a time.
@@ -94,14 +110,14 @@ export function RegisterForm({ otpEnabled = true }: { otpEnabled?: boolean }) {
           setError(res.error);
           return;
         }
+        const emailRequired = res.emailConfirmationRequired ?? true;
+        setEmailConfirmationRequired(emailRequired);
         if (res.reward) {
           setReward(res.reward);
           setStep("done");
           return;
         }
-        router.push(
-          `/verify-email?email=${encodeURIComponent(form.email.trim())}`,
-        );
+        finishSignup(emailRequired);
         return;
       }
       const res = await sendRegistrationOtp(form);
@@ -127,12 +143,14 @@ export function RegisterForm({ otpEnabled = true }: { otpEnabled?: boolean }) {
         setError(res.error);
         return;
       }
+      const emailRequired = res.emailConfirmationRequired ?? true;
+      setEmailConfirmationRequired(emailRequired);
       if (res.reward) {
         setReward(res.reward);
         setStep("done");
         return;
       }
-      router.push(`/verify-email?email=${encodeURIComponent(form.email.trim())}`);
+      finishSignup(emailRequired);
     });
   }
 
@@ -151,21 +169,18 @@ export function RegisterForm({ otpEnabled = true }: { otpEnabled?: boolean }) {
             {reward.code}
           </p>
           <p className="mt-2 text-xs text-muted-foreground">
-            Stay signed in and apply this code at checkout on your first order. It
-            works once and is tied to your account — we&rsquo;ve also emailed it
-            to you.
+            Apply this code at checkout on your first order. It works once and is
+            tied to your account — we&rsquo;ve also emailed it to you.
           </p>
         </div>
         <button
           type="button"
-          onClick={() =>
-            router.push(
-              `/verify-email?email=${encodeURIComponent(form.email.trim())}`,
-            )
-          }
+          onClick={() => finishSignup(emailConfirmationRequired)}
           className="w-full inline-flex items-center justify-center bg-brand text-primary-foreground py-3.5 font-display text-sm tracking-[0.2em] uppercase hover:bg-brand-hover"
         >
-          Verify your email to finish
+          {emailConfirmationRequired
+            ? "Verify your email to finish"
+            : "Start your order"}
         </button>
       </div>
     );

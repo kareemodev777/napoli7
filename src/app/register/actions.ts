@@ -50,6 +50,12 @@ export interface RegisterResult {
   error?: string;
   /** Present when this new registrant claimed a launch free-pizza reward. */
   reward?: SignupReward;
+  /**
+   * True when the account still needs email confirmation before use (the no-SMS
+   * fallback). False when SMS OTP already verified the customer — the account is
+   * created confirmed and signed in, so no confirmation email is sent.
+   */
+  emailConfirmationRequired?: boolean;
 }
 
 /** Validate identity + anti-abuse, then bail with a clear reason if blocked. */
@@ -156,7 +162,11 @@ export async function verifyAndRegister(
     }
   }
 
-  return createAccountAndClaim(parsed.data);
+  // SMS OTP succeeded, so the number (and identity) is verified — create the
+  // account already-confirmed and skip the email confirmation entirely. If
+  // Twilio isn't configured we never actually texted a code, so fall back to
+  // email confirmation rather than confirming on nothing.
+  return createAccountAndClaim(parsed.data, { emailPreConfirmed: HAS_TWILIO });
 }
 
 /**
@@ -180,46 +190,95 @@ export async function registerDirect(input: unknown): Promise<RegisterResult> {
   if (isLikelyFakePhone(parsed.data.mobile)) {
     return { error: "Enter a real UAE mobile number." };
   }
-  return createAccountAndClaim(parsed.data);
+  // No SMS step ran here, so keep email confirmation as the verification gate.
+  return createAccountAndClaim(parsed.data, { emailPreConfirmed: false });
 }
 
 /**
- * Create the account (standard email sign-up → keeps the verify-email flow) and
- * issue the launch free-pizza reward. Re-screens identity right before creation
- * for race-safety. Shared by the OTP and the direct (no-OTP) paths.
+ * Create the account and issue the launch free-pizza reward. Re-screens identity
+ * right before creation for race-safety. Shared by the OTP and direct paths.
+ *
+ * When {@link CreateOptions.emailPreConfirmed} is true (SMS OTP verified the
+ * customer) the account is created already-confirmed via the admin API — no
+ * confirmation email — and the customer is signed straight in. Otherwise it uses
+ * the standard email sign-up so the confirmation email still gates the account.
  */
+interface CreateOptions {
+  emailPreConfirmed: boolean;
+}
+
 async function createAccountAndClaim(
   data: RegisterInput,
+  { emailPreConfirmed }: CreateOptions,
 ): Promise<RegisterResult> {
   const blocked = await screenIdentity(data);
   if (blocked) return blocked;
 
-  const supabase = await createClient();
-  const { data: signUp, error } = await supabase.auth.signUp({
-    email: data.email,
-    password: data.password,
-    options: {
-      emailRedirectTo: buildEmailVerificationRedirect(SITE_URL, data.email),
-      data: {
-        first_name: data.firstName,
-        last_name: data.lastName,
-        mobile: data.mobile,
-      },
-    },
-  });
-  if (error) {
-    if (error.message.toLowerCase().includes("already")) {
-      return {
-        error: "An account with this email already exists. Log in instead.",
-      };
+  const userMetadata = {
+    first_name: data.firstName,
+    last_name: data.lastName,
+    mobile: data.mobile,
+  };
+
+  let userId: string | null = null;
+
+  if (emailPreConfirmed && HAS_SUPABASE_SERVICE) {
+    // Phone verified by SMS OTP → create the account confirmed (no email) and
+    // sign the customer in so they land ready to order.
+    const service = createServiceRoleClient();
+    const { data: created, error } = await service.auth.admin.createUser({
+      email: data.email,
+      password: data.password,
+      email_confirm: true,
+      user_metadata: userMetadata,
+    });
+    if (error) {
+      if (error.message.toLowerCase().includes("already")) {
+        return {
+          error: "An account with this email already exists. Log in instead.",
+        };
+      }
+      return { error: error.message };
     }
-    return { error: error.message };
+    userId = created.user?.id ?? null;
+
+    // Establish a session cookie so the customer is logged in on return.
+    const supabase = await createClient();
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    });
+    if (signInError) {
+      console.error("[register] auto sign-in after OTP signup failed", signInError);
+    }
+  } else {
+    // No SMS verification — standard email sign-up keeps the verify-email gate.
+    const supabase = await createClient();
+    const { data: signUp, error } = await supabase.auth.signUp({
+      email: data.email,
+      password: data.password,
+      options: {
+        emailRedirectTo: buildEmailVerificationRedirect(SITE_URL, data.email),
+        data: userMetadata,
+      },
+    });
+    if (error) {
+      if (error.message.toLowerCase().includes("already")) {
+        return {
+          error: "An account with this email already exists. Log in instead.",
+        };
+      }
+      return { error: error.message };
+    }
+    userId = signUp.user?.id ?? null;
   }
+
+  const emailConfirmationRequired = !emailPreConfirmed;
 
   // Launch offer — deduped on email + phone in the RPC.
   try {
     const claimed = await claimSignupFreePizza({
-      userId: signUp.user?.id ?? null,
+      userId,
       email: data.email,
       phone: data.mobile,
     });
@@ -233,11 +292,11 @@ async function createAccountAndClaim(
       }).catch((e: unknown) =>
         console.error("[register] reward email failed", e),
       );
-      return { ok: true, reward: claimed };
+      return { ok: true, reward: claimed, emailConfirmationRequired };
     }
   } catch (e: unknown) {
     console.error("[register] free-pizza claim failed", e);
   }
 
-  return { ok: true };
+  return { ok: true, emailConfirmationRequired };
 }
