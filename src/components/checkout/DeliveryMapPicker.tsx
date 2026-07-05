@@ -19,6 +19,17 @@ export interface PickedLocation {
   lng: number;
 }
 
+/** Reverse-geocoded address parts for a dropped pin, so checkout can prefill the
+ *  street field and match the delivery area. */
+export interface GeocodedAddress {
+  /** Road/street name, if the geocoder resolved one. */
+  street?: string;
+  /** Neighbourhood/suburb — used to auto-select the delivery area. */
+  area?: string;
+  /** A human-readable "road, area, city" line (fallback for the street field). */
+  full: string;
+}
+
 // Shop location — the initial map center before the customer drops a pin, and
 // the centre of the delivery radius.
 const AJMAN_CENTER: PickedLocation = {
@@ -38,7 +49,9 @@ const markerIcon = L.icon({
   shadowSize: [41, 41],
 });
 
-async function reverseGeocode(loc: PickedLocation): Promise<string | undefined> {
+async function reverseGeocode(
+  loc: PickedLocation,
+): Promise<GeocodedAddress | undefined> {
   try {
     const res = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${loc.lat}&lon=${loc.lng}&zoom=18&addressdetails=1`,
@@ -50,12 +63,17 @@ async function reverseGeocode(loc: PickedLocation): Promise<string | undefined> 
       address?: Record<string, string>;
     };
     const a = data.address ?? {};
-    const parts = [
-      a.road,
-      a.neighbourhood ?? a.suburb ?? a.residential,
-      a.city ?? a.town ?? a.village,
-    ].filter(Boolean);
-    return parts.length ? parts.join(", ") : data.display_name;
+    const street = a.road;
+    const area =
+      a.neighbourhood ??
+      a.suburb ??
+      a.residential ??
+      a.quarter ??
+      a.city_district;
+    const parts = [street, area, a.city ?? a.town ?? a.village].filter(Boolean);
+    const full = parts.length ? parts.join(", ") : (data.display_name ?? "");
+    if (!full) return undefined;
+    return { street, area, full };
   } catch {
     return undefined;
   }
@@ -109,7 +127,7 @@ export default function DeliveryMapPicker({
   onChange,
 }: {
   value: PickedLocation | null;
-  onChange: (loc: PickedLocation, address?: string) => void;
+  onChange: (loc: PickedLocation, address?: GeocodedAddress) => void;
 }) {
   const markerRef = useRef<L.Marker | null>(null);
   const [flyTo, setFlyTo] = useState<PickedLocation | null>(null);

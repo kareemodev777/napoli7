@@ -15,7 +15,10 @@ import {
   distanceFromShopKm,
   DELIVERY_RADIUS_KM,
 } from "@/lib/delivery-map";
-import type { PickedLocation } from "@/components/checkout/DeliveryMapPicker";
+import type {
+  PickedLocation,
+  GeocodedAddress,
+} from "@/components/checkout/DeliveryMapPicker";
 
 // Leaflet touches `window`, so load the picker client-side only.
 const DeliveryMapPicker = dynamic(
@@ -60,6 +63,28 @@ export interface CheckoutSavedAddress {
 }
 
 const NEW_ADDRESS = "__new__";
+
+/**
+ * Match a reverse-geocoded neighbourhood name to one of our delivery zones so a
+ * dropped pin can auto-select the area. Prefers an exact match, then falls back
+ * to containment (e.g. geocoded "Al Jurf" → zone "Al Jurf 1"). Returns null when
+ * nothing matches, so we never overwrite the area with a wrong guess.
+ */
+function matchZoneArea(zones: DeliveryZone[], geocoded: string): string | null {
+  const norm = (s: string) =>
+    s.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+  const g = norm(geocoded);
+  if (!g) return null;
+
+  const exact = zones.find((z) => norm(z.area) === g);
+  if (exact) return exact.area;
+
+  const partial = zones.find((z) => {
+    const za = norm(z.area);
+    return za.includes(g) || g.includes(za);
+  });
+  return partial ? partial.area : null;
+}
 
 // Real menu products use UUID ids. A cart item with a non-UUID id (e.g. a demo
 // slug like "margherita-classic") is stale and cannot be ordered — checkout
@@ -195,13 +220,25 @@ export function CheckoutForm({
     setArea(chooseCheckoutArea({ zones, preferredArea: match.area }));
   }
 
-  function handlePinChange(loc: PickedLocation, address?: string) {
+  function handlePinChange(loc: PickedLocation, address?: GeocodedAddress) {
     setCoords(loc);
+    if (!address) return;
+
     // Fill the street from the reverse-geocoded address only when the field is
     // empty, so we never clobber what the customer typed themselves.
-    if (address && !street.trim()) {
-      setStreet(address);
+    const streetValue = address.street ?? address.full;
+    if (streetValue && !street.trim()) {
+      setStreet(streetValue);
       setSelectedAddressId(NEW_ADDRESS);
+    }
+
+    // Auto-select the delivery area from the pin when it maps to a known zone.
+    if (address.area) {
+      const matched = matchZoneArea(zones, address.area);
+      if (matched) {
+        setArea(matched);
+        setSelectedAddressId(NEW_ADDRESS);
+      }
     }
   }
 
