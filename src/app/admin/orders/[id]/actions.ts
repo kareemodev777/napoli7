@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { UUID_RE } from "@/lib/uuid";
 import { revalidatePath } from "next/cache";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { createServiceRoleClient } from "@/lib/supabase/service";
@@ -30,7 +31,7 @@ const editSchema = z.object({
   orderNotes: z.string().max(500).optional(),
   paymentHandling: z.enum(PAYMENT_HANDLING),
   paymentNote: z.string().max(500).optional(),
-  addProductId: z.string().uuid().optional(),
+  addProductId: z.string().regex(UUID_RE).optional(),
   addQuantity: z.coerce.number().int().min(0).max(50).default(0),
 });
 

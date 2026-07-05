@@ -2,6 +2,7 @@
 
 import { refresh, revalidatePath } from "next/cache";
 import { z } from "zod";
+import { UUID_RE } from "@/lib/uuid";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 
@@ -30,7 +31,7 @@ const productSchema = z.object({
 
 const sizeSchema = z.object({
   id: z.string().uuid().optional().or(z.literal("")),
-  product_id: z.string().uuid(),
+  product_id: z.string().regex(UUID_RE),
   size_id: z.enum(["small", "regular", "large", "family"]),
   label: z.string().min(1).max(60),
   detail: z.string().max(80).default(""),
@@ -40,7 +41,7 @@ const sizeSchema = z.object({
 
 const customizationSchema = z.object({
   id: z.string().uuid().optional().or(z.literal("")),
-  product_id: z.string().uuid(),
+  product_id: z.string().regex(UUID_RE),
   ingredient: z.string().min(1).max(120),
   extra_price: z.coerce.number().min(0).nullable().optional(),
   removable: z.coerce.boolean().default(false),

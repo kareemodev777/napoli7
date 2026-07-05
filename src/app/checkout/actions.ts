@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import { UUID_RE } from "@/lib/uuid";
 import { createClient } from "@/lib/supabase/server";
 import { validatePromo, redeemPromo } from "@/lib/promo";
 import { resolveDeliveryFee } from "@/lib/checkout";
@@ -33,7 +34,9 @@ const customizationSchema = z.object({
 });
 
 const itemSchema = z.object({
-  productId: z.string().uuid(),
+  // Lenient: some catalog ids (drinks) aren't RFC-4122 versioned but are valid
+  // DB uuids. Strict z.uuid() rejected them, failing checkout for any drink.
+  productId: z.string().regex(UUID_RE),
   productName: z.string(),
   sizeId: z.enum(["small", "regular", "large", "family"]),
   basePriceAed: z.number().positive(),

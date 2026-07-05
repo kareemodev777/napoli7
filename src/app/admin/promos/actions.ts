@@ -2,6 +2,7 @@
 
 import { refresh, revalidatePath } from "next/cache";
 import { z } from "zod";
+import { UUID_RE } from "@/lib/uuid";
 import { normalizeCode } from "@/lib/promo";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { createServiceRoleClient } from "@/lib/supabase/service";
@@ -51,7 +52,7 @@ function revalidatePromos() {
 
 const campaignSchema = z.object({
   active: z.coerce.boolean().default(false),
-  reward_product_id: z.string().uuid().optional().or(z.literal("")),
+  reward_product_id: z.string().regex(UUID_RE).optional().or(z.literal("")),
   max_claims: z.coerce.number().int().positive().max(1_000_000),
 });
 
