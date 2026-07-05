@@ -245,7 +245,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     if (isRewardPickupOnly(appliedPromoIsReward, data.items)) {
       return {
         error:
-          "Your free pizza offer is pickup-only on its own. Add a second pizza or upgrade to a larger size to unlock delivery, or switch to pickup.",
+          "Your free pizza is pickup-only on its own. Add anything else — another pizza or a drink — to unlock delivery, or switch to pickup.",
       };
     }
     // The customer must drop a GPS pin, and it must fall inside Ajman. This is

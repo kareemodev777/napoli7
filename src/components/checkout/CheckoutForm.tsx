@@ -329,7 +329,7 @@ export function CheckoutForm({
     }
     if (deliveryType === "delivery" && rewardPickupOnly) {
       setError(
-        "Your free pizza offer is pickup-only on its own. Add a second pizza or upgrade to a larger size to unlock delivery, or switch to pickup.",
+        "Your free pizza is pickup-only on its own. Add anything else — another pizza or a drink — to unlock delivery, or switch to pickup.",
       );
       return;
     }
@@ -818,8 +818,8 @@ export function CheckoutForm({
         ) : null}
         {deliveryType === "delivery" && rewardPickupOnly ? (
           <p className="mt-3 text-xs text-flag-red">
-            Your free pizza offer is pickup-only on its own. Add a second pizza
-            or upgrade to a larger size to unlock delivery, or switch to pickup.
+            Your free pizza is pickup-only on its own. Add anything else —
+            another pizza or a drink — to unlock delivery, or switch to pickup.
           </p>
         ) : null}
         <div className="mt-4">
