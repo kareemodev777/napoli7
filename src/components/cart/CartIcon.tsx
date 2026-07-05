@@ -1,20 +1,22 @@
 "use client";
 
-import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { useCart } from "@/store/cart";
+import { useCartDrawer } from "@/store/cart-drawer";
 import { useMounted } from "@/lib/use-mounted";
 
 export function CartIcon() {
   const totalQuantity = useCart((s) => s.totalQuantity());
+  const openCart = useCartDrawer((s) => s.openCart);
   const mounted = useMounted();
   const count = mounted ? totalQuantity : 0;
 
   return (
-    <Link
-      href="/cart"
+    <button
+      type="button"
+      onClick={openCart}
       className="hidden lg:inline-flex relative flex-col items-center justify-center gap-1 hover:opacity-60 min-w-[48px]"
-      aria-label={`Cart, ${count} item${count === 1 ? "" : "s"}`}
+      aria-label={`Open cart, ${count} item${count === 1 ? "" : "s"}`}
     >
       <ShoppingBag className="h-5 w-5" strokeWidth={1.5} />
       {count > 0 ? (
@@ -25,6 +27,6 @@ export function CartIcon() {
       <span className="text-[10px] tracking-[0.2em] uppercase leading-none">
         Cart
       </span>
-    </Link>
+    </button>
   );
 }

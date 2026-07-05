@@ -1,6 +1,7 @@
 import { Header } from "./Header";
 import { Footer } from "./Footer";
 import { MobileBottomBar } from "./MobileBottomBar";
+import { CartDrawer } from "@/components/cart/CartDrawer";
 
 interface SiteShellProps {
   children: React.ReactNode;
@@ -15,6 +16,7 @@ export function SiteShell({ children }: SiteShellProps) {
       </main>
       <Footer />
       <MobileBottomBar />
+      <CartDrawer />
     </>
   );
 }

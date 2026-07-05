@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ShoppingBag } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useCart } from "@/store/cart";
+import { useCartDrawer } from "@/store/cart-drawer";
 import { useMounted } from "@/lib/use-mounted";
 import { formatAed } from "@/components/catalog/PriceBadge";
 import { useOrderingAvailability } from "@/lib/use-ordering-availability";
@@ -28,6 +29,7 @@ export function MobileBottomBar() {
   const pathname = usePathname();
   const totalQty = useCart((s) => s.totalQuantity());
   const subtotal = useCart((s) => s.subtotal());
+  const openCart = useCartDrawer((s) => s.openCart);
   const mounted = useMounted();
   const { availability } = useOrderingAvailability();
   const orderingOpen = availability?.isOpen ?? true;
@@ -67,13 +69,14 @@ export function MobileBottomBar() {
       )}
 
       {/* Cart pill — min-w so it grows to fit large subtotals up to max-w */}
-      <Link
-        href="/cart"
+      <button
+        type="button"
+        onClick={openCart}
         className="inline-flex items-center justify-center gap-2 min-w-[88px] max-w-[140px] px-2 h-[52px] border-l border-border hover:bg-muted transition-colors"
         aria-label={
           qty > 0
-            ? `Cart — ${qty} item${qty === 1 ? "" : "s"}, ${formatAed(amount)}`
-            : "Cart — empty"
+            ? `Open cart — ${qty} item${qty === 1 ? "" : "s"}, ${formatAed(amount)}`
+            : "Open cart — empty"
         }
       >
         <div className="relative shrink-0">
@@ -89,7 +92,7 @@ export function MobileBottomBar() {
             {formatAed(amount)}
           </span>
         ) : null}
-      </Link>
+      </button>
     </nav>
   );
 }
