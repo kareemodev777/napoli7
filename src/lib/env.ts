@@ -44,6 +44,27 @@ export const HAS_WHATSAPP = Boolean(
     process.env["WHATSAPP_PHONE_NUMBER_ID"],
 );
 
+/**
+ * Outbound SMS (order updates to the customer, assignments to the rider). This is
+ * NOT the same thing as HAS_TWILIO above: that gates Twilio *Verify*, which only
+ * sends login OTPs and cannot send an arbitrary message. Sending one needs the
+ * Messages API and a sender to send FROM, which Verify does not provide — so a
+ * fully-working Verify setup still sends no notifications at all.
+ *
+ * Prefer TWILIO_MESSAGING_SERVICE_SID (MG…): the UAE requires a registered sender
+ * ID, and a Messaging Service is what holds it. TWILIO_SMS_FROM (a plain +971…
+ * number) is the fallback for testing.
+ */
+export const SMS_MESSAGING_SERVICE_SID =
+  process.env["TWILIO_MESSAGING_SERVICE_SID"] ?? "";
+export const SMS_FROM = process.env["TWILIO_SMS_FROM"] ?? "";
+
+export const HAS_SMS = Boolean(
+  process.env["TWILIO_ACCOUNT_SID"] &&
+    process.env["TWILIO_AUTH_TOKEN"] &&
+    (SMS_MESSAGING_SERVICE_SID || SMS_FROM),
+);
+
 export const ORDER_EMAIL_TO = process.env["ORDER_EMAIL_TO"] ?? "info@napoli7.com";
 export const ORDER_EMAIL_FROM =
   process.env["ORDER_EMAIL_FROM"] ?? "orders@napoli7.com";

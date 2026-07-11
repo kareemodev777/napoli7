@@ -42,19 +42,19 @@ export function customerStatusMessage(
  */
 export async function notifyCustomerStatusWhatsApp(
   input: Omit<CustomerNotificationInput, "to"> & { customerPhone: string },
-) {
+): Promise<{ sent: boolean; reason?: string }> {
   const to = toWhatsAppNumber(input.customerPhone ?? "");
   if (!HAS_WHATSAPP) {
     console.info(
       `[notifyCustomerStatusWhatsApp] WhatsApp disabled. Order: ${input.orderNumber} -> ${input.status}`,
     );
-    return;
+    return { sent: false, reason: "WhatsApp is not configured" };
   }
   if (!to) {
     console.warn(
       `[notifyCustomerStatusWhatsApp] no customer phone for order ${input.orderNumber}`,
     );
-    return;
+    return { sent: false, reason: "No phone number" };
   }
 
   const phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID!;
@@ -82,7 +82,9 @@ export async function notifyCustomerStatusWhatsApp(
       res.status,
       await res.text(),
     );
+    return { sent: false, reason: "WhatsApp API rejected the message" };
   }
+  return { sent: true };
 }
 
 export async function notifyKitchenWhatsApp(input: KitchenNotificationInput) {

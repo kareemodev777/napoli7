@@ -51,15 +51,18 @@ export function AssignRiderForm({
         return;
       }
       const who = result.riderName ?? "rider";
-      if (result.whatsappSent) {
-        setMessage(`Assigned to ${who} — WhatsApp brief sent.`);
+      if (result.notifySent) {
+        const channel = result.notifyChannel === "sms" ? "SMS" : "WhatsApp";
+        setMessage(`Assigned to ${who} — brief sent by ${channel}.`);
         setIsError(false);
       } else {
+        // Loud on purpose. The order IS assigned, but the rider does not know it,
+        // and a quiet success here is how a delivery sits waiting for nobody.
         setIsError(true);
         setMessage(
-          `Assigned to ${who}, but WhatsApp was not sent${
-            result.whatsappReason ? ` (${result.whatsappReason})` : ""
-          }. Notify them directly.`,
+          `Assigned to ${who}, but they were NOT notified${
+            result.notifyReason ? ` (${result.notifyReason})` : ""
+          }. Call them.`,
         );
       }
     });

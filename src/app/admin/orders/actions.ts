@@ -6,9 +6,10 @@ import { createClient } from "@/lib/supabase/server";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { notifyCustomerStatusEmail } from "@/lib/notifications/email";
 import {
-  notifyCustomerStatusWhatsApp,
-  notifyRiderAssignmentWhatsApp,
-} from "@/lib/notifications/whatsapp";
+  notifyCustomerStatusPhone,
+  notifyRiderAssignmentPhone,
+  type NotifyChannel,
+} from "@/lib/notifications/phone";
 import { restorePromoForCancelledOrder } from "@/lib/promo";
 import { pushOrderStatusToPos } from "@/lib/pos/push";
 import type { OrderStatus } from "@/lib/notifications/status-updates";
@@ -80,14 +81,22 @@ export async function updateOrderStatus(
     } catch (e) {
       console.error("[updateOrderStatus] customer email failed:", e);
     }
+    // WhatsApp if it's configured, SMS otherwise. Previously this was WhatsApp
+    // only, so with no Meta credentials the customer got nothing to their phone
+    // at all — which is why the SMS updates never arrived: there were none.
     try {
-      await notifyCustomerStatusWhatsApp({
+      const phone = await notifyCustomerStatusPhone({
         customerPhone: order.customer_phone,
         orderNumber: order.order_number,
         status: parsed.data.status,
       });
+      if (!phone.sent) {
+        console.error(
+          `[updateOrderStatus] no phone notification for ${order.order_number}: ${phone.reason}`,
+        );
+      }
     } catch (e) {
-      console.error("[updateOrderStatus] customer whatsapp failed:", e);
+      console.error("[updateOrderStatus] customer phone notify failed:", e);
     }
   }
 
@@ -119,10 +128,13 @@ export interface AssignRiderResult {
   success?: boolean;
   riderId?: string | null;
   riderName?: string | null;
-  /** Whether the WhatsApp brief reached the rider (false when skipped/failed). */
-  whatsappSent?: boolean;
-  /** Why WhatsApp did not send, if it didn't — surfaced to the admin. */
-  whatsappReason?: string;
+  /** Whether the brief actually reached the rider (false when skipped/failed). */
+  notifySent?: boolean;
+  /** Which channel delivered it — WhatsApp, or SMS as the fallback. */
+  notifyChannel?: NotifyChannel;
+  /** Why the rider was NOT told, if they weren't — surfaced to the admin, so an
+   *  assignment nobody heard about can't be mistaken for a successful one. */
+  notifyReason?: string;
 }
 
 /**
@@ -172,9 +184,15 @@ export async function assignRiderToOrder(
     .eq("id", riderId)
     .maybeSingle();
 
-  let whatsappSent = false;
-  let whatsappReason: string | undefined;
-  if (rider) {
+  // The rider is told over WhatsApp, or by SMS when WhatsApp isn't configured.
+  // Whether it actually reached them is returned to the admin — an assignment the
+  // rider never heard about must not look like a successful one.
+  let notifySent = false;
+  let notifyChannel: NotifyChannel | undefined;
+  let notifyReason: string | undefined;
+  if (!rider) {
+    notifyReason = "Rider not found";
+  } else {
     try {
       const address = order.delivery_address as {
         street?: string;
@@ -185,7 +203,7 @@ export async function assignRiderToOrder(
         lat?: number;
         lng?: number;
       } | null;
-      const result = await notifyRiderAssignmentWhatsApp({
+      const result = await notifyRiderAssignmentPhone({
         riderName: rider.name,
         riderPhone: rider.phone,
         orderNumber: order.order_number,
@@ -204,12 +222,19 @@ export async function assignRiderToOrder(
           }),
         ),
       });
-      whatsappSent = result.sent;
-      whatsappReason = result.reason;
+      notifySent = result.sent;
+      notifyChannel = result.channel;
+      notifyReason = result.reason;
     } catch (e) {
-      console.error("[assignRiderToOrder] rider whatsapp failed:", e);
-      whatsappReason = "WhatsApp send errored";
+      console.error("[assignRiderToOrder] rider notify failed:", e);
+      notifyReason = "Notification errored";
     }
+  }
+
+  if (!notifySent) {
+    console.error(
+      `[assignRiderToOrder] rider NOT notified for ${order.order_number}: ${notifyReason}`,
+    );
   }
 
   revalidatePath("/admin/orders");
@@ -219,7 +244,8 @@ export async function assignRiderToOrder(
     success: true,
     riderId,
     riderName: rider?.name ?? null,
-    whatsappSent,
-    whatsappReason,
+    notifySent,
+    notifyChannel,
+    notifyReason,
   };
 }
