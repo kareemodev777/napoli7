@@ -28,6 +28,21 @@ export interface AdminNotificationSnapshot {
   recentMessages: AdminNotificationMessage[];
 }
 
+/**
+ * Whether the new-order alarm should be ringing.
+ *
+ * It rings while any order is still RECEIVED and stops only when the last one
+ * leaves that status — the kitchen accepting it (PREPARING) or cancelling it.
+ * Deliberately blind to whether the admin has SEEN the order: acknowledging,
+ * opening the queue, or clicking about must not silence it. An alarm you can
+ * switch off by looking at it is not an alarm.
+ */
+export function shouldRingOrderAlarm(
+  snapshot: Pick<AdminNotificationSnapshot, "orders">,
+): boolean {
+  return snapshot.orders > 0;
+}
+
 export const EMPTY_SNAPSHOT: AdminNotificationSnapshot = {
   orders: 0,
   unacknowledgedOrders: 0,

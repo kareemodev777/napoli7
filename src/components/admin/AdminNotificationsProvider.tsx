@@ -15,6 +15,7 @@ import { useAdminAlarm } from "@/store/admin-alarm";
 import { startAlarm, stopAlarm, unlockAlarm } from "./alarm";
 import {
   EMPTY_SNAPSHOT,
+  shouldRingOrderAlarm,
   type AdminNotificationSnapshot,
 } from "@/lib/admin/notifications";
 
@@ -155,18 +156,25 @@ export function AdminNotificationsProvider({
     };
   }, []);
 
-  // Continuous alarm: loop the sound while orders await acceptance, and stop it
-  // when the queue is cleared (count -> 0, i.e. the order was accepted), the
-  // admin opens notifications, or they're on the orders page. A fresh order
-  // re-arms it (silenced reset above).
+  // The alarm rings while ANY order is still RECEIVED, and stops only when the
+  // last one leaves that status — i.e. when the kitchen actually accepts it
+  // (PREPARING) or it is CANCELLED. Pickup orders included; `snapshot.orders`
+  // counts every received order regardless of fulfilment type.
+  //
+  // It used to key off "unacknowledged", and to treat looking at the queue as
+  // acknowledging it — opening /admin/orders silenced the alarm and stamped the
+  // orders acknowledged in the database, permanently. So the sound stopped when
+  // someone glanced at the screen rather than when anyone cooked the pizza, which
+  // is precisely backwards: the alarm exists to survive being noticed. Seeing an
+  // order is not accepting it, and only accepting it stops the ringing.
   useEffect(() => {
-    if (snapshot.unacknowledgedOrders > 0 && !silenced && !onOrdersPage) {
+    if (shouldRingOrderAlarm(snapshot)) {
       startAlarm();
     } else {
       stopAlarm();
     }
     return () => stopAlarm();
-  }, [snapshot.unacknowledgedOrders, silenced, onOrdersPage]);
+  }, [snapshot]);
 
   const value: AdminNotificationsContextValue = {
     snapshot,
