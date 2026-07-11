@@ -16,34 +16,77 @@ export const metadata: Metadata = {
   },
 };
 
-const sections = [
+// The areas we deliver to. This is the same list the checkout dropdown is seeded
+// with (migration 026) — keep the two in step, or the page will promise an area
+// the customer cannot then select.
+const DELIVERY_AREAS = [
+  "Al Jurf 1",
+  "Al Jurf 2",
+  "Al Jurf 3",
+  "Al Nuaimiya",
+  "Al Rashidiya",
+  "Al Rumailah",
+  "Ajman Corniche",
+  "Al Zahra",
+  "Al Mowaihat",
+  "Al Hamidiya",
+  "Al Rawda",
+  "Al Bustan",
+  "Al Nakheel",
+  "Al Raqaib",
+  "Al Yasmeen",
+  "Ajman Free Zone (Port)",
+  "Ajman Free Zone (Al Jurf)",
+];
+
+const sections: { heading: string; body: string[] }[] = [
   {
     heading: "Service area",
-    body: "We deliver across Al Jurf 1, Al Jurf 2, Al Jurf 3, Ajman City Centre, and Al Rashidiya. Outside our zone? Order for pickup at the shop and we will have it ready in fifteen minutes.",
+    body: [
+      // Both halves matter. The radius alone would be a false promise: about a
+      // third of an 8 km circle around the shop is Sharjah or open sea, and a
+      // pin dropped there is refused at checkout however close it is.
+      `We deliver inside Ajman only, within an 8 km radius of Napoli 7. Sharjah and the other emirates are outside our zone, even where they fall inside that radius.`,
+      `Delivery areas in Ajman: ${DELIVERY_AREAS.join(", ")}.`,
+      "Outside our delivery area? Choose Pickup, and your order will be ready in approximately 15 minutes.",
+    ],
   },
   {
-    heading: "Estimated time",
-    body: "Most deliveries arrive in 25–35 minutes from order confirmation. The kitchen confirms a tighter window when you place the order, based on current load.",
+    heading: "Estimated delivery time",
+    body: [
+      "Most orders are delivered within 20–35 minutes from order confirmation.",
+      "Delivery times may be longer during peak hours, weekends, holidays, or adverse weather conditions.",
+    ],
   },
   {
-    heading: "Delivery fee",
-    body: "Al Jurf areas: 5.00 AED, minimum 20.00 AED order. Ajman City Centre and Al Rashidiya: 10.00 AED, minimum 25.00 AED order. The exact fee for your area is shown at checkout.",
+    heading: "Delivery fees",
+    body: [
+      "Minimum order for delivery: 13 AED.",
+      "Flat delivery fee: 9 AED anywhere within our delivery zone, plus a 3 AED service fee.",
+      "FREE delivery on orders of 80 AED or more — this waives the 9 AED delivery fee; the 3 AED service fee still applies.",
+      "Pickup orders pay neither fee.",
+    ],
   },
   {
-    heading: "Minimum order",
-    body: "Each zone has a minimum order value. If your basket is below the minimum, we cannot route a driver to that area — choose pickup instead and we will hold the order for you.",
+    heading: "Order cancellations",
+    body: [
+      "Orders may be cancelled only before preparation begins.",
+      "Once your order status changes to Preparing, it can no longer be cancelled or modified.",
+    ],
   },
   {
-    heading: "Modifications policy",
-    body: "Orders cannot be modified once the kitchen status moves to ‘preparing’. If you need to change quantities or remove an item, call us within five minutes of placing the order.",
+    heading: "Delivery arrival",
+    body: [
+      "Our driver will contact you upon arrival.",
+      "Please ensure your phone is available and that your delivery address is complete and accurate, to help us deliver your order as quickly as possible.",
+    ],
   },
   {
-    heading: "Arrival protocol",
-    body: "Our drivers wait two minutes at the door, then call. If we cannot reach you within ten minutes, the order is returned to the kitchen and the order is considered abandoned.",
-  },
-  {
-    heading: "Disclaimers",
-    body: "Estimated times are good-faith estimates. Weather, traffic, or unusually high demand may extend delivery times. Refunds for late delivery follow our refund policy.",
+    heading: "Important notice",
+    body: [
+      "Delivery times are estimates and may vary depending on traffic, weather conditions, and order volume.",
+      "Thank you for choosing Napoli 7! 🇮🇹🍕",
+    ],
   },
 ];
 
@@ -63,9 +106,16 @@ export default function DeliveryPage() {
               <h2 className="font-display text-2xl md:text-3xl uppercase tracking-[1.5px] mb-4">
                 {s.heading}
               </h2>
-              <p className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-[65ch]">
-                {s.body}
-              </p>
+              <div className="space-y-3">
+                {s.body.map((paragraph) => (
+                  <p
+                    key={paragraph}
+                    className="text-base md:text-lg text-muted-foreground leading-relaxed max-w-[65ch]"
+                  >
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
             </article>
           ))}
 

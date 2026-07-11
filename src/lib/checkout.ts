@@ -19,33 +19,30 @@ export interface DeliveryFeeResult {
  */
 export const DEFAULT_DELIVERY_FEE = 12;
 
-// Mirrors the seed in 009. Used when Supabase service env vars are absent
+// Mirrors the seed in 026. Used when Supabase service env vars are absent
 // (graceful fallback, matching the catalog mock pattern).
 //
 // Ajman areas only — Sharjah is excluded by policy. The area is a convenience
 // field for the driver; whether an order can actually be delivered is decided by
 // the GPS pin (see checkDeliverability in ./delivery-map), not by this list.
 const MOCK_ZONES: DeliveryZone[] = [
-  { area: "Al Jurf", fee: 9 },
+  { area: "Al Jurf 1", fee: 9 },
+  { area: "Al Jurf 2", fee: 9 },
+  { area: "Al Jurf 3", fee: 9 },
   { area: "Al Nuaimiya", fee: 9 },
   { area: "Al Rashidiya", fee: 9 },
   { area: "Al Rumailah", fee: 9 },
-  { area: "Al Nakheel", fee: 9 },
-  { area: "Al Bustan", fee: 9 },
   { area: "Ajman Corniche", fee: 9 },
   { area: "Al Zahra", fee: 9 },
+  { area: "Al Mowaihat", fee: 9 },
   { area: "Al Hamidiya", fee: 9 },
   { area: "Al Rawda", fee: 9 },
-  { area: "Al Mowaihat", fee: 9 },
-  { area: "Al Tallah", fee: 9 },
-  { area: "Al Yasmeen", fee: 9 },
-  { area: "Al Helio", fee: 9 },
-  { area: "Al Zahya", fee: 9 },
-  { area: "Al Alia", fee: 9 },
+  { area: "Al Bustan", fee: 9 },
+  { area: "Al Nakheel", fee: 9 },
   { area: "Al Raqaib", fee: 9 },
-  { area: "Ajman Industrial Area", fee: 9 },
-  { area: "Emirates City", fee: 9 },
-  { area: "Al Zorah", fee: 9 },
+  { area: "Al Yasmeen", fee: 9 },
+  { area: "Ajman Free Zone (Port)", fee: 9 },
+  { area: "Ajman Free Zone (Al Jurf)", fee: 9 },
 ];
 
 function normalizeArea(area: string): string {
