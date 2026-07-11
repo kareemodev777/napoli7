@@ -17,15 +17,7 @@ import { useRouteChange } from "@/lib/use-route-change";
 import { useAuthState } from "./AuthMenu";
 import { signOut } from "@/app/login/actions";
 import en from "@/i18n/en.json";
-
-const navLinks = [
-  { label: "Menu", href: "/menu" },
-  { label: "Deals", href: "/deals" },
-  { label: "About", href: "/about" },
-  { label: "Track Order", href: "/track" },
-  { label: "Location", href: "/location" },
-  { label: "Contact", href: "/contact" },
-];
+import { navLinks } from "./nav-links";
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';

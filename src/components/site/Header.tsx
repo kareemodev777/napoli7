@@ -3,15 +3,7 @@ import { Logo } from "./Logo";
 import { CartIcon } from "@/components/cart/CartIcon";
 import { MobileNav } from "./MobileNav";
 import { AuthMenu } from "./AuthMenu";
-
-const navLinks = [
-  { label: "Menu", href: "/menu" },
-  { label: "Deals", href: "/deals" },
-  { label: "About", href: "/about" },
-  { label: "Track Order", href: "/track" },
-  { label: "Location", href: "/location" },
-  { label: "Contact", href: "/contact" },
-];
+import { navLinks } from "./nav-links";
 
 export function Header() {
   return (
