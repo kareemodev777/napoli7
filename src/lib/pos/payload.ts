@@ -227,9 +227,9 @@ function lineItem(row: PosOrderItemRow): WooLineItem {
     meta.push({ key: "product_id", value: row.product_id });
   }
   meta.push(...customizationMeta(row.customizations));
-  // SKU stays keyed on the clean product name + price; the size is appended to
-  // the display name only, so it prints on the receipt without breaking lookup.
-  const sku = resolvePosSku(row.product_name, row.base_price_aed) ?? "";
+  // SKU is keyed on the clean product name + size; the size is also appended to
+  // the display name, so it prints on the receipt without breaking lookup.
+  const sku = resolvePosSku(row.product_name, row.size_label) ?? "";
   const displayName = row.size_label
     ? `${row.product_name} (${row.size_label})`
     : row.product_name;

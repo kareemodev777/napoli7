@@ -286,18 +286,18 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
   {
     name: "Frutti Di Mare (Seafood Pizza)",
     size: "regular",
-    price: 44,
+    price: 53,
     sku: "FRU-0005",
     posName: "Frutti Di Mare (Seafood Pizza)",
-    posPrice: 44,
+    posPrice: 53,
   },
   {
     name: "Frutti Di Mare (Seafood Pizza)",
     size: "small",
-    price: 29,
+    price: 34,
     sku: "SMA-0039",
     posName: "Small Frutti Di Mare (Seafood Pizza)",
-    posPrice: 29,
+    posPrice: 34,
   },
   {
     name: "Diavola Piccante (Spicy Italian Beef Salami)",
@@ -519,14 +519,37 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
 
 const normalize = (value: string) => value.toLowerCase().replace(/\s+/g, " ").trim();
 
-export function resolvePosSku(productName: string, basePriceAed: number | string): string | undefined {
-  const price = Number(basePriceAed);
+/** A size label from an order line ("Small", "Regular", or null for a
+ *  single-size product) mapped onto the two sizes the POS actually stocks. */
+export function normalizePosSize(
+  sizeLabel: string | null | undefined,
+): PosSkuEntry["size"] {
+  return normalize(sizeLabel ?? "") === "small" ? "small" : "regular";
+}
+
+/**
+ * The POS SKU for a product + size.
+ *
+ * Keyed on SIZE, never on price. A SKU identifies a product, and which product
+ * you ordered does not change when its price does — but this used to look the SKU
+ * up by price, falling back to whichever mapped price was numerically nearest. So
+ * every price change quietly re-pointed the lookup, and two sizes drifting close
+ * together would resolve to the WRONG SKU: the wrong item on the kitchen's
+ * receipt, with no error anywhere. Size is the stable key, so a price change can
+ * no longer misroute anything.
+ */
+export function resolvePosSku(
+  productName: string,
+  sizeLabel: string | null | undefined,
+): string | undefined {
   const normalizedName = normalize(productName);
-  const exact = POS_SKU_ENTRIES.find((entry) => normalize(entry.name) === normalizedName && entry.price === price);
-  if (exact) return exact.sku;
-  const sameName = POS_SKU_ENTRIES.filter((entry) => normalize(entry.name) === normalizedName);
-  if (sameName.length === 0) return undefined;
-  return sameName
-    .slice()
-    .sort((a, b) => Math.abs(a.price - price) - Math.abs(b.price - price) || a.price - b.price)[0]?.sku;
+  const size = normalizePosSize(sizeLabel);
+  const match = POS_SKU_ENTRIES.find(
+    (entry) => normalize(entry.name) === normalizedName && entry.size === size,
+  );
+  if (match) return match.sku;
+  // A single-size product may be mapped as "regular" while the order carries no
+  // size label at all — already covered above. Anything still unmatched is a
+  // product the POS does not stock under this name.
+  return undefined;
 }

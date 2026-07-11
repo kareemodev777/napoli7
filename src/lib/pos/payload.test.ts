@@ -77,22 +77,41 @@ describe("splitName", () => {
 });
 
 describe("resolvePosSku", () => {
-  test("finds exact-match pizza SKUs by name and price", () => {
-    expect(resolvePosSku("Margherita", 28)).toBe("MAR-0001");
-    expect(resolvePosSku("Margherita", 19)).toBe("SMA-0035");
+  test("finds pizza SKUs by name and size", () => {
+    expect(resolvePosSku("Margherita", "Regular")).toBe("MAR-0001");
+    expect(resolvePosSku("Margherita", "Small")).toBe("SMA-0035");
   });
 
   test("handles region-prefixed menu names", () => {
-    expect(resolvePosSku("Indian - Spicy Chicken Kebab", 29)).toBe(
+    expect(resolvePosSku("Indian - Spicy Chicken Kebab", "Small")).toBe(
       "SMA-0046",
     );
-    expect(resolvePosSku("Egyptian - Merguez (Egyptian Sausage)", 24)).toBe(
+    expect(resolvePosSku("Egyptian - Merguez (Egyptian Sausage)", "Small")).toBe(
       "SMA-0053",
     );
   });
 
-  test("falls back to the closest matching product when price drifts", () => {
-    expect(resolvePosSku("Water", 1)).toBe("WAT-0120");
+  test("a single-size product carries no size label and maps to regular", () => {
+    expect(resolvePosSku("Water", null)).toBe("WAT-0120");
+  });
+
+  // The whole point of keying on size. The SKU says WHICH product was ordered,
+  // and that does not change when the price does. Keying on price meant every
+  // price edit silently re-pointed the lookup — and two sizes priced close
+  // together could resolve to each other's SKU, putting the wrong item on the
+  // kitchen's receipt with no error raised anywhere.
+  test("a price change cannot move the SKU", () => {
+    // Frutti went 44 -> 53 (regular) and 29 -> 34 (small). Same SKUs, regardless.
+    expect(resolvePosSku("Frutti Di Mare (Seafood Pizza)", "Regular")).toBe(
+      "FRU-0005",
+    );
+    expect(resolvePosSku("Frutti Di Mare (Seafood Pizza)", "Small")).toBe(
+      "SMA-0039",
+    );
+  });
+
+  test("an unmapped product resolves to nothing rather than a wrong guess", () => {
+    expect(resolvePosSku("Not On The POS", "Regular")).toBeUndefined();
   });
 });
 
