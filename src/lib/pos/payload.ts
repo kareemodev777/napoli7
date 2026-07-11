@@ -99,6 +99,15 @@ export interface WooShippingLine {
   total: string;
 }
 
+/** A charge that is not a catalogue product. The POS rejects an unmatched line
+ *  item, but accepts a fee line, so this is where non-product fees belong. */
+export interface WooFeeLine {
+  name: string;
+  total: string;
+  tax_status: "none" | "taxable";
+  total_tax: string;
+}
+
 export interface WooCouponLine {
   code: string;
   discount: string;
@@ -132,7 +141,7 @@ export interface WooOrderBody {
   line_items: WooLineItem[];
   tax_lines: unknown[];
   shipping_lines: WooShippingLine[];
-  fee_lines: unknown[];
+  fee_lines: WooFeeLine[];
   coupon_lines: WooCouponLine[];
   refunds: unknown[];
   cart_hash: string;
@@ -235,37 +244,50 @@ function lineItem(row: PosOrderItemRow): WooLineItem {
   };
 }
 
+// The POS resolves EVERY line item to a product in its own catalogue — by SKU,
+// or by name when the SKU is blank. It does not accept custom lines: an unmatched
+// one is rejected outright with HTTP 500 and the order never syncs.
+//
+// We used to send the delivery fee as a blank-SKU line named "Delivery", on the
+// assumption that the POS tolerated non-catalogue lines. It does not, and there is
+// no product called "Delivery" — the POS calls it "Delivery charge". So EVERY
+// delivery order failed to reach the kitchen, whether the customer was a guest or
+// signed in. Match the POS's own product exactly.
+const POS_DELIVERY_PRODUCT_NAME = "Delivery charge";
+const POS_DELIVERY_SKU = "DEL-0216";
+
 /**
- * Delivery fee as a line item. The POS receipt only renders the line-items
- * table (not Woo shipping_lines), so sending the fee as shipping made the total
- * look wrong on the print-out (e.g. 28 subtotal → 40 total with no 12 delivery
- * line). As a line item it prints, and we zero shipping_total so the total can't
- * be double-counted. SKU is blank — a custom (non-catalog) line, which the POS
- * already accepts for unmapped products.
+ * Delivery fee as a line item. The POS receipt only renders the line-items table
+ * (not Woo shipping_lines), so sending the fee as shipping made the total look
+ * wrong on the print-out. As a line item it prints, and we zero shipping_total so
+ * the total can't be double-counted.
  */
 function deliveryLineItem(fee: number): WooLineItem {
   return {
-    name: "Delivery",
+    name: POS_DELIVERY_PRODUCT_NAME,
     quantity: 1,
     price: money(fee),
     subtotal: money(fee),
     total: money(fee),
-    sku: "",
+    sku: POS_DELIVERY_SKU,
     meta_data: [{ key: "line_type", value: "delivery_fee" }],
   };
 }
 
-/** The service fee, itemised for the same reason as delivery: it is part of
- *  total_aed, so without a line the POS receipt would not add up. */
-function serviceLineItem(fee: number): WooLineItem {
+/**
+ * The service fee, as a Woo fee_line rather than a line item.
+ *
+ * There is no "Service fee" product in the POS catalogue, so it cannot be a line
+ * item — that is the very thing the POS rejects. `fee_lines` is WooCommerce's
+ * channel for a charge that is not a product, it needs no catalogue entry, and
+ * the POS accepts it (verified against the live endpoint).
+ */
+function serviceFeeLine(fee: number): WooFeeLine {
   return {
     name: "Service fee",
-    quantity: 1,
-    price: money(fee),
-    subtotal: money(fee),
     total: money(fee),
-    sku: "",
-    meta_data: [{ key: "line_type", value: "service_fee" }],
+    tax_status: "none",
+    total_tax: "0.00",
   };
 }
 
@@ -282,16 +304,21 @@ export function orderRowToWooOrder(order: PosOrderRow): WooOrderBody {
   const deliveryFee = Number(order.delivery_fee_aed);
   const serviceFee = Number(order.service_fee_aed ?? 0);
 
-  // Items + both fees as printable lines. Delivery moves OUT of shipping_total
-  // (set to 0 below) so the receipt itemises it without double-counting. The two
-  // fees are independent: free delivery zeroes the delivery fee and leaves the
-  // service fee standing, and pickup zeroes both.
+  // Delivery moves OUT of shipping_total (set to 0 below) so the receipt itemises
+  // it without double-counting. The two fees are independent: free delivery zeroes
+  // the delivery fee and leaves the service fee standing, and pickup zeroes both.
+  //
+  // They travel by different routes because the POS only accepts line items that
+  // resolve to one of its products: delivery maps to the POS's own "Delivery
+  // charge" product, while the service fee has no product and so must be a fee
+  // line. Sending either as a bare custom line item fails the whole push.
   const lineItems = (order.order_items ?? []).map(lineItem);
   if (deliveryFee > 0) {
     lineItems.push(deliveryLineItem(deliveryFee));
   }
+  const feeLines: WooFeeLine[] = [];
   if (serviceFee > 0) {
-    lineItems.push(serviceLineItem(serviceFee));
+    feeLines.push(serviceFeeLine(serviceFee));
   }
 
   const billing: WooAddress = {
@@ -367,7 +394,7 @@ export function orderRowToWooOrder(order: PosOrderRow): WooOrderBody {
     line_items: lineItems,
     tax_lines: [],
     shipping_lines: [],
-    fee_lines: [],
+    fee_lines: feeLines,
     coupon_lines: [],
     refunds: [],
     cart_hash: "",

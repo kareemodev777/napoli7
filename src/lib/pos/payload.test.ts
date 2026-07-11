@@ -219,15 +219,20 @@ describe("orderRowToWooOrder — card delivery, with promo + customization", () 
 
   test("delivery fee is a printable line item; shipping is zeroed", () => {
     // Delivery is carried as a line item so the POS receipt prints it; shipping
-    // is zeroed to avoid double-counting.
-    const delivery = body.line_items.find((li) => li.name === "Delivery");
+    // is zeroed to avoid double-counting. It MUST carry the POS's own product
+    // name and SKU: the POS resolves every line item against its catalogue and
+    // rejects the whole order — HTTP 500, nothing reaches the kitchen — if a line
+    // matches nothing. A blank SKU named "Delivery" is what used to break this.
+    const delivery = body.line_items.find(
+      (li) => li.name === "Delivery charge",
+    );
     expect(delivery).toEqual({
-      name: "Delivery",
+      name: "Delivery charge",
       quantity: 1,
       price: "15.00",
       subtotal: "15.00",
       total: "15.00",
-      sku: "",
+      sku: "DEL-0216",
       meta_data: [{ key: "line_type", value: "delivery_fee" }],
     });
     expect(body.shipping_lines).toHaveLength(0);
@@ -309,15 +314,45 @@ describe("orderRowToWooOrder — line items + totals", () => {
     expect(body.total).toBe(recomputed.toFixed(2));
   });
 
-  // The POS reconciles its printed lines against `total`. A service fee that is
-  // inside total_aed but has no line would make every receipt fail to add up.
-  test("the service fee is pushed as its own line item, so the receipt adds up", () => {
+  // The service fee has no product in the POS catalogue, so it CANNOT be a line
+  // item — the POS rejects any line it can't resolve. fee_lines is Woo's channel
+  // for a non-product charge and needs no catalogue entry.
+  test("the service fee travels as a fee_line, not a line item", () => {
+    const body = orderRowToWooOrder(
+      baseRow({ delivery_fee_aed: 9, service_fee_aed: 3 }),
+    );
+    expect(body.fee_lines).toEqual([
+      {
+        name: "Service fee",
+        total: "3.00",
+        tax_status: "none",
+        total_tax: "0.00",
+      },
+    ]);
+    expect(
+      body.line_items.some((l) => l.name === "Service fee"),
+    ).toBe(false);
+  });
+
+  // The rule the whole POS integration lives or dies by. Every line item is
+  // resolved against the POS catalogue; one unmatched line rejects the ENTIRE
+  // order with a 500 and it never reaches the kitchen. A blank SKU means "look me
+  // up by name", and a name the POS doesn't stock fails exactly the same way.
+  test("no line item is ever sent with a blank SKU", () => {
+    const body = orderRowToWooOrder(
+      baseRow({ delivery_fee_aed: 9, service_fee_aed: 3 }),
+    );
+    for (const line of body.line_items) {
+      expect(`${line.name}: "${line.sku}"`).not.toBe(`${line.name}: ""`);
+    }
+  });
+
+  test("the printed lines plus the fee lines reconcile to the total", () => {
     const row = baseRow({
       discount_aed: 0,
       delivery_fee_aed: 9,
       service_fee_aed: 3,
     });
-    // Whatever the fixture's items come to, the total is items + both fees.
     const itemsTotal = (row.order_items ?? []).reduce(
       (s, i) => s + Number(i.line_total_aed),
       0,
@@ -326,21 +361,15 @@ describe("orderRowToWooOrder — line items + totals", () => {
     row.total_aed = itemsTotal + 9 + 3;
 
     const body = orderRowToWooOrder(row);
-    const fees = body.line_items.filter((l) =>
-      l.meta_data?.some((m) => m.key === "line_type"),
-    );
-    expect(fees.map((l) => l.name)).toEqual(["Delivery", "Service fee"]);
-
-    // The invariant the POS depends on: the printed lines, less the discount,
-    // must equal the total it is told to collect.
     const lineSum = body.line_items.reduce((s, l) => s + Number(l.total), 0);
-    expect(lineSum - Number(body.discount_total)).toBeCloseTo(
+    const feeSum = body.fee_lines.reduce((s, f) => s + Number(f.total), 0);
+    expect(lineSum + feeSum - Number(body.discount_total)).toBeCloseTo(
       Number(body.total),
       2,
     );
   });
 
-  test("pickup pushes neither fee line", () => {
+  test("pickup pushes no delivery line and no fee line", () => {
     const body = orderRowToWooOrder(
       baseRow({
         delivery_type: "pickup",
@@ -352,10 +381,9 @@ describe("orderRowToWooOrder — line items + totals", () => {
       }),
     );
     expect(
-      body.line_items.filter((l) =>
-        l.meta_data?.some((m) => m.key === "line_type"),
-      ),
-    ).toHaveLength(0);
+      body.line_items.some((l) => l.name === "Delivery charge"),
+    ).toBe(false);
+    expect(body.fee_lines).toHaveLength(0);
   });
 
   test("numeric strings from the DB are coerced and formatted", () => {
