@@ -1,6 +1,7 @@
 import { Resend } from "resend";
 import { HAS_RESEND, ORDER_EMAIL_FROM, ORDER_EMAIL_TO } from "@/lib/env";
 import { buildGpsMapsUrl } from "@/lib/delivery-map";
+import { isPlaceholderEmail } from "@/lib/auth/placeholder-email";
 
 interface OrderItemSummary {
   name: string;
@@ -145,6 +146,14 @@ interface SendArgs {
  * isn't configured we log in dev and report not-sent.
  */
 async function sendBrandedEmail(args: SendArgs): Promise<EmailSendResult> {
+  // A customer who signed up with a phone and no email carries a placeholder
+  // address on a reserved TLD. It is not an inbox and never will be. Drop those
+  // here, at the one door every email goes through, rather than trusting each
+  // caller to remember — they get their updates by SMS instead.
+  const recipients = args.to.filter((to) => !isPlaceholderEmail(to));
+  if (recipients.length === 0) {
+    return { sent: false, reason: "Customer has no email address" };
+  }
   if (!HAS_RESEND) {
     console.info(`[${args.label}] Resend disabled. Subject: ${args.subject}`);
     return { sent: false, reason: "Email service not configured" };
@@ -153,7 +162,7 @@ async function sendBrandedEmail(args: SendArgs): Promise<EmailSendResult> {
     const resend = new Resend(process.env.RESEND_API_KEY!);
     const { error } = await resend.emails.send({
       from: args.from,
-      to: args.to,
+      to: recipients,
       subject: args.subject,
       text: args.text,
       html: args.html,

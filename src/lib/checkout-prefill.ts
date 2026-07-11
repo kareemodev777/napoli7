@@ -1,3 +1,5 @@
+import { displayEmail } from "@/lib/auth/placeholder-email";
+
 export interface CheckoutInitialAddress {
   street: string;
   area: string;
@@ -55,7 +57,11 @@ export function buildCheckoutInitialDetails(args: {
     stringFromMetadata(metadata, "phone") ??
     stringFromMetadata(metadata, "phone_number") ??
     stringFromMetadata(metadata, "phoneNumber");
-  const email = args.email?.trim() || stringFromMetadata(metadata, "email");
+  // A phone-only account's auth email is a placeholder, not an inbox. Show the
+  // field empty rather than prefilling a synthetic address the customer has never
+  // seen and would have to delete.
+  const rawEmail = args.email?.trim() || stringFromMetadata(metadata, "email");
+  const email = displayEmail(rawEmail) || undefined;
 
   return {
     firstName,

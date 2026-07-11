@@ -493,14 +493,15 @@ export function CheckoutForm({
                 autoComplete="tel"
               />
             </Field>
-            <Field id="email" label="Email" required>
+            {/* Optional — order updates go by SMS. An email only adds a receipt. */}
+            <Field id="email" label="Email (optional)">
               <Input
                 id="email"
                 name="email"
                 type="email"
-                required
                 defaultValue={initialDetails.email ?? ""}
                 autoComplete="email"
+                placeholder="For an emailed receipt"
               />
             </Field>
           </div>

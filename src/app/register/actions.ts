@@ -17,12 +17,21 @@ import {
 } from "@/lib/notifications/verify";
 import { claimSignupFreePizza, type SignupReward } from "@/lib/signup-reward";
 import { notifyFreePizzaRewardEmail } from "@/lib/notifications/email";
+import { placeholderEmailForPhone } from "@/lib/auth/placeholder-email";
 
 const registerSchema = z
   .object({
     firstName: z.string().min(1),
     lastName: z.string().min(1),
-    email: z.string().email(),
+    // Optional. The mobile is the identity — SMS is how we verify a customer —
+    // and an email is a nice-to-have for receipts. An empty string means "none";
+    // a non-empty one still has to be a real address.
+    email: z
+      .string()
+      .trim()
+      .email("Enter a valid email, or leave it blank.")
+      .optional()
+      .or(z.literal("")),
     mobile: z
       .string()
       .trim()
@@ -67,13 +76,18 @@ async function screenIdentity(
     return { error: "Enter a real UAE mobile number." };
   }
   // Reject identities already tied to an account so the launch offer can't be
-  // farmed by re-using one phone (or email) across throwaway signups.
+  // farmed by re-using one phone (or email) across throwaway signups. The phone
+  // check is the one that matters: it is mandatory, so it is the identity that
+  // actually bounds the offer. The email check only runs when an email was given.
   if (HAS_SUPABASE_SERVICE) {
     try {
       const service = createServiceRoleClient();
+      const givenEmail = data.email?.trim();
       const [phoneRes, emailRes] = await Promise.all([
         service.rpc("phone_already_registered", { p_phone: data.mobile }),
-        service.rpc("email_already_registered", { p_email: data.email }),
+        givenEmail
+          ? service.rpc("email_already_registered", { p_email: givenEmail })
+          : Promise.resolve({ data: false }),
       ]);
       if (emailRes.data) {
         return {
@@ -214,20 +228,34 @@ async function createAccountAndClaim(
   const blocked = await screenIdentity(data);
   if (blocked) return blocked;
 
+  // Supabase Auth needs an address to hang the account on even when the customer
+  // gave none, so a phone-only signup gets a placeholder derived from the mobile.
+  // Nothing is ever mailed to it — see isPlaceholderEmail.
+  const givenEmail = data.email?.trim() || null;
+  const authEmail = givenEmail ?? placeholderEmailForPhone(data.mobile);
+
+  // Without a real address, the confirm-your-email gate is meaningless: the
+  // confirmation would be sent to an inbox that cannot exist, and the account
+  // would be stranded forever. A phone-only account is therefore always created
+  // confirmed — the SMS code is what verified them, which is the whole point.
+  const createConfirmed = emailPreConfirmed || !givenEmail;
+
   const userMetadata = {
     first_name: data.firstName,
     last_name: data.lastName,
     mobile: data.mobile,
+    /** Null when the customer gave no email — so we never mail the placeholder. */
+    email: givenEmail,
   };
 
   let userId: string | null = null;
 
-  if (emailPreConfirmed && HAS_SUPABASE_SERVICE) {
-    // Phone verified by SMS OTP → create the account confirmed (no email) and
-    // sign the customer in so they land ready to order.
+  if (createConfirmed && HAS_SUPABASE_SERVICE) {
+    // Verified by SMS OTP, or phone-only with no inbox to confirm → create the
+    // account already-confirmed and sign the customer in, ready to order.
     const service = createServiceRoleClient();
     const { data: created, error } = await service.auth.admin.createUser({
-      email: data.email,
+      email: authEmail,
       password: data.password,
       email_confirm: true,
       user_metadata: userMetadata,
@@ -245,7 +273,7 @@ async function createAccountAndClaim(
     // Establish a session cookie so the customer is logged in on return.
     const supabase = await createClient();
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: data.email,
+      email: authEmail,
       password: data.password,
     });
     if (signInError) {
@@ -255,10 +283,10 @@ async function createAccountAndClaim(
     // No SMS verification — standard email sign-up keeps the verify-email gate.
     const supabase = await createClient();
     const { data: signUp, error } = await supabase.auth.signUp({
-      email: data.email,
+      email: authEmail,
       password: data.password,
       options: {
-        emailRedirectTo: buildEmailVerificationRedirect(SITE_URL, data.email),
+        emailRedirectTo: buildEmailVerificationRedirect(SITE_URL, authEmail),
         data: userMetadata,
       },
     });
@@ -273,25 +301,32 @@ async function createAccountAndClaim(
     userId = signUp.user?.id ?? null;
   }
 
-  const emailConfirmationRequired = !emailPreConfirmed;
+  // Nothing to confirm when the account was created confirmed — and a phone-only
+  // account always is, since there is no inbox a confirmation could reach.
+  const emailConfirmationRequired = !createConfirmed;
 
-  // Launch offer — deduped on email + phone in the RPC.
+  // Launch offer — deduped on email + phone in the RPC. The phone is what bounds
+  // it; the placeholder address is unique per mobile, so it dedupes the same way.
   try {
     const claimed = await claimSignupFreePizza({
       userId,
-      email: data.email,
+      email: authEmail,
       phone: data.mobile,
     });
     if (claimed) {
-      await notifyFreePizzaRewardEmail({
-        to: data.email,
-        firstName: data.firstName,
-        code: claimed.code,
-        rewardName: claimed.rewardName,
-        claimNumber: claimed.claimNumber,
-      }).catch((e: unknown) =>
-        console.error("[register] reward email failed", e),
-      );
+      // The reward code goes out by email only if there is an inbox to send it
+      // to. A phone-only customer sees it on screen and finds it in their account.
+      if (givenEmail) {
+        await notifyFreePizzaRewardEmail({
+          to: givenEmail,
+          firstName: data.firstName,
+          code: claimed.code,
+          rewardName: claimed.rewardName,
+          claimNumber: claimed.claimNumber,
+        }).catch((e: unknown) =>
+          console.error("[register] reward email failed", e),
+        );
+      }
       return { ok: true, reward: claimed, emailConfirmationRequired };
     }
   } catch (e: unknown) {

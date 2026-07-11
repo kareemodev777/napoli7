@@ -17,6 +17,7 @@ import {
   type CanonicalOrderItem,
 } from "@/lib/checkout-pricing";
 import { checkDeliverability, deliverabilityMessage } from "@/lib/delivery-map";
+import { placeholderEmailForPhone } from "@/lib/auth/placeholder-email";
 import { planAddressSave, type AddressLike } from "@/lib/saved-address";
 import { sendKitchenNotificationsForOrder } from "@/lib/notifications/kitchen";
 import { pushOrderToPos } from "@/lib/pos/push";
@@ -61,7 +62,15 @@ const placeOrderSchema = z.object({
       /^\+971[0-9]{8,9}$/,
       "Enter a valid UAE mobile number starting with +971",
     ),
-  email: z.string().email(),
+  // Optional, like registration: a customer who signed up on their phone alone
+  // has no address to give, and must still be able to order. They are reachable
+  // by SMS, which is the channel that matters for a pizza.
+  email: z
+    .string()
+    .trim()
+    .email("Enter a valid email, or leave it blank.")
+    .optional()
+    .or(z.literal("")),
   deliveryType: z.enum(["delivery", "pickup"]),
   deliveryAddress: deliveryAddressSchema.optional(),
   deliverySlot: z.string().min(1),
@@ -309,7 +318,11 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
       user_id: user?.id || null,
       customer_name: `${data.firstName} ${data.lastName}`,
       customer_phone: data.phone,
-      customer_email: data.email,
+      // customer_email is NOT NULL, and a phone-only customer has no address to
+      // put in it. The placeholder keeps the column honest and never gets mailed
+      // (sendBrandedEmail drops it) — their updates go out by SMS.
+      customer_email:
+        data.email?.trim() || placeholderEmailForPhone(data.phone),
       delivery_type: data.deliveryType,
       delivery_address:
         data.deliveryType === "delivery" ? data.deliveryAddress : null,
