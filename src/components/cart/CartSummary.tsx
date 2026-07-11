@@ -5,6 +5,12 @@ import { useCart } from "@/store/cart";
 import { formatAed } from "@/components/catalog/PriceBadge";
 import { PromoField } from "@/components/cart/PromoField";
 import { useOrderingAvailability } from "@/lib/use-ordering-availability";
+import {
+  amountToFreeDeliveryAed,
+  qualifiesForFreeDelivery,
+  SERVICE_FEE_AED,
+  STANDARD_DELIVERY_FEE_AED,
+} from "@/lib/delivery-settings";
 
 export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
   const subtotal = useCart((s) => s.subtotal());
@@ -12,6 +18,9 @@ export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
   const promo = useCart((s) => s.promo);
   const discount = useCart((s) => s.discount());
   const total = useCart((s) => s.total());
+
+  const freeDelivery = qualifiesForFreeDelivery(subtotal);
+  const toFreeDelivery = amountToFreeDeliveryAed(subtotal);
 
   const { availability } = useOrderingAvailability();
   const orderingOpen = availability?.isOpen ?? true;
@@ -32,8 +41,26 @@ export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
             <span>−{formatAed(discount)}</span>
           </Row>
         ) : null}
-        <Row label="Delivery fee · 12 AED">At checkout</Row>
+        {/* The cart has no delivery type or zone yet, so both fees are quoted,
+            not charged. Checkout settles them: pickup pays neither. */}
+        <Row label={`Delivery fee · ${STANDARD_DELIVERY_FEE_AED} AED`}>
+          {freeDelivery ? (
+            <span className="text-basil">Free ✓</span>
+          ) : (
+            "At checkout"
+          )}
+        </Row>
+        <Row label={`Service fee · ${SERVICE_FEE_AED} AED`}>
+          On delivery orders
+        </Row>
       </dl>
+
+      {!freeDelivery && subtotal > 0 ? (
+        <p className="mt-3 text-xs text-muted-foreground">
+          Add {formatAed(toFreeDelivery)} more for free delivery — the{" "}
+          {formatAed(SERVICE_FEE_AED)} service fee still applies.
+        </p>
+      ) : null}
 
       <div className="mt-6">
         <PromoField />

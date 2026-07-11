@@ -25,16 +25,84 @@ export function normalizeDeliveryMinimumSubtotalAed(value: number): number {
   return Math.max(0, Math.round(value * 100) / 100);
 }
 
+/** Flat per-order charge on every delivery. Pickup never pays it, and unlike the
+ *  delivery fee it is NOT waived by the free-delivery threshold. */
+export const SERVICE_FEE_AED = 3;
+
+/**
+ * The delivery fee we advertise, for surfaces that must quote a figure before an
+ * area is known — the cart, which has no zone yet. It is a QUOTE, not the charge:
+ * the amount billed is always the matched zone's `fee_aed` (every zone is 9 AED
+ * today, so the two agree). Never compute a total from this.
+ */
+export const STANDARD_DELIVERY_FEE_AED = 9;
+
+/** At or above this item subtotal, the delivery fee is waived (the service fee is
+ *  not). Measured against the ITEM SUBTOTAL, like the delivery minimum — fees do
+ *  not count toward it, and neither does a promo discount. */
+export const FREE_DELIVERY_MIN_SUBTOTAL_AED = 80;
+
+export interface OrderFeesAed {
+  deliveryFeeAed: number;
+  serviceFeeAed: number;
+}
+
+/**
+ * The single place both fees are decided. Every surface that quotes or charges
+ * them — cart, checkout, the server guard, Stripe, the POS — derives them here,
+ * so they cannot disagree about what an order costs.
+ *
+ * Pickup pays neither fee. Delivery always pays the service fee, and pays the
+ * zone's delivery fee unless the subtotal has earned free delivery.
+ */
+export function computeOrderFeesAed({
+  deliveryType,
+  subtotalAed,
+  zoneFeeAed,
+}: {
+  deliveryType: "delivery" | "pickup";
+  subtotalAed: number;
+  zoneFeeAed: number;
+}): OrderFeesAed {
+  if (deliveryType !== "delivery") {
+    return { deliveryFeeAed: 0, serviceFeeAed: 0 };
+  }
+  return {
+    deliveryFeeAed: qualifiesForFreeDelivery(subtotalAed) ? 0 : zoneFeeAed,
+    serviceFeeAed: SERVICE_FEE_AED,
+  };
+}
+
+/** Whether the item subtotal has earned free delivery (the 9 AED fee, not the 3). */
+export function qualifiesForFreeDelivery(subtotalAed: number): boolean {
+  return Math.max(0, subtotalAed) >= FREE_DELIVERY_MIN_SUBTOTAL_AED;
+}
+
+/** What is still needed to reach free delivery, or 0 once it is earned. */
+export function amountToFreeDeliveryAed(subtotalAed: number): number {
+  const remaining = FREE_DELIVERY_MIN_SUBTOTAL_AED - Math.max(0, subtotalAed);
+  return remaining > 0 ? Math.round(remaining * 100) / 100 : 0;
+}
+
+/**
+ * The amount the customer pays. `serviceFeeAed` is required, not defaulted: a
+ * silent 0 would let the fee vanish from a total that a caller forgot to pass it
+ * to, and the totals here are reconciled against Stripe and the POS.
+ */
 export function getDeliveryOrderTotalAed({
   subtotalAed,
   deliveryFeeAed,
+  serviceFeeAed,
   discountAed = 0,
 }: {
   subtotalAed: number;
   deliveryFeeAed: number;
+  serviceFeeAed: number;
   discountAed?: number;
 }): number {
-  return Math.max(0, subtotalAed - discountAed) + deliveryFeeAed;
+  return (
+    Math.max(0, subtotalAed - discountAed) + deliveryFeeAed + serviceFeeAed
+  );
 }
 
 /**

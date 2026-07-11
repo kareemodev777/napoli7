@@ -19,6 +19,7 @@ export interface EditableLine {
 export interface OrderTotals {
   subtotalAed: number;
   deliveryFeeAed: number;
+  serviceFeeAed: number;
   discountAed: number;
   totalAed: number;
 }
@@ -54,22 +55,31 @@ export function unitPriceFromLine(
 
 /**
  * Recompute order totals. Discount is clamped to the subtotal (a discount can
- * never exceed the goods), and the total floors at the delivery fee.
+ * never exceed the goods), and the total floors at the fees.
+ *
+ * The fees are carried through as given rather than re-derived from the edited
+ * subtotal. An admin edit must not silently re-price an order the customer has
+ * already agreed to — if editing an 85 AED order down to 70 flipped it back out
+ * of free delivery, the customer would be charged a fee they never saw. Whether
+ * to change a fee is the admin's call, made explicitly.
  */
 export function computeOrderTotals(
   lines: EditableLine[],
   deliveryFeeAed: number,
+  serviceFeeAed: number,
   discountAed: number,
 ): OrderTotals {
   const subtotal = round2(
     lines.reduce((sum, l) => sum + lineTotal(l.unitPriceAed, l.quantity), 0),
   );
   const fee = round2(Math.max(0, deliveryFeeAed));
+  const serviceFee = round2(Math.max(0, serviceFeeAed));
   const discount = round2(Math.min(Math.max(0, discountAed), subtotal));
-  const total = round2(Math.max(0, subtotal - discount) + fee);
+  const total = round2(Math.max(0, subtotal - discount) + fee + serviceFee);
   return {
     subtotalAed: subtotal,
     deliveryFeeAed: fee,
+    serviceFeeAed: serviceFee,
     discountAed: discount,
     totalAed: total,
   };

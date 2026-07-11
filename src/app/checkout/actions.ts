@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { validatePromo, redeemPromo } from "@/lib/promo";
 import { resolveDeliveryFee } from "@/lib/checkout";
 import {
+  computeOrderFeesAed,
   getDeliveryOrderTotalAed,
   getDeliveryMinimumSubtotalAed,
   meetsDeliveryMinimumAed,
@@ -234,6 +235,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   // Authoritative delivery-zone check. An unsupported area is blocked outright —
   // never charged a default fee — mirroring the client-side guard (UC-45).
   let deliveryFee = 0;
+  let serviceFee = 0;
   if (data.deliveryType === "delivery" && data.deliveryAddress) {
     // The signup free-pizza reward is pickup-only for the SINGLE free small
     // pizza on its own. A second pizza, a larger quantity, or an upgrade to a
@@ -260,7 +262,14 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
           "We don't deliver to that area yet. Choose a supported area or switch to pickup.",
       };
     }
-    deliveryFee = zone.fee;
+    // Both fees are derived, never taken from the client: the zone fee is waived
+    // above the free-delivery threshold, the service fee never is.
+    ({ deliveryFeeAed: deliveryFee, serviceFeeAed: serviceFee } =
+      computeOrderFeesAed({
+        deliveryType: "delivery",
+        subtotalAed: subtotal,
+        zoneFeeAed: zone.fee,
+      }));
     if (
       !meetsDeliveryMinimumAed({
         subtotalAed: subtotal,
@@ -270,13 +279,14 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
       })
     ) {
       return {
-        error: `Delivery orders need at least ${deliveryMinSubtotalAed} AED in items (the delivery fee doesn't count). Add a little more, or switch to pickup.`,
+        error: `Delivery orders need at least ${deliveryMinSubtotalAed} AED in items (the fees don't count). Add a little more, or switch to pickup.`,
       };
     }
   }
   const total = getDeliveryOrderTotalAed({
     subtotalAed: subtotal,
     deliveryFeeAed: deliveryFee,
+    serviceFeeAed: serviceFee,
     discountAed: discount,
   });
 
@@ -312,6 +322,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
       discount_aed: discount,
       subtotal_aed: subtotal,
       delivery_fee_aed: deliveryFee,
+      service_fee_aed: serviceFee,
       total_aed: total,
     })
     .select("id, order_number")

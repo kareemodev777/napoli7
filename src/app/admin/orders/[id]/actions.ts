@@ -86,7 +86,7 @@ export async function editOrder(formData: FormData): Promise<EditOrderResult> {
   const { data: order, error: orderError } = await supabase
     .from("orders")
     .select(
-      "id, order_number, total_aed, admin_notes, order_items(id, quantity, line_total_aed)",
+      "id, order_number, total_aed, service_fee_aed, admin_notes, order_items(id, quantity, line_total_aed)",
     )
     .eq("id", data.orderId)
     .maybeSingle();
@@ -152,9 +152,13 @@ export async function editOrder(formData: FormData): Promise<EditOrderResult> {
     return { error: "An order must keep at least one item." };
   }
 
+  // The service fee rides through untouched. It is not an admin-editable field:
+  // it is a flat charge the customer already agreed to, and re-deriving it from
+  // the edited subtotal could hand someone a fee they never saw at checkout.
   const totals = computeOrderTotals(
     lines,
     data.deliveryFeeAed,
+    Number(order.service_fee_aed ?? 0),
     data.discountAed,
   );
   const oldTotal = Number(order.total_aed);
@@ -191,6 +195,7 @@ export async function editOrder(formData: FormData): Promise<EditOrderResult> {
     .update({
       subtotal_aed: totals.subtotalAed,
       delivery_fee_aed: totals.deliveryFeeAed,
+      service_fee_aed: totals.serviceFeeAed,
       discount_aed: totals.discountAed,
       total_aed: totals.totalAed,
       order_notes: data.orderNotes ?? null,

@@ -21,29 +21,40 @@ describe("lineTotal / unitPriceFromLine", () => {
 });
 
 describe("computeOrderTotals", () => {
-  test("sums lines, clamps discount to subtotal, adds fee", () => {
+  test("sums lines, clamps discount to subtotal, adds both fees", () => {
     const totals = computeOrderTotals(
       [
         { unitPriceAed: 30, quantity: 2 },
         { unitPriceAed: 15, quantity: 1 },
       ],
       10,
+      3,
       20,
     );
     expect(totals.subtotalAed).toBe(75);
     expect(totals.deliveryFeeAed).toBe(10);
+    expect(totals.serviceFeeAed).toBe(3);
     expect(totals.discountAed).toBe(20);
-    expect(totals.totalAed).toBe(65); // 75 - 20 + 10
+    expect(totals.totalAed).toBe(68); // 75 - 20 + 10 + 3
   });
 
   test("discount cannot exceed subtotal", () => {
     const totals = computeOrderTotals(
       [{ unitPriceAed: 10, quantity: 1 }],
       5,
+      3,
       999,
     );
     expect(totals.discountAed).toBe(10);
-    expect(totals.totalAed).toBe(5); // 10 - 10 + 5
+    expect(totals.totalAed).toBe(8); // 10 - 10 + 5 + 3
+  });
+
+  // An admin edit must never re-price the order: the fee it was given is the fee
+  // it returns, even if the edited subtotal would now qualify for free delivery.
+  test("carries the service fee through untouched", () => {
+    const totals = computeOrderTotals([{ unitPriceAed: 100, quantity: 1 }], 0, 3, 0);
+    expect(totals.serviceFeeAed).toBe(3);
+    expect(totals.totalAed).toBe(103);
   });
 
   test("dropping a line (qty 0) removes it from subtotal", () => {

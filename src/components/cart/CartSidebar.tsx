@@ -6,9 +6,13 @@ import { SmartImage } from "@/components/ui/SmartImage";
 import { useCart, type CartItem } from "@/store/cart";
 import { useMounted } from "@/lib/use-mounted";
 import { formatAed } from "@/components/catalog/PriceBadge";
-
-const DELIVERY_MIN_SUBTOTAL = 13;
-const DELIVERY_FEE = 12;
+import {
+  amountToFreeDeliveryAed,
+  DEFAULT_DELIVERY_MIN_SUBTOTAL_AED,
+  qualifiesForFreeDelivery,
+  SERVICE_FEE_AED,
+  STANDARD_DELIVERY_FEE_AED,
+} from "@/lib/delivery-settings";
 
 export function CartSidebar() {
   const items = useCart((s) => s.items);
@@ -20,9 +24,11 @@ export function CartSidebar() {
 
   const hasItems = mounted && items.length > 0;
   const progress = mounted
-    ? Math.min(100, (subtotal / DELIVERY_MIN_SUBTOTAL) * 100)
+    ? Math.min(100, (subtotal / DEFAULT_DELIVERY_MIN_SUBTOTAL_AED) * 100)
     : 0;
-  const remaining = Math.max(0, DELIVERY_MIN_SUBTOTAL - subtotal);
+  const remaining = Math.max(0, DEFAULT_DELIVERY_MIN_SUBTOTAL_AED - subtotal);
+  const freeDelivery = mounted && qualifiesForFreeDelivery(subtotal);
+  const toFreeDelivery = amountToFreeDeliveryAed(subtotal);
 
   return (
     <aside
@@ -71,7 +77,8 @@ export function CartSidebar() {
                   : "Delivery minimum reached"}
               </span>
               <span className="font-display tabular-nums">
-                {formatAed(subtotal)} / {formatAed(DELIVERY_MIN_SUBTOTAL)}
+                {formatAed(subtotal)} /{" "}
+                {formatAed(DEFAULT_DELIVERY_MIN_SUBTOTAL_AED)}
               </span>
             </div>
             <div className="mt-2 h-1 bg-border overflow-hidden">
@@ -89,10 +96,25 @@ export function CartSidebar() {
           >
             {formatAed(subtotal)}
           </Row>
-          <Row label={`Delivery fee · ${formatAed(DELIVERY_FEE)}`}>
-            At checkout
+          {/* Quotes, not charges — the cart has no delivery type or zone yet.
+              Checkout settles both, and pickup pays neither. */}
+          <Row label={`Delivery fee · ${formatAed(STANDARD_DELIVERY_FEE_AED)}`}>
+            {freeDelivery ? (
+              <span className="text-basil">Free ✓</span>
+            ) : (
+              "At checkout"
+            )}
+          </Row>
+          <Row label={`Service fee · ${formatAed(SERVICE_FEE_AED)}`}>
+            On delivery
           </Row>
         </dl>
+
+        {hasItems && !freeDelivery ? (
+          <p className="text-xs text-muted-foreground">
+            Add {formatAed(toFreeDelivery)} more for free delivery.
+          </p>
+        ) : null}
 
         <Link
           href="/checkout"

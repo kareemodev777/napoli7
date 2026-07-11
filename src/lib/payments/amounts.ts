@@ -27,6 +27,7 @@ export function toFils(aed: number): number {
 }
 
 const DELIVERY_FEE_LABEL = "Delivery fee";
+const SERVICE_FEE_LABEL = "Service fee";
 
 /**
  * Build the Stripe line items from the authoritative order rows.
@@ -35,11 +36,17 @@ const DELIVERY_FEE_LABEL = "Delivery fee";
  * unit amount (label carries the quantity). Charging the line total directly —
  * instead of re-deriving a per-unit price and multiplying — guarantees the
  * product subtotal equals the stored `subtotal_aed` exactly, with no per-unit
- * rounding drift. A delivery line is appended when a fee applies.
+ * rounding drift. A fee line is appended for each fee that applies.
+ *
+ * The two fees are separate lines, not one merged "fees" line, so the customer's
+ * Stripe receipt reads the same as the checkout summary they agreed to. Either can
+ * be zero independently: free delivery zeroes the delivery fee while the service
+ * fee stands, and pickup zeroes both.
  */
 export function buildCheckoutLines(
   items: OrderItemAmount[],
   deliveryFeeAed: number,
+  serviceFeeAed: number,
 ): CheckoutLine[] {
   const lines: CheckoutLine[] = items.map((it) => ({
     name: it.qty > 1 ? `${it.qty} × ${it.name}` : it.name,
@@ -49,6 +56,12 @@ export function buildCheckoutLines(
     lines.push({
       name: DELIVERY_FEE_LABEL,
       unitAmountFils: toFils(deliveryFeeAed),
+    });
+  }
+  if (serviceFeeAed > 0) {
+    lines.push({
+      name: SERVICE_FEE_LABEL,
+      unitAmountFils: toFils(serviceFeeAed),
     });
   }
   return lines;
@@ -79,17 +92,26 @@ export interface CheckoutAmount {
 export function buildAndAssertCheckoutAmount(input: {
   items: OrderItemAmount[];
   deliveryFeeAed: number;
+  serviceFeeAed: number;
   discountAed: number;
   totalAed: number;
 }): CheckoutAmount {
-  const lines = buildCheckoutLines(input.items, input.deliveryFeeAed);
+  const lines = buildCheckoutLines(
+    input.items,
+    input.deliveryFeeAed,
+    input.serviceFeeAed,
+  );
   const discountFils = toFils(input.discountAed);
   const net = grossFils(lines) - discountFils;
   const expectedFils = toFils(input.totalAed);
 
-  if (discountFils < 0 || input.deliveryFeeAed < 0) {
+  if (
+    discountFils < 0 ||
+    input.deliveryFeeAed < 0 ||
+    input.serviceFeeAed < 0
+  ) {
     throw new Error(
-      `[checkout-amount] negative input: discount=${input.discountAed} delivery=${input.deliveryFeeAed}`,
+      `[checkout-amount] negative input: discount=${input.discountAed} delivery=${input.deliveryFeeAed} service=${input.serviceFeeAed}`,
     );
   }
   if (net < 0) {

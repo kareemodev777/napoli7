@@ -291,20 +291,71 @@ describe("orderRowToWooOrder — line items + totals", () => {
     ]);
   });
 
-  test("total is a 2dp string equal to subtotal - discount + delivery", () => {
+  test("total is a 2dp string equal to subtotal - discount + delivery + service", () => {
     const row = baseRow({
       subtotal_aed: 121,
       discount_aed: 10,
       delivery_fee_aed: 15,
-      total_aed: 126,
+      service_fee_aed: 3,
+      total_aed: 129,
     });
     const body = orderRowToWooOrder(row);
-    expect(body.total).toBe("126.00");
+    expect(body.total).toBe("129.00");
     const recomputed =
       Number(row.subtotal_aed) -
       Number(row.discount_aed) +
-      Number(row.delivery_fee_aed);
+      Number(row.delivery_fee_aed) +
+      Number(row.service_fee_aed);
     expect(body.total).toBe(recomputed.toFixed(2));
+  });
+
+  // The POS reconciles its printed lines against `total`. A service fee that is
+  // inside total_aed but has no line would make every receipt fail to add up.
+  test("the service fee is pushed as its own line item, so the receipt adds up", () => {
+    const row = baseRow({
+      discount_aed: 0,
+      delivery_fee_aed: 9,
+      service_fee_aed: 3,
+    });
+    // Whatever the fixture's items come to, the total is items + both fees.
+    const itemsTotal = (row.order_items ?? []).reduce(
+      (s, i) => s + Number(i.line_total_aed),
+      0,
+    );
+    row.subtotal_aed = itemsTotal;
+    row.total_aed = itemsTotal + 9 + 3;
+
+    const body = orderRowToWooOrder(row);
+    const fees = body.line_items.filter((l) =>
+      l.meta_data?.some((m) => m.key === "line_type"),
+    );
+    expect(fees.map((l) => l.name)).toEqual(["Delivery", "Service fee"]);
+
+    // The invariant the POS depends on: the printed lines, less the discount,
+    // must equal the total it is told to collect.
+    const lineSum = body.line_items.reduce((s, l) => s + Number(l.total), 0);
+    expect(lineSum - Number(body.discount_total)).toBeCloseTo(
+      Number(body.total),
+      2,
+    );
+  });
+
+  test("pickup pushes neither fee line", () => {
+    const body = orderRowToWooOrder(
+      baseRow({
+        delivery_type: "pickup",
+        subtotal_aed: 40,
+        discount_aed: 0,
+        delivery_fee_aed: 0,
+        service_fee_aed: 0,
+        total_aed: 40,
+      }),
+    );
+    expect(
+      body.line_items.filter((l) =>
+        l.meta_data?.some((m) => m.key === "line_type"),
+      ),
+    ).toHaveLength(0);
   });
 
   test("numeric strings from the DB are coerced and formatted", () => {

@@ -69,6 +69,7 @@ describe("buildAndAssertCheckoutAmount", () => {
         { name: "Coke", qty: 1, lineTotalAed: 6 },
       ],
       deliveryFeeAed: 0,
+      serviceFeeAed: 0,
       discountAed: 0,
       totalAed: 76,
     });
@@ -81,6 +82,7 @@ describe("buildAndAssertCheckoutAmount", () => {
     const r = buildAndAssertCheckoutAmount({
       items: [{ name: "Pizza", qty: 1, lineTotalAed: 40 }],
       deliveryFeeAed: 15,
+      serviceFeeAed: 0,
       discountAed: 0,
       totalAed: 55,
     });
@@ -88,11 +90,54 @@ describe("buildAndAssertCheckoutAmount", () => {
     expect(r.lines).toHaveLength(2);
   });
 
+  // The service fee is a real charge, so it must reach Stripe as its own line —
+  // otherwise the assertion below fires and no card order can be placed at all.
+  test("the service fee is charged as its own line", () => {
+    const r = buildAndAssertCheckoutAmount({
+      items: [{ name: "Pizza", qty: 1, lineTotalAed: 40 }],
+      deliveryFeeAed: 9,
+      serviceFeeAed: 3,
+      discountAed: 0,
+      totalAed: 52,
+    });
+    expect(r.netFils).toBe(5200);
+    expect(r.lines.map((l) => l.name)).toEqual([
+      "Pizza",
+      "Delivery fee",
+      "Service fee",
+    ]);
+  });
+
+  test("free delivery drops the delivery line but keeps the service line", () => {
+    const r = buildAndAssertCheckoutAmount({
+      items: [{ name: "Feast", qty: 1, lineTotalAed: 90 }],
+      deliveryFeeAed: 0,
+      serviceFeeAed: 3,
+      discountAed: 0,
+      totalAed: 93,
+    });
+    expect(r.lines.map((l) => l.name)).toEqual(["Feast", "Service fee"]);
+    expect(r.netFils).toBe(9300);
+  });
+
+  test("THROWS if the total carries a service fee the lines do not", () => {
+    expect(() =>
+      buildAndAssertCheckoutAmount({
+        items: [{ name: "Pizza", qty: 1, lineTotalAed: 40 }],
+        deliveryFeeAed: 9,
+        serviceFeeAed: 0, // forgotten here…
+        discountAed: 0,
+        totalAed: 52, // …but billed here
+      }),
+    ).toThrow(/mismatch/);
+  });
+
   test("fixed-AED promo discount is applied", () => {
     // NAPOLI20: 20 AED off an 80 AED subtotal + 10 delivery = 70 total
     const r = buildAndAssertCheckoutAmount({
       items: [{ name: "Family deal", qty: 1, lineTotalAed: 80 }],
       deliveryFeeAed: 10,
+      serviceFeeAed: 0,
       discountAed: 20,
       totalAed: 70,
     });
@@ -105,6 +150,7 @@ describe("buildAndAssertCheckoutAmount", () => {
     const r = buildAndAssertCheckoutAmount({
       items: [{ name: "Pizza", qty: 1, lineTotalAed: 50 }],
       deliveryFeeAed: 12,
+      serviceFeeAed: 0,
       discountAed: 5,
       totalAed: 57,
     });
@@ -118,6 +164,7 @@ describe("buildAndAssertCheckoutAmount", () => {
         { name: "Water", qty: 3, lineTotalAed: 9 },
       ],
       deliveryFeeAed: 18,
+      serviceFeeAed: 0,
       discountAed: 9.9,
       totalAed: 107.1, // 99 - 9.9 + 18
     });

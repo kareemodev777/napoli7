@@ -42,8 +42,12 @@ import { placeOrder, type PlaceOrderInput } from "@/app/checkout/actions";
 import { formatAed } from "@/components/catalog/PriceBadge";
 import { PromoField } from "@/components/cart/PromoField";
 import {
+  amountToFreeDeliveryAed,
+  computeOrderFeesAed,
   getDeliveryOrderTotalAed,
   meetsDeliveryMinimumAed,
+  qualifiesForFreeDelivery,
+  SERVICE_FEE_AED,
 } from "@/lib/delivery-settings";
 
 const TIME_SLOTS = generateTimeSlots();
@@ -250,10 +254,22 @@ export function CheckoutForm({
   // charged a fallback fee (UC-45). Pickup is always "supported".
   const areaSupported = deliveryType !== "delivery" || matchedZone !== null;
   const zoneFee = matchedZone ? matchedZone.fee : defaultFee;
-  const deliveryFee = deliveryType === "delivery" && matchedZone ? zoneFee : 0;
+  // Derived by the same function the server uses, so the quote the customer sees
+  // is the amount they are charged: free delivery drops the 9 AED zone fee, the
+  // 3 AED service fee stands, and pickup pays neither.
+  const { deliveryFeeAed: deliveryFee, serviceFeeAed: serviceFee } =
+    computeOrderFeesAed({
+      deliveryType: deliveryType === "delivery" && matchedZone ? "delivery" : "pickup",
+      subtotalAed: subtotal,
+      zoneFeeAed: zoneFee,
+    });
+  const freeDeliveryEarned =
+    deliveryType === "delivery" && qualifiesForFreeDelivery(subtotal);
+  const toFreeDelivery = amountToFreeDeliveryAed(subtotal);
   const orderTotal = getDeliveryOrderTotalAed({
     subtotalAed: subtotal,
     deliveryFeeAed: deliveryFee,
+    serviceFeeAed: serviceFee,
     discountAed: discount,
   });
   const deliveryMapQuery = useMemo(
@@ -784,15 +800,30 @@ export function CheckoutForm({
             <Row label={`Discount · ${promo.code}`}>−{formatAed(discount)}</Row>
           ) : null}
           <Row label="Delivery fee">
+            {deliveryType !== "delivery" ? (
+              "Free · pickup"
+            ) : freeDeliveryEarned ? (
+              <span className="text-basil">Free ✓</span>
+            ) : (
+              formatAed(deliveryFee)
+            )}
+          </Row>
+          <Row label="Service fee">
             {deliveryType === "delivery"
-              ? formatAed(deliveryFee)
+              ? formatAed(serviceFee)
               : "Free · pickup"}
           </Row>
         </dl>
+        {deliveryType === "delivery" && !freeDeliveryEarned && meetsDeliveryMin ? (
+          <p className="mt-3 text-xs text-muted-foreground">
+            Add {formatAed(toFreeDelivery)} more in items for free delivery — the{" "}
+            {formatAed(SERVICE_FEE_AED)} service fee still applies.
+          </p>
+        ) : null}
         {!meetsDeliveryMin ? (
           <p className="mt-3 text-xs text-flag-red">
             Minimum {formatAed(deliveryMinSubtotalAed)} in items for delivery
-            (delivery fee excluded). Add{" "}
+            (fees excluded). Add{" "}
             {formatAed(Math.max(0, deliveryMinSubtotalAed - subtotal))} more, or
             switch to pickup.
           </p>

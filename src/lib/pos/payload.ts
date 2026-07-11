@@ -56,6 +56,7 @@ export interface PosOrderRow {
   stripe_payment_intent: string | null;
   subtotal_aed: number | string;
   delivery_fee_aed: number | string;
+  service_fee_aed: number | string;
   discount_aed: number | string;
   promo_code: string | null;
   total_aed: number | string;
@@ -254,6 +255,20 @@ function deliveryLineItem(fee: number): WooLineItem {
   };
 }
 
+/** The service fee, itemised for the same reason as delivery: it is part of
+ *  total_aed, so without a line the POS receipt would not add up. */
+function serviceLineItem(fee: number): WooLineItem {
+  return {
+    name: "Service fee",
+    quantity: 1,
+    price: money(fee),
+    subtotal: money(fee),
+    total: money(fee),
+    sku: "",
+    meta_data: [{ key: "line_type", value: "service_fee" }],
+  };
+}
+
 /**
  * Map a persisted order row + its items into the WooCommerce order-create body.
  * Pure: no DB, no network. Currency is AED throughout; monetary fields are
@@ -265,12 +280,18 @@ export function orderRowToWooOrder(order: PosOrderRow): WooOrderBody {
   const isCard = order.payment_method === "card";
   const addr = order.delivery_address ?? {};
   const deliveryFee = Number(order.delivery_fee_aed);
+  const serviceFee = Number(order.service_fee_aed ?? 0);
 
-  // Items + delivery as a printable line. Delivery moves OUT of shipping_total
-  // (set to 0 below) so the receipt itemises it without double-counting.
+  // Items + both fees as printable lines. Delivery moves OUT of shipping_total
+  // (set to 0 below) so the receipt itemises it without double-counting. The two
+  // fees are independent: free delivery zeroes the delivery fee and leaves the
+  // service fee standing, and pickup zeroes both.
   const lineItems = (order.order_items ?? []).map(lineItem);
   if (deliveryFee > 0) {
     lineItems.push(deliveryLineItem(deliveryFee));
+  }
+  if (serviceFee > 0) {
+    lineItems.push(serviceLineItem(serviceFee));
   }
 
   const billing: WooAddress = {

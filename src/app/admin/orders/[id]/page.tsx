@@ -54,7 +54,7 @@ async function loadOrder(id: string) {
   const { data } = await supabase
     .from("orders")
     .select(
-      "id, order_number, customer_name, customer_phone, customer_email, status, payment_method, payment_status, pos_sync_status, pos_invoice_number, delivery_type, delivery_address, delivery_slot, pizza_cut, subtotal_aed, delivery_fee_aed, discount_aed, total_aed, promo_code, order_notes, admin_notes, assigned_rider_id, created_at, order_items(id, product_id, product_name, base_price_aed, quantity, customizations, line_total_aed, size_label)",
+      "id, order_number, customer_name, customer_phone, customer_email, status, payment_method, payment_status, pos_sync_status, pos_invoice_number, delivery_type, delivery_address, delivery_slot, pizza_cut, subtotal_aed, delivery_fee_aed, service_fee_aed, discount_aed, total_aed, promo_code, order_notes, admin_notes, assigned_rider_id, created_at, order_items(id, product_id, product_name, base_price_aed, quantity, customizations, line_total_aed, size_label)",
     )
     .eq("id", id)
     .maybeSingle();
@@ -337,6 +337,12 @@ export default async function AdminOrderEditPage({
                     <dd>{Number(order.delivery_fee_aed).toFixed(2)} AED</dd>
                   </div>
                 ) : null}
+                {Number(order.service_fee_aed ?? 0) > 0 ? (
+                  <div className="flex justify-between">
+                    <dt className="text-muted-foreground">Service fee</dt>
+                    <dd>{Number(order.service_fee_aed).toFixed(2)} AED</dd>
+                  </div>
+                ) : null}
                 {Number(order.discount_aed ?? 0) > 0 ? (
                   <div className="flex justify-between">
                     <dt className="text-muted-foreground">
@@ -369,6 +375,7 @@ export default async function AdminOrderEditPage({
                 paymentStatus={order.payment_status}
                 oldTotalAed={Number(order.total_aed)}
                 deliveryFeeAed={Number(order.delivery_fee_aed)}
+                serviceFeeAed={Number(order.service_fee_aed ?? 0)}
                 discountAed={Number(order.discount_aed ?? 0)}
                 orderNotes={order.order_notes ?? ""}
                 items={items}

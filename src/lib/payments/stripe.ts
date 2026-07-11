@@ -27,6 +27,7 @@ interface CreateSessionInput {
   items: OrderItemAmount[];
   /** Authoritative order columns — the charge is reconciled against these. */
   deliveryFeeAed: number;
+  serviceFeeAed: number;
   discountAed: number;
   totalAed: number;
   promoCode?: string | null;
@@ -47,6 +48,7 @@ export async function createCheckoutSession(input: CreateSessionInput) {
   const { lines, discountFils } = buildAndAssertCheckoutAmount({
     items: input.items,
     deliveryFeeAed: input.deliveryFeeAed,
+    serviceFeeAed: input.serviceFeeAed,
     discountAed: input.discountAed,
     totalAed: input.totalAed,
   });

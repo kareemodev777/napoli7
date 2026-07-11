@@ -29,6 +29,8 @@ export interface OrderEditFormProps {
   paymentStatus: string;
   oldTotalAed: number;
   deliveryFeeAed: number;
+  /** Read-only here: shown in the totals, never re-derived from an edit. */
+  serviceFeeAed: number;
   discountAed: number;
   orderNotes: string;
   items: EditOrderItem[];
@@ -86,6 +88,7 @@ export function OrderEditForm(props: OrderEditFormProps) {
             : []),
         ],
         Number.isFinite(deliveryFee) ? deliveryFee : 0,
+        props.serviceFeeAed,
         Number.isFinite(discount) ? discount : 0,
       ),
     [
@@ -95,6 +98,7 @@ export function OrderEditForm(props: OrderEditFormProps) {
       addedProduct,
       addQuantity,
       deliveryFee,
+      props.serviceFeeAed,
       discount,
     ],
   );
@@ -280,6 +284,9 @@ export function OrderEditForm(props: OrderEditFormProps) {
             <dl className="space-y-2 text-sm">
               <Row label="New subtotal">{money(totals.subtotalAed)}</Row>
               <Row label="Delivery fee">{money(totals.deliveryFeeAed)}</Row>
+              {totals.serviceFeeAed > 0 ? (
+                <Row label="Service fee">{money(totals.serviceFeeAed)}</Row>
+              ) : null}
               <Row label="Discount">−{money(totals.discountAed)}</Row>
               <div className="border-t border-border pt-2">
                 <Row label="Old total">{money(props.oldTotalAed)}</Row>
