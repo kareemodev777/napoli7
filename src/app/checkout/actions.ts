@@ -15,11 +15,7 @@ import {
   isRewardPickupOnly,
   type CanonicalOrderItem,
 } from "@/lib/checkout-pricing";
-import {
-  isWithinDeliveryRadius,
-  distanceFromShopKm,
-  DELIVERY_RADIUS_KM,
-} from "@/lib/delivery-map";
+import { checkDeliverability, deliverabilityMessage } from "@/lib/delivery-map";
 import { planAddressSave, type AddressLike } from "@/lib/saved-address";
 import { sendKitchenNotificationsForOrder } from "@/lib/notifications/kitchen";
 import { pushOrderToPos } from "@/lib/pos/push";
@@ -248,21 +244,14 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
           "Your free pizza is pickup-only on its own. Add anything else — another pizza or a drink — to unlock delivery, or switch to pickup.",
       };
     }
-    // The customer must drop a GPS pin, and it must fall inside Ajman. This is
-    // the authoritative out-of-zone guard: the area dropdown alone can be paired
-    // with a Sharjah street, but the pin can't be faked past the bounding box.
+    // The authoritative out-of-zone guard. The customer must drop a GPS pin, and
+    // it must clear BOTH the radius and the Ajman boundary. The area dropdown is
+    // not consulted for this: it is a convenience field, and any area can be
+    // paired with any street, so only the pin decides.
     const { lat, lng } = data.deliveryAddress;
-    if (lat == null || lng == null) {
-      return {
-        error:
-          "Drop a pin on the map so the driver can find your exact location.",
-      };
-    }
-    if (!isWithinDeliveryRadius(lat, lng)) {
-      const km = distanceFromShopKm(lat, lng);
-      return {
-        error: `That location is ${km.toFixed(1)} km from the shop — outside our ${DELIVERY_RADIUS_KM} km delivery range. Move the pin closer, or switch to pickup.`,
-      };
+    const deliverability = checkDeliverability(lat, lng);
+    if (!deliverability.deliverable) {
+      return { error: deliverabilityMessage(deliverability) };
     }
     const zone = await resolveDeliveryFee(data.deliveryAddress.area);
     if (!zone.supported) {

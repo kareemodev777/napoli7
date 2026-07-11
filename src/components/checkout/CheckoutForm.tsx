@@ -11,8 +11,8 @@ import {
 import { isRewardPickupOnly } from "@/lib/checkout-pricing";
 import {
   buildDeliveryMapQuery,
-  isWithinDeliveryRadius,
-  distanceFromShopKm,
+  checkDeliverability,
+  deliverabilityMessage,
   DELIVERY_RADIUS_KM,
 } from "@/lib/delivery-map";
 import type {
@@ -273,23 +273,29 @@ export function CheckoutForm({
       discountAed: discount,
       minimumAed: deliveryMinSubtotalAed,
     });
-  // Delivery requires a pin, and that pin must sit within the delivery radius of
-  // the shop (straight-line distance).
-  const hasPin = deliveryType !== "delivery" || coords !== null;
-  const pinInRange =
-    deliveryType !== "delivery" ||
-    (coords !== null && isWithinDeliveryRadius(coords.lat, coords.lng));
+  // Delivery requires a pin that clears both the radius and the Ajman boundary.
+  // Advisory only — the server re-runs the same check before the order is taken.
+  const deliverability = useMemo(
+    () => checkDeliverability(coords?.lat, coords?.lng),
+    [coords],
+  );
+  const pinAccepted = deliveryType !== "delivery" || deliverability.deliverable;
+  // Short form of the same rejection, for the submit button face.
+  const pinBlockedLabel =
+    pinAccepted || deliverability.deliverable
+      ? null
+      : deliverability.reason === "no-pin"
+        ? "Drop your delivery pin on the map"
+        : deliverability.reason === "outside-ajman"
+          ? "Pin is outside Ajman — we deliver in Ajman only"
+          : `Pin is outside our ${DELIVERY_RADIUS_KM} km delivery range`;
   // The signup free-pizza reward is pickup-only for the SINGLE free small pizza
   // on its own; a second pizza, a larger quantity, or an upgrade to a non-small
   // size unlocks a normal delivery order. Shared with the server guard.
   const rewardPickupOnly = isRewardPickupOnly(Boolean(promo?.isReward), items);
   const deliveryAllowed = deliveryType !== "delivery" || !rewardPickupOnly;
   const canSubmit =
-    areaSupported &&
-    meetsDeliveryMin &&
-    hasPin &&
-    pinInRange &&
-    deliveryAllowed;
+    areaSupported && meetsDeliveryMin && pinAccepted && deliveryAllowed;
 
   if (!hydrated) {
     return <p className="text-sm text-muted-foreground">Loading checkout…</p>;
@@ -333,20 +339,8 @@ export function CheckoutForm({
       );
       return;
     }
-    if (deliveryType === "delivery" && !coords) {
-      setError(
-        "Drop a pin on the map so the driver can find your exact location.",
-      );
-      return;
-    }
-    if (
-      deliveryType === "delivery" &&
-      coords &&
-      !isWithinDeliveryRadius(coords.lat, coords.lng)
-    ) {
-      setError(
-        `That location is ${distanceFromShopKm(coords.lat, coords.lng).toFixed(1)} km from the shop — outside our ${DELIVERY_RADIUS_KM} km delivery range. Move the pin closer, or switch to pickup.`,
-      );
+    if (deliveryType === "delivery" && !deliverability.deliverable) {
+      setError(deliverabilityMessage(deliverability));
       return;
     }
     const form = e.currentTarget;
@@ -610,26 +604,15 @@ export function CheckoutForm({
                   </div>
                 </div>
                 <DeliveryMapPicker value={coords} onChange={handlePinChange} />
-                {coords ? (
-                  isWithinDeliveryRadius(coords.lat, coords.lng) ? (
-                    <p className="text-xs text-muted-foreground">
-                      Pin set ·{" "}
-                      {distanceFromShopKm(coords.lat, coords.lng).toFixed(1)} km
-                      from the shop — within our {DELIVERY_RADIUS_KM} km range.
-                      ✓
-                    </p>
-                  ) : (
-                    <p className="text-xs text-flag-red">
-                      That pin is{" "}
-                      {distanceFromShopKm(coords.lat, coords.lng).toFixed(1)} km
-                      from the shop — outside our {DELIVERY_RADIUS_KM} km
-                      delivery range. Move it closer, or switch to pickup.
-                    </p>
-                  )
+                {deliverability.deliverable ? (
+                  <p className="text-xs text-muted-foreground">
+                    Pin set · {deliverability.distanceKm.toFixed(1)} km from the
+                    shop, inside Ajman — within our {DELIVERY_RADIUS_KM} km
+                    range. ✓
+                  </p>
                 ) : (
                   <p className="text-xs text-flag-red">
-                    Tap the map to drop your delivery pin before placing the
-                    order.
+                    {deliverabilityMessage(deliverability)}
                   </p>
                 )}
               </div>
@@ -769,10 +752,8 @@ export function CheckoutForm({
             "Delivery unavailable for this area"
           ) : !meetsDeliveryMin ? (
             `Minimum ${formatAed(deliveryMinSubtotalAed)} in items for delivery`
-          ) : !hasPin ? (
-            "Drop your delivery pin on the map"
-          ) : !pinInRange ? (
-            `Pin is outside our ${DELIVERY_RADIUS_KM} km delivery range`
+          ) : pinBlockedLabel ? (
+            pinBlockedLabel
           ) : paymentMethod === "cod" && deliveryType === "pickup" ? (
             "Place pickup order"
           ) : (

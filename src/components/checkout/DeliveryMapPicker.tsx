@@ -6,6 +6,7 @@ import {
   TileLayer,
   Marker,
   Circle,
+  Polygon,
   useMap,
   useMapEvents,
 } from "react-leaflet";
@@ -13,6 +14,11 @@ import { LocateFixed } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { SHOP_LOCATION, DELIVERY_RADIUS_KM } from "@/lib/delivery-map";
+import { AJMAN_BOUNDARY_RINGS } from "@/lib/ajman-boundary";
+
+// Ajman's mainland. The other two rings are inland exclaves tens of km away —
+// nowhere near the radius, so drawing them would only clutter the map.
+const AJMAN_DELIVERABLE_RING = AJMAN_BOUNDARY_RINGS[0];
 
 export interface PickedLocation {
   lat: number;
@@ -182,6 +188,17 @@ export default function DeliveryMapPicker({
           <TileLayer
             attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          />
+          {/* The Ajman emirate border. We deliver inside the overlap of this and
+              the radius circle below — the circle alone spills into Sharjah. */}
+          <Polygon
+            positions={AJMAN_DELIVERABLE_RING as [number, number][]}
+            pathOptions={{
+              color: "#15803d",
+              weight: 2,
+              fillColor: "#15803d",
+              fillOpacity: 0.05,
+            }}
           />
           {/* Delivery zone — the straight-line radius the courier covers. */}
           <Circle
