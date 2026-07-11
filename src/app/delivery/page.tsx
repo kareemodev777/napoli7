@@ -17,26 +17,29 @@ export const metadata: Metadata = {
 };
 
 // The areas we deliver to. This is the same list the checkout dropdown is seeded
-// with (migration 026) — keep the two in step, or the page will promise an area
+// with (migration 027) — keep the two in step, or the page will promise an area
 // the customer cannot then select.
 const DELIVERY_AREAS = [
-  "Al Jurf 1",
-  "Al Jurf 2",
-  "Al Jurf 3",
+  "Al Jurf",
   "Al Nuaimiya",
   "Al Rashidiya",
   "Al Rumailah",
+  "Al Nakheel",
+  "Al Bustan",
   "Ajman Corniche",
   "Al Zahra",
-  "Al Mowaihat",
   "Al Hamidiya",
   "Al Rawda",
-  "Al Bustan",
-  "Al Nakheel",
-  "Al Raqaib",
+  "Al Mowaihat",
+  "Al Tallah",
   "Al Yasmeen",
-  "Ajman Free Zone (Port)",
-  "Ajman Free Zone (Al Jurf)",
+  "Al Helio",
+  "Al Zahya",
+  "Al Alia",
+  "Al Raqaib",
+  "Ajman Industrial Area",
+  "Emirates City",
+  "Al Zorah",
 ];
 
 const sections: { heading: string; body: string[] }[] = [
@@ -48,6 +51,11 @@ const sections: { heading: string; body: string[] }[] = [
       // pin dropped there is refused at checkout however close it is.
       `We deliver inside Ajman only, within an 8 km radius of Napoli 7. Sharjah and the other emirates are outside our zone, even where they fall inside that radius.`,
       `Delivery areas in Ajman: ${DELIVERY_AREAS.join(", ")}.`,
+      // Some of these areas are large enough to reach past the 8 km radius, so
+      // listing one is not a promise that every address in it is reachable. The
+      // map pin at checkout is what confirms it, and it is better to say so here
+      // than to let someone fill a basket and get refused at the last step.
+      "The outer edges of some of these areas fall beyond the 8 km radius. Drop your pin on the map at checkout and we'll confirm straight away whether we can reach you.",
       "Outside our delivery area? Choose Pickup, and your order will be ready in approximately 15 minutes.",
     ],
   },
