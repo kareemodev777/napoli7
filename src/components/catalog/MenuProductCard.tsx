@@ -30,6 +30,10 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
     product.sizes.find((s) => s.id === sizeId) ?? product.sizes[0];
   const hasCustomizations = product.customizations.length > 0;
   const unavailable = Boolean(product.isTemporarilyUnavailable) || !orderingOpen;
+  // The same list the Customize screen shows, so the two can never disagree.
+  const ingredients = product.customizations
+    .map((c) => c.ingredient)
+    .join(", ");
 
   function handleQuickAdd() {
     addItem({
@@ -90,9 +94,20 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
           ) : null}
         </div>
 
-        <p className="text-sm text-muted-foreground leading-relaxed line-clamp-2 flex-1">
-          {product.description}
-        </p>
+        {/* What's actually on it, in full, before the customer has to open
+            anything. It used to be the description clamped to two lines — and for
+            a pizza the description IS the ingredient list, so the menu was
+            truncating the one thing people choose a pizza by. Drinks and the like
+            carry no ingredients, so they keep their description. */}
+        {ingredients ? (
+          <p className="text-sm text-muted-foreground leading-relaxed flex-1">
+            {ingredients}
+          </p>
+        ) : (
+          <p className="text-sm text-muted-foreground leading-relaxed flex-1">
+            {product.description}
+          </p>
+        )}
 
         {product.sizes.length > 1 ? (
           <div>
