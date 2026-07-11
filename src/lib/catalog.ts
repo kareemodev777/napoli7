@@ -125,21 +125,20 @@ function mapCategory(row: CategoryRow): Category {
   };
 }
 
+/**
+ * A product always offers at least one size. A product with no size rows is sold
+ * at its own price as a single "Regular".
+ *
+ * Focaccia used to be special-cased here: every size but the first was DISCARDED
+ * and the survivor relabelled "One size". That was true once — the focaccias were
+ * regular-only — but it is not a fact about focaccia, it is a fact about the rows
+ * that happened to exist, and it silently deleted the small focaccia the moment
+ * one was added. Sizes come from the catalogue now, for every category alike.
+ */
 export function normalizeProductSizes(
-  categoryId: string,
   sizes: ProductSize[],
   fallbackPrice: number,
 ): ProductSize[] {
-  if (categoryId === "focaccia" && sizes.length > 0) {
-    return [
-      {
-        ...sizes[0],
-        label: "One size",
-        detail: "",
-      },
-    ];
-  }
-
   if (sizes.length > 0) return sizes;
 
   return [
@@ -163,11 +162,7 @@ function mapProduct(row: ProductRow): Product {
       price: Number(size.price_aed),
     }));
 
-  const normalizedSizes = normalizeProductSizes(
-    row.category_id,
-    sizes,
-    Number(row.price_aed),
-  );
+  const normalizedSizes = normalizeProductSizes(sizes, Number(row.price_aed));
 
   const customizations: ProductCustomization[] = (
     row.product_customizations ?? []

@@ -2,28 +2,29 @@ import { expect, test } from "bun:test";
 import type { ProductSize } from "@/data/types/catalog";
 import { normalizeProductSizes } from "./catalog";
 
-test("normalizeProductSizes collapses focaccia sizes to one visible option", () => {
+// This used to collapse focaccia to a single "One size" option, discarding every
+// size but the first — which is exactly how the small focaccia vanished from the
+// menu. Sizes are the catalogue's business; no category is special.
+test("normalizeProductSizes keeps every size a focaccia offers", () => {
   const sizes: ProductSize[] = [
-    { id: "medium", label: "MEDIUM 30 CM", detail: "", price: 48 },
-    { id: "small", label: "SMALL 24 CM", detail: "", price: 45 },
+    { id: "regular", label: "Regular", detail: "", price: 48 },
+    { id: "small", label: "Small", detail: "", price: 35 },
   ];
 
-  expect(normalizeProductSizes("focaccia", sizes, 48)).toEqual([
-    { id: "medium", label: "One size", detail: "", price: 48 },
-  ]);
+  expect(normalizeProductSizes(sizes, 48)).toEqual(sizes);
 });
 
-test("normalizeProductSizes keeps non-focaccia sizes unchanged", () => {
+test("normalizeProductSizes keeps pizza sizes unchanged", () => {
   const sizes: ProductSize[] = [
     { id: "medium", label: "MEDIUM 30 CM", detail: "", price: 28 },
     { id: "small", label: "SMALL 24 CM", detail: "", price: 22 },
   ];
 
-  expect(normalizeProductSizes("pizza", sizes, 28)).toEqual(sizes);
+  expect(normalizeProductSizes(sizes, 28)).toEqual(sizes);
 });
 
 test("normalizeProductSizes falls back to a regular size when no sizes exist", () => {
-  expect(normalizeProductSizes("pizza", [], 28)).toEqual([
+  expect(normalizeProductSizes([], 28)).toEqual([
     { id: "regular", label: "Regular", detail: "", price: 28 },
   ]);
 });
