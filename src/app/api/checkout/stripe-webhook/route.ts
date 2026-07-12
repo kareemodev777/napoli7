@@ -70,7 +70,7 @@ export async function POST(req: Request) {
           .eq("payment_method", "card")
           .in("payment_status", ["pending", "failed"])
           .neq("status", "cancelled")
-          .select("id, promo_code");
+          .select("id, promo_codes");
 
         if (updateError) {
           console.error(
@@ -91,11 +91,11 @@ export async function POST(req: Request) {
           // brief POS outage (POS retry is handled internally + via pos_push_log).
           await pushOrderToPos(orderId);
 
-          // Redeem the promo now that the card payment is confirmed. Guarded by
-          // the pending -> paid transition above, so Stripe retries never
-          // double-count it.
-          const promoCode = transitioned[0]?.promo_code;
-          if (promoCode) {
+          // Redeem EVERY code now that the card payment is confirmed — an order
+          // can carry several. Guarded by the pending -> paid transition above,
+          // so Stripe retries never double-count them.
+          const promoCodes: string[] = transitioned[0]?.promo_codes ?? [];
+          for (const promoCode of promoCodes) {
             try {
               await redeemPromo(promoCode);
             } catch (e) {

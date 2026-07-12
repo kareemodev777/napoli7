@@ -44,6 +44,7 @@ type OrderItemRow = {
 
 type ProductRow = {
   id: string;
+  category_id: string;
   slug: string;
   name: string;
   name_it: string | null;
@@ -86,6 +87,7 @@ function toReorderItem(
     changed: !exactSize,
     item: {
       productId: item.product_id,
+      categoryId: product.category_id,
       slug: product.slug,
       name: product.name,
       nameIt: product.name_it,
@@ -123,7 +125,7 @@ async function loadOrders(userId: string): Promise<OrderRow[]> {
     ? await supabase
         .from("products")
         .select(
-          "id, slug, name, name_it, image_url, price_aed, is_active, product_sizes(size_id, label, detail, price_aed)",
+          "id, category_id, slug, name, name_it, image_url, price_aed, is_active, product_sizes(size_id, label, detail, price_aed)",
         )
         .in("id", productIds)
     : { data: [] };

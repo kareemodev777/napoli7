@@ -170,6 +170,7 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
   function handleAdd() {
     addItem({
       productId: product.id,
+      categoryId: product.categoryId,
       slug: product.slug,
       name: product.name,
       nameIt: product.nameIt,

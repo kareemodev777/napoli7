@@ -15,7 +15,7 @@ export function ReorderButton({
   disabled?: boolean;
 }) {
   const addItem = useCart((state) => state.addItem);
-  const clearPromo = useCart((state) => state.clearPromo);
+  const clearPromos = useCart((state) => state.clearPromos);
   const router = useRouter();
 
   return (
@@ -23,7 +23,7 @@ export function ReorderButton({
       type="button"
       disabled={disabled || items.length === 0}
       onClick={() => {
-        clearPromo();
+        clearPromos();
         items.forEach((item) => addItem(item));
         if (changedCount > 0 || unavailableCount > 0) {
           window.alert(

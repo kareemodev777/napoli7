@@ -13,9 +13,9 @@ import {
 } from "@/lib/delivery-settings";
 import {
   canonicalizeCheckoutCart,
-  isRewardPickupOnly,
   type CanonicalOrderItem,
 } from "@/lib/checkout-pricing";
+import { isRewardPickupOnly } from "@/lib/reward-promo";
 import { checkDeliverability, deliverabilityMessage } from "@/lib/delivery-map";
 import { placeholderEmailForPhone } from "@/lib/auth/placeholder-email";
 import { planAddressSave, type AddressLike } from "@/lib/saved-address";
@@ -77,7 +77,8 @@ const placeOrderSchema = z.object({
   orderNotes: z.string().max(500).optional(),
   pizzaCut: z.boolean().optional(),
   paymentMethod: z.enum(["card", "cod"]),
-  promoCode: z.string().max(40).optional(),
+  // Several codes may be spent on one order (friends pooling free-pizza rewards).
+  promoCodes: z.array(z.string().max(40)).max(10).optional(),
   items: z.array(itemSchema).min(1),
 });
 
@@ -139,6 +140,9 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     sizeLabel: item.sizeId,
   }));
   let subtotal = canonicalItems.reduce((s, i) => s + i.lineTotalAed, 0);
+  // Category per product, read from the catalogue. The reward rule turns on it
+  // (a drink is not an upgrade), so it must never come from the client.
+  let categoryByProduct = new Map<string, string>();
 
   if (HAS_SUPABASE) {
     const productIds = [...new Set(data.items.map((item) => item.productId))];
@@ -146,7 +150,7 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     const { data: products, error: productError } = await supabase
       .from("products")
       .select(
-        "id, name, price_aed, is_active, product_sizes(size_id, label, price_aed), product_customizations(ingredient, extra_price, removable)",
+        "id, category_id, name, price_aed, is_active, product_sizes(size_id, label, price_aed), product_customizations(ingredient, extra_price, removable)",
       )
       .in("id", productIds);
 
@@ -157,6 +161,13 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
           "We could not validate the latest menu prices. Please refresh and try again.",
       };
     }
+
+    categoryByProduct = new Map(
+      (products as Array<{ id: string; category_id: string }>).map((p) => [
+        p.id,
+        p.category_id,
+      ]),
+    );
 
     const canonical = canonicalizeCheckoutCart(
       data.items.map((item) => ({
@@ -203,41 +214,31 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     subtotal = canonical.subtotalAed;
   }
 
-  // Re-validate the promo server-side — never trust a client-sent amount, and
-  // gate personal reward (free-pizza) codes to the signed-in account that
-  // claimed them so a leaked code can't be redeemed by anyone else.
+  // Re-validate EVERY code server-side — never trust a client-sent amount. Each
+  // code is worth its face value once, so duplicates are collapsed before they are
+  // priced: sending the same code three times must not treble the discount.
   let discount = 0;
-  let appliedPromo: string | undefined;
-  let appliedPromoIsReward = false;
-  if (data.promoCode) {
-    let promoIdentity:
-      { userId?: string | null; email?: string | null } | undefined;
-    if (HAS_SUPABASE) {
-      try {
-        const authClient = await createClient();
-        const {
-          data: { user: authUser },
-        } = await authClient.auth.getUser();
-        promoIdentity = {
-          userId: authUser?.id ?? null,
-          email: authUser?.email ?? null,
-        };
-      } catch {
-        // Treat as a guest if the session can't be read.
-      }
-    }
-    const promoResult = await validatePromo(
-      data.promoCode,
-      subtotal,
-      promoIdentity,
-    );
-    if (promoResult.code && promoResult.amount) {
-      discount = promoResult.amount;
-      appliedPromo = promoResult.code;
-      appliedPromoIsReward = Boolean(promoResult.isReward);
-    }
-    // An invalid/expired/unowned code at submit time is ignored (no discount).
+  const appliedPromos: string[] = [];
+  let rewardCount = 0;
+  const submittedCodes = [
+    ...new Set((data.promoCodes ?? []).map((c) => c.trim().toUpperCase())),
+  ].filter(Boolean);
+
+  for (const code of submittedCodes) {
+    const promoResult = await validatePromo(code, subtotal);
+    if (!promoResult.code || !promoResult.amount) continue;
+    // An invalid/expired code at submit time is ignored (no discount), as before.
+    appliedPromos.push(promoResult.code);
+    discount += promoResult.amount;
+    if (promoResult.isReward) rewardCount += 1;
   }
+
+  // Cap the total at the value of the goods. Stripe is sent the line items and
+  // asserts they less the discount equal the charge; a discount larger than the
+  // basket makes that sum negative and every card payment throws. Capping puts the
+  // items at zero and leaves the fees owed — which is the intent: the reward buys
+  // pizza, not delivery.
+  discount = Math.min(discount, subtotal);
 
   const deliveryMinSubtotalAed = await getDeliveryMinimumSubtotalAed();
 
@@ -246,13 +247,19 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   let deliveryFee = 0;
   let serviceFee = 0;
   if (data.deliveryType === "delivery" && data.deliveryAddress) {
-    // The signup free-pizza reward is pickup-only for the SINGLE free small
-    // pizza on its own. A second pizza, a larger quantity, or an upgrade to a
-    // non-small size makes it a normal delivery order and unlocks delivery.
-    if (isRewardPickupOnly(appliedPromoIsReward, data.items)) {
+    // A reward order only unlocks delivery once it carries food beyond the free
+    // pizzas the codes pay for — a second pizza, a focaccia, a dessert, anything
+    // we are being paid for. One upgrade is enough for the whole order however
+    // many codes are stacked on it. Drinks do not count: a can of cola alongside
+    // three free pizzas is not an order worth sending a driver out for.
+    const eligibilityItems = data.items.map((item) => ({
+      categoryId: categoryByProduct.get(item.productId) ?? "",
+      quantity: item.quantity,
+    }));
+    if (isRewardPickupOnly(eligibilityItems, rewardCount)) {
       return {
         error:
-          "Your free pizza is pickup-only on its own. Add anything else — another pizza or a drink — to unlock delivery, or switch to pickup.",
+          "Your free pizza is pickup-only on its own. Add a pizza, a focaccia or a dessert to unlock delivery — a drink doesn't count — or switch to pickup.",
       };
     }
     // The authoritative out-of-zone guard. The customer must drop a GPS pin, and
@@ -279,7 +286,11 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
         subtotalAed: subtotal,
         zoneFeeAed: zone.fee,
       }));
+    // The 13 AED delivery minimum does NOT apply to a reward order — the client
+    // was explicit. The upgrade rule above is what guards a reward delivery, and
+    // making a customer top up to 13 AED as well would gate the free pizza twice.
     if (
+      rewardCount === 0 &&
       !meetsDeliveryMinimumAed({
         subtotalAed: subtotal,
         deliveryFeeAed: deliveryFee,
@@ -331,7 +342,10 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
       pizza_cut: data.pizzaCut ?? false,
       payment_method: data.paymentMethod,
       payment_status: "pending",
-      promo_code: appliedPromo ?? null,
+      // promo_code keeps the first code so every existing reader (POS, admin,
+      // history) works unchanged; promo_codes is the truth.
+      promo_code: appliedPromos[0] ?? null,
+      promo_codes: appliedPromos,
       discount_aed: discount,
       subtotal_aed: subtotal,
       delivery_fee_aed: deliveryFee,
@@ -375,12 +389,14 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   // Redeem the promo right away. The order is already in the database, so the
   // voucher can be consumed whether the customer is paying by card or pickup
   // cash.
-  if (appliedPromo) {
+  // Redeem every code, not just the first. Each is single-use; one that cannot be
+  // consumed is logged rather than failing the order, which is already placed.
+  for (const code of appliedPromos) {
     try {
-      const redeemed = await redeemPromo(appliedPromo);
+      const redeemed = await redeemPromo(code);
       if (!redeemed) {
         console.warn(
-          `[placeOrder] Promo ${appliedPromo} could not be redeemed (exhausted/expired) on order ${order.order_number}`,
+          `[placeOrder] Promo ${code} could not be redeemed (exhausted/expired) on order ${order.order_number}`,
         );
       }
     } catch (e) {

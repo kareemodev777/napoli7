@@ -15,7 +15,7 @@ import {
 export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
   const subtotal = useCart((s) => s.subtotal());
   const itemCount = useCart((s) => s.totalQuantity());
-  const promo = useCart((s) => s.promo);
+  const promos = useCart((s) => s.promos);
   const discount = useCart((s) => s.discount());
   const total = useCart((s) => s.total());
 
@@ -36,8 +36,14 @@ export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
         >
           {formatAed(subtotal)}
         </Row>
-        {promo ? (
-          <Row label={`Discount · ${promo.code}`}>
+        {promos.length > 0 ? (
+          <Row
+            label={
+              promos.length === 1
+                ? `Discount · ${promos[0].code}`
+                : `Discount · ${promos.length} codes`
+            }
+          >
             <span>−{formatAed(discount)}</span>
           </Row>
         ) : null}

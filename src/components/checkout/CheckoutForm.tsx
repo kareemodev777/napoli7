@@ -8,7 +8,7 @@ import {
   chooseCheckoutArea,
   type CheckoutInitialDetails,
 } from "@/lib/checkout-prefill";
-import { isRewardPickupOnly } from "@/lib/checkout-pricing";
+import { isRewardPickupOnly } from "@/lib/reward-promo";
 import {
   buildDeliveryMapQuery,
   checkDeliverability,
@@ -126,7 +126,7 @@ export function CheckoutForm({
   const searchParams = useSearchParams();
   const items = useCart((s) => s.items);
   const subtotal = useCart((s) => s.subtotal());
-  const promo = useCart((s) => s.promo);
+  const promos = useCart((s) => s.promos);
   const discount = useCart((s) => s.discount());
   const clearCart = useCart((s) => s.clear);
 
@@ -279,10 +279,15 @@ export function CheckoutForm({
         : "",
     [area, deliveryType, flat, street],
   );
-  // Delivery orders require the item subtotal to clear the minimum (the delivery
-  // fee is NOT counted toward it); pickup has no minimum.
+  const rewardCount = promos.filter((p) => p.isReward).length;
+  // Delivery orders require the item subtotal to clear the minimum (the fees are
+  // NOT counted toward it); pickup has no minimum. A reward order is exempt — the
+  // client was explicit that the 13 AED minimum does not apply to the promotion.
+  // The upgrade rule below is what guards a reward delivery instead; requiring the
+  // minimum as well would gate the free pizza twice. Mirrors the server.
   const meetsDeliveryMin =
     deliveryType !== "delivery" ||
+    rewardCount > 0 ||
     meetsDeliveryMinimumAed({
       subtotalAed: subtotal,
       deliveryFeeAed: deliveryFee,
@@ -305,10 +310,10 @@ export function CheckoutForm({
         : deliverability.reason === "outside-ajman"
           ? "Pin is outside Ajman — we deliver in Ajman only"
           : `Pin is outside our ${DELIVERY_RADIUS_KM} km delivery range`;
-  // The signup free-pizza reward is pickup-only for the SINGLE free small pizza
-  // on its own; a second pizza, a larger quantity, or an upgrade to a non-small
-  // size unlocks a normal delivery order. Shared with the server guard.
-  const rewardPickupOnly = isRewardPickupOnly(Boolean(promo?.isReward), items);
+  // A reward order unlocks delivery only once it carries food beyond the free
+  // pizzas the codes pay for. Drinks don't count. One upgrade is enough for the
+  // whole order, however many codes are stacked. The server re-runs this.
+  const rewardPickupOnly = isRewardPickupOnly(items, rewardCount);
   const deliveryAllowed = deliveryType !== "delivery" || !rewardPickupOnly;
   const canSubmit =
     areaSupported && meetsDeliveryMin && pinAccepted && deliveryAllowed;
@@ -351,7 +356,7 @@ export function CheckoutForm({
     }
     if (deliveryType === "delivery" && rewardPickupOnly) {
       setError(
-        "Your free pizza is pickup-only on its own. Add anything else — another pizza or a drink — to unlock delivery, or switch to pickup.",
+        "Your free pizza is pickup-only on its own. Add a pizza, a focaccia or a dessert to unlock delivery — a drink doesn't count — or switch to pickup.",
       );
       return;
     }
@@ -388,7 +393,7 @@ export function CheckoutForm({
       orderNotes: String(formData.get("orderNotes") ?? "") || undefined,
       pizzaCut,
       paymentMethod: effectivePaymentMethod,
-      promoCode: promo?.code,
+      promoCodes: promos.map((p) => p.code),
       items: items.map((it) => ({
         productId: it.productId,
         productName: it.name,
@@ -797,8 +802,16 @@ export function CheckoutForm({
         </ul>
         <dl className="mt-4 space-y-2 text-sm">
           <Row label="Subtotal">{formatAed(subtotal)}</Row>
-          {promo ? (
-            <Row label={`Discount · ${promo.code}`}>−{formatAed(discount)}</Row>
+          {promos.length > 0 ? (
+            <Row
+              label={
+                promos.length === 1
+                  ? `Discount · ${promos[0].code}`
+                  : `Discount · ${promos.length} codes`
+              }
+            >
+              −{formatAed(discount)}
+            </Row>
           ) : null}
           <Row label="Delivery fee">
             {deliveryType !== "delivery" ? (
@@ -831,8 +844,9 @@ export function CheckoutForm({
         ) : null}
         {deliveryType === "delivery" && rewardPickupOnly ? (
           <p className="mt-3 text-xs text-flag-red">
-            Your free pizza is pickup-only on its own. Add anything else —
-            another pizza or a drink — to unlock delivery, or switch to pickup.
+            Your free pizza is pickup-only on its own. Add a pizza, a focaccia
+            or a dessert to unlock delivery — a drink doesn&apos;t count — or
+            switch to pickup.
           </p>
         ) : null}
         <div className="mt-4">

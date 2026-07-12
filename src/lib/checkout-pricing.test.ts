@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
   canonicalizeCheckoutCart,
-  isRewardPickupOnly,
   type CatalogProductForCheckout,
 } from "./checkout-pricing";
 
@@ -84,35 +83,3 @@ describe("canonicalizeCheckoutCart", () => {
   });
 });
 
-describe("isRewardPickupOnly — free-pizza delivery gate", () => {
-  const small = (quantity: number) => ({ sizeId: "small" as const, quantity });
-  const regular = (quantity: number) => ({
-    sizeId: "regular" as const,
-    quantity,
-  });
-
-  test("no reward applied -> never pickup-only", () => {
-    expect(isRewardPickupOnly(false, [small(1)])).toBe(false);
-    expect(isRewardPickupOnly(false, [])).toBe(false);
-  });
-
-  test("the single free small pizza on its own is pickup-only", () => {
-    expect(isRewardPickupOnly(true, [small(1)])).toBe(true);
-  });
-
-  test("a second small pizza unlocks delivery", () => {
-    // two separate small lines
-    expect(isRewardPickupOnly(true, [small(1), small(1)])).toBe(false);
-    // or one small line with quantity 2
-    expect(isRewardPickupOnly(true, [small(2)])).toBe(false);
-  });
-
-  test("an upgrade to a non-small size unlocks delivery", () => {
-    expect(isRewardPickupOnly(true, [regular(1)])).toBe(false);
-    expect(isRewardPickupOnly(true, [small(1), regular(1)])).toBe(false);
-  });
-
-  test("empty cart is not pickup-only", () => {
-    expect(isRewardPickupOnly(true, [])).toBe(false);
-  });
-});

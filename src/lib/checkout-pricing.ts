@@ -48,24 +48,6 @@ export type CanonicalCartResult =
   | { ok: true; items: CanonicalOrderItem[]; subtotalAed: number }
   | { ok: false; error: string };
 
-/**
- * The signup free-pizza reward is pickup-only for the SINGLE free small pizza on
- * its own. As soon as the order grows past that one pizza — a second pizza, a
- * larger quantity, or an upgrade to a non-small size — it becomes a normal
- * delivery order (12 AED fee, 13 AED minimum) and delivery unlocks again.
- *
- * Shared by the client checkout guard and the authoritative server guard so the
- * two can never drift.
- */
-export function isRewardPickupOnly(
-  isReward: boolean,
-  items: Array<{ sizeId: CheckoutSizeId; quantity: number }>,
-): boolean {
-  if (!isReward) return false;
-  const units = items.reduce((n, it) => n + it.quantity, 0);
-  return units === 1 && items.every((it) => it.sizeId === "small");
-}
-
 function money(value: number): number {
   return Math.round(value * 100) / 100;
 }

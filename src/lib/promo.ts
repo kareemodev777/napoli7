@@ -139,56 +139,38 @@ export interface PromoIdentity {
 }
 
 /**
- * Personal reward codes (the auto-generated signup free-pizza codes) are bound
- * to the account that claimed them — recorded in free_pizza_claims. They must NOT be
- * redeemable by anyone who merely has the string. Returns an error PromoResult
- * when the code is personal and the identity doesn't own it; null otherwise
- * (general codes, or owned personal codes).
+ * Validate a code against a subtotal. Shared by the cart action and placeOrder.
+ *
+ * A reward code is NOT bound to the account redeeming it. It used to be: a code
+ * could only be spent by the customer who earned it, and anyone else was turned
+ * away. That makes the whole point of the offer impossible — the client wants
+ * three friends to be able to pool their codes onto one basket, paid for from one
+ * account, and a code "remains linked to the customer who earned it but can be
+ * redeemed in any order, even if the order is placed using another customer's
+ * account".
+ *
+ * What stops a leaked code being farmed is not who is holding it: it is that each
+ * code is redeemable exactly once (max_uses = 1, enforced in redeemPromo), and
+ * that codes are only minted one per registered mobile. Ownership was never the
+ * thing doing the work.
+ *
+ * `identity` is still accepted so callers need not change, and so the ownership
+ * rule can be reinstated for some future non-transferable code without another
+ * signature change.
  */
-async function checkPromoOwnership(
-  code: string,
-  identity: PromoIdentity | undefined,
-): Promise<PromoResult | null> {
-  if (!HAS_SUPABASE_SERVICE) return null; // mock/dev: no claims table
-
-  const supabase = createServiceRoleClient();
-  const { data: claim } = await supabase
-    .from("free_pizza_claims")
-    .select("user_id, email_norm")
-    .eq("code", code)
-    .maybeSingle();
-
-  // Not a personal reward code → a general promo anyone may use.
-  if (!claim) return null;
-
-  const userId = identity?.userId ?? null;
-  const email = (identity?.email ?? "").trim().toLowerCase();
-  const owns =
-    (!!userId && !!claim.user_id && userId === claim.user_id) ||
-    (!!email && !!claim.email_norm && email === claim.email_norm);
-
-  if (owns) return null;
-  return {
-    error:
-      "This reward code belongs to a specific account. Sign in to that account to use it.",
-  };
-}
-
-/** Validate a code against a subtotal. Shared by the cart action and placeOrder. */
 export async function validatePromo(
   code: string,
   subtotal: number,
-  identity?: PromoIdentity,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- kept so callers
+  // need not change, and so a future non-transferable code can reinstate the
+  // ownership rule without another signature change.
+  _identity?: PromoIdentity,
 ): Promise<PromoResult> {
   const normalized = normalizeCode(code);
   if (!normalized) return { error: "Enter a promo code." };
 
   const row = await lookupPromo(normalized);
   if (!row) return { error: "That promo code isn't valid." };
-
-  // Personal reward codes may only be used by the account that claimed them.
-  const ownership = await checkPromoOwnership(normalized, identity);
-  if (ownership) return ownership;
 
   const result = computeDiscount(row, subtotal);
   if (result.code) result.isReward = row.auto_generated;
@@ -223,6 +205,8 @@ export async function restorePromoForCancelledOrder(
   if (!HAS_SUPABASE_SERVICE) return false;
 
   const supabase = createServiceRoleClient();
+  // The RPC is the exactly-once latch: it hands the code back only on the FIRST
+  // call and marks the order restored, so a double-cancel can't credit twice.
   const { data: code, error } = await supabase.rpc("claim_promo_restore", {
     p_order_id: orderId,
   });
@@ -232,18 +216,36 @@ export async function restorePromoForCancelledOrder(
   }
   if (!code) return false; // nothing redeemed, or already restored
 
-  const { error: restoreError } = await supabase.rpc("restore_promo_code", {
-    p_code: code,
-  });
-  if (restoreError) {
-    // The claim already marked the order restored; log loudly for reconciliation.
-    console.error(
-      `[promo] counter decrement failed for ${code} on order ${orderId}`,
-      restoreError,
-    );
-    return false;
+  // The latch returns one code, but an order can carry several — three friends
+  // pooling their rewards. Give ALL of them back, or a cancelled order silently
+  // burns the codes of everyone but the first.
+  const { data: orderRow } = await supabase
+    .from("orders")
+    .select("promo_codes")
+    .eq("id", orderId)
+    .maybeSingle();
+
+  const codes: string[] =
+    (orderRow?.promo_codes as string[] | null)?.length
+      ? (orderRow!.promo_codes as string[])
+      : [code as string];
+
+  let allRestored = true;
+  for (const promoCode of codes) {
+    const { error: restoreError } = await supabase.rpc("restore_promo_code", {
+      p_code: promoCode,
+    });
+    if (restoreError) {
+      // The latch already marked the order restored, so this cannot be retried
+      // by re-cancelling. Log loudly for manual reconciliation.
+      console.error(
+        `[promo] counter decrement failed for ${promoCode} on order ${orderId}`,
+        restoreError,
+      );
+      allRestored = false;
+    }
   }
-  return true;
+  return allRestored;
 }
 
 /**
