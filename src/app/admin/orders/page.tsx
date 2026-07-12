@@ -70,14 +70,24 @@ export default async function AdminOrdersPage() {
     <section className="px-6 md:px-10 py-12">
       <OrdersAutoRefresh />
       <div className="max-w-[1400px] mx-auto">
-        <h1 className="font-display text-3xl md:text-4xl uppercase tracking-[1.5px] leading-tight">
-          Live orders
-        </h1>
-        <p className="mt-3 text-sm text-muted-foreground">
-          {orders.length === 0
-            ? "No orders yet."
-            : `${orders.length} orders, newest first.`}
-        </p>
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h1 className="font-display text-3xl md:text-4xl uppercase tracking-[1.5px] leading-tight">
+              Live orders
+            </h1>
+            <p className="mt-3 text-sm text-muted-foreground">
+              {orders.length === 0
+                ? "No orders yet."
+                : `${orders.length} orders, newest first.`}
+            </p>
+          </div>
+          <Link
+            href="/admin/orders/new"
+            className="inline-flex items-center bg-brand text-primary-foreground px-5 py-3 font-display text-[11px] tracking-[0.2em] uppercase hover:bg-brand-hover"
+          >
+            + Phone order
+          </Link>
+        </div>
 
         <div className="mt-10 overflow-x-auto">
           <table className="w-full text-sm border-t border-border">
