@@ -16,38 +16,53 @@ export const REWARD_DISCOUNT_AED = 19;
 /** The only category that is not food. Drinks never unlock delivery. */
 const DRINK_CATEGORY = "drinks";
 
+/**
+ * A cent of tolerance. AED prices carry 2dp and summing them introduces float
+ * noise, so we compare with a hair of slack: a basket worth exactly the reward
+ * (one free small pizza and nothing else) must stay pickup-only, while a real
+ * extra — even a single fils of paid food — clears the bar.
+ */
+const UPGRADE_EPSILON_AED = 0.001;
+
 export interface RewardEligibilityItem {
   /** The product's catalogue category — resolved server-side, never trusted from the client. */
   categoryId: string;
-  quantity: number;
+  /** This line's total in AED — resolved server-side, never trusted from the client. */
+  lineTotalAed: number;
 }
 
-/** Units of actual food in the order. A drink is not an upgrade, however many. */
-export function countFoodUnits(items: RewardEligibilityItem[]): number {
+/** The AED value of actual food in the order. A drink is never food, at any price. */
+export function foodSubtotalAed(items: RewardEligibilityItem[]): number {
   return items
     .filter((item) => item.categoryId !== DRINK_CATEGORY)
-    .reduce((n, item) => n + item.quantity, 0);
+    .reduce((sum, item) => sum + item.lineTotalAed, 0);
 }
 
 /**
  * Whether a reward order carries an eligible upgrade — the thing that unlocks
  * delivery.
  *
- * `rewardCount` codes pay for `rewardCount` free pizzas, so an upgrade is any food
- * beyond those: a second small pizza, a medium one, a focaccia, a dessert, another
- * pizza of any kind. Anything we are being paid for. One upgrade is enough for the
- * whole order however many codes are stacked on it — the client was explicit that
- * three codes plus one dessert may be delivered.
+ * The codes pay for `rewardCount` free pizzas whose combined value is
+ * `rewardDiscountAed` (each code is worth the chosen pizza's price at claim time —
+ * a flat discount, not a fixed 19 AED). An upgrade is any food value BEYOND that:
+ * a bigger pizza (the free Small swapped for a Large is worth more than the Small
+ * it discounts), a second pizza, a focaccia, a dessert — anything we are being paid
+ * for. One upgrade is enough for the whole order however many codes are stacked on
+ * it: the client was explicit that three codes plus one dessert may be delivered.
+ *
+ * Comparing value (not a count of items) is what lets a size upgrade unlock
+ * delivery — swapping the free Small for a Large adds no item, but it adds money.
  *
  * Drinks are excluded deliberately: a can of cola alongside three free pizzas is
- * not an order worth sending a driver out for.
+ * not an order worth sending a driver out for, so it carries no food value here.
  */
 export function hasEligibleUpgrade(
   items: RewardEligibilityItem[],
   rewardCount: number,
+  rewardDiscountAed: number,
 ): boolean {
   if (rewardCount <= 0) return true; // Not a reward order; the rule doesn't apply.
-  return countFoodUnits(items) > rewardCount;
+  return foodSubtotalAed(items) > rewardDiscountAed + UPGRADE_EPSILON_AED;
 }
 
 /**
@@ -61,8 +76,12 @@ export function hasEligibleUpgrade(
 export function isRewardPickupOnly(
   items: RewardEligibilityItem[],
   rewardCount: number,
+  rewardDiscountAed: number,
 ): boolean {
-  return rewardCount > 0 && !hasEligibleUpgrade(items, rewardCount);
+  return (
+    rewardCount > 0 &&
+    !hasEligibleUpgrade(items, rewardCount, rewardDiscountAed)
+  );
 }
 
 /**

@@ -220,6 +220,11 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   let discount = 0;
   const appliedPromos: string[] = [];
   let rewardCount = 0;
+  // The combined value of the free pizzas the reward codes pay for — each code is
+  // worth its chosen pizza's price, so this is the bar the order's food must clear
+  // to unlock delivery. Kept separate from `discount`, which also folds in any
+  // ordinary (non-reward) codes.
+  let rewardDiscount = 0;
   const submittedCodes = [
     ...new Set((data.promoCodes ?? []).map((c) => c.trim().toUpperCase())),
   ].filter(Boolean);
@@ -230,7 +235,10 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     // An invalid/expired code at submit time is ignored (no discount), as before.
     appliedPromos.push(promoResult.code);
     discount += promoResult.amount;
-    if (promoResult.isReward) rewardCount += 1;
+    if (promoResult.isReward) {
+      rewardCount += 1;
+      rewardDiscount += promoResult.amount;
+    }
   }
 
   // Cap the total at the value of the goods. Stripe is sent the line items and
@@ -247,19 +255,21 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   let deliveryFee = 0;
   let serviceFee = 0;
   if (data.deliveryType === "delivery" && data.deliveryAddress) {
-    // A reward order only unlocks delivery once it carries food beyond the free
-    // pizzas the codes pay for — a second pizza, a focaccia, a dessert, anything
-    // we are being paid for. One upgrade is enough for the whole order however
-    // many codes are stacked on it. Drinks do not count: a can of cola alongside
-    // three free pizzas is not an order worth sending a driver out for.
-    const eligibilityItems = data.items.map((item) => ({
+    // A reward order only unlocks delivery once it carries food value beyond the
+    // free pizzas the codes pay for — upgrading the free Small to a bigger pizza,
+    // adding a second pizza, a focaccia, a dessert: anything we are being paid for.
+    // One upgrade is enough for the whole order however many codes are stacked on
+    // it. Drinks do not count: a can of cola alongside three free pizzas is not an
+    // order worth sending a driver out for. Line values come from the catalogue
+    // (canonicalItems), never from the client.
+    const eligibilityItems = canonicalItems.map((item) => ({
       categoryId: categoryByProduct.get(item.productId) ?? "",
-      quantity: item.quantity,
+      lineTotalAed: item.lineTotalAed,
     }));
-    if (isRewardPickupOnly(eligibilityItems, rewardCount)) {
+    if (isRewardPickupOnly(eligibilityItems, rewardCount, rewardDiscount)) {
       return {
         error:
-          "Your free pizza is pickup-only on its own. Add a pizza, a focaccia or a dessert to unlock delivery — a drink doesn't count — or switch to pickup.",
+          "Your free pizza is pickup-only on its own. Upgrade it to a bigger pizza, or add another pizza, a focaccia or a dessert to unlock delivery — a drink doesn't count — or switch to pickup.",
       };
     }
     // The authoritative out-of-zone guard. The customer must drop a GPS pin, and
