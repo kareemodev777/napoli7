@@ -31,42 +31,84 @@ export default function DealsPage() {
         <div className="max-w-[1140px] mx-auto grid lg:grid-cols-[2fr_1fr] gap-10 items-start">
           <article className="border border-border bg-card p-8 md:p-12">
             <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep mb-4">
-              Welcome offer
+              {WELCOME_OFFER.eyebrow}
             </p>
             <h2 className="font-display text-3xl md:text-4xl uppercase tracking-[1.5px] leading-tight">
               {WELCOME_OFFER.title}
             </h2>
             <p className="mt-6 text-lg text-muted-foreground max-w-[60ch] leading-relaxed">
-              {WELCOME_OFFER.description}
+              {WELCOME_OFFER.intro}
             </p>
-            <div className="mt-6 flex items-start gap-3 text-base text-muted-foreground max-w-[60ch]">
-              <Truck
-                className="h-5 w-5 mt-0.5 text-azure-deep shrink-0"
-                strokeWidth={1.5}
-                aria-hidden
-              />
-              <p>
-                If you upgrade to another pizza, delivery is available.{" "}
-                <Link
-                  href="/delivery"
-                  className="text-azure-deep underline underline-offset-4 hover:text-brand"
-                >
-                  We deliver!
-                </Link>
+
+            <section className="mt-10">
+              <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep mb-3">
+                {WELCOME_OFFER.pickup.heading}
               </p>
-            </div>
-            <ul className="mt-8 space-y-3">
-              {WELCOME_OFFER.conditions.map((c) => (
-                <li key={c} className="flex items-start gap-3 text-sm">
-                  <Check
-                    className="h-4 w-4 mt-0.5 text-brand shrink-0"
-                    strokeWidth={1.5}
-                    aria-hidden
-                  />
-                  <span>{c}</span>
-                </li>
-              ))}
-            </ul>
+              <p className="flex items-start gap-3 text-base">
+                <span aria-hidden>🍕</span>
+                <span>{WELCOME_OFFER.pickup.item}</span>
+              </p>
+            </section>
+
+            <section className="mt-10">
+              <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep mb-3">
+                {WELCOME_OFFER.delivery.heading}
+              </p>
+              <div className="flex items-start gap-3 text-base text-muted-foreground max-w-[60ch]">
+                <Truck
+                  className="h-5 w-5 mt-0.5 text-azure-deep shrink-0"
+                  strokeWidth={1.5}
+                  aria-hidden
+                />
+                <div>
+                  <p>{WELCOME_OFFER.delivery.intro}</p>
+                  <ul className="mt-3 space-y-2">
+                    {WELCOME_OFFER.delivery.upgrades.map((u) => (
+                      <li key={u} className="flex items-start gap-3 text-sm">
+                        <Check
+                          className="h-4 w-4 mt-0.5 text-brand shrink-0"
+                          strokeWidth={1.5}
+                          aria-hidden
+                        />
+                        <span>{u}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <p className="mt-3 text-sm">{WELCOME_OFFER.delivery.note}</p>
+                </div>
+              </div>
+            </section>
+
+            <section className="mt-10">
+              <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep mb-3">
+                {WELCOME_OFFER.orderTogether.heading}
+              </p>
+              <p className="text-base text-muted-foreground max-w-[60ch]">
+                {WELCOME_OFFER.orderTogether.intro}
+              </p>
+              <ul className="mt-4 space-y-3">
+                {WELCOME_OFFER.orderTogether.points.map((p) => (
+                  <li key={p} className="flex items-start gap-3 text-sm">
+                    <Check
+                      className="h-4 w-4 mt-0.5 text-brand shrink-0"
+                      strokeWidth={1.5}
+                      aria-hidden
+                    />
+                    <span>{p}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            <section className="mt-10 border-t border-border pt-6">
+              <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep mb-3">
+                ⏳ {WELCOME_OFFER.limited.heading}
+              </p>
+              <p className="text-sm text-muted-foreground max-w-[60ch]">
+                {WELCOME_OFFER.limited.text}
+              </p>
+            </section>
+
             <Link
               href={WELCOME_OFFER.cta.href}
               className="mt-10 inline-flex items-center bg-brand text-primary-foreground px-8 py-4 font-display text-sm tracking-[0.2em] uppercase hover:bg-brand-hover"

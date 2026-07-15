@@ -1,11 +1,9 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { Header } from "@/components/site/Header";
+import { SiteShell } from "@/components/site/SiteShell";
 import { Hero } from "@/components/site/Hero";
 import { HomeStory } from "@/components/site/HomeStory";
 import { LocationBanner } from "@/components/site/LocationBanner";
-import { Footer } from "@/components/site/Footer";
-import { MobileBottomBar } from "@/components/site/MobileBottomBar";
 import { CookieBar } from "@/components/site/CookieBar";
 import { LocalBusinessJsonLd } from "@/components/structured-data/LocalBusiness";
 import { getSiteImages } from "@/lib/site-images";
@@ -28,14 +26,11 @@ export default async function HomePage({
   return (
     <>
       <LocalBusinessJsonLd />
-      <Header />
-      <main id="main" className="flex-1 bg-background text-foreground">
+      <SiteShell>
         <Hero image={images.home_hero} />
         <HomeStory images={images} />
         <LocationBanner />
-      </main>
-      <Footer />
-      <MobileBottomBar />
+      </SiteShell>
       <CookieBar />
     </>
   );

@@ -6,18 +6,59 @@ export interface Deal {
   cta: { label: string; href: string };
 }
 
-export const WELCOME_OFFER: Deal = {
+export interface WelcomeOffer {
+  slug: string;
+  eyebrow: string;
+  title: string;
+  intro: string;
+  pickup: { heading: string; item: string };
+  delivery: {
+    heading: string;
+    intro: string;
+    upgrades: string[];
+    note: string;
+  };
+  orderTogether: {
+    heading: string;
+    intro: string;
+    points: string[];
+  };
+  limited: { heading: string; text: string };
+  cta: { label: string; href: string };
+}
+
+export const WELCOME_OFFER: WelcomeOffer = {
   slug: "first-pizza-on-us",
+  eyebrow: "Welcome offer",
   title: "Your first small Margherita is on us",
-  description:
-    "Sign up at Napoli 7 and your first small Margherita is complimentary — for pickup. Prefer another pizza? The 19 AED comes off any small pizza, you just pay the difference (still pickup). Size up to a larger pizza and delivery unlocks too.",
-  conditions: [
-    "Free small Margherita, for pickup.",
-    "The 19 AED applies to any small pizza — just pay the difference.",
-    "Size up to a larger pizza to unlock delivery.",
-    "One per person, via napoli7.com signup.",
-    "Available for the first 1,000 who sign up ONLY!",
-  ],
+  intro: "Create your Napoli 7 account and receive a 19 AED promo code.",
+  pickup: {
+    heading: "Pickup",
+    item: "Free Small Margherita",
+  },
+  delivery: {
+    heading: "Delivery",
+    intro: "Delivery is available with any food upgrade:",
+    upgrades: [
+      "Upgrade your free Small Margherita to a Medium",
+      "Any other pizza",
+      "Focaccia",
+      "Dessert",
+    ],
+    note: "Drinks do not qualify.",
+  },
+  orderTogether: {
+    heading: "Order together",
+    intro: "Use multiple promo codes in one order.",
+    points: [
+      "One food upgrade unlocks delivery for the whole order",
+      "Only one delivery fee and one service fee per order",
+    ],
+  },
+  limited: {
+    heading: "Limited offer",
+    text: "Only the first 1,000 customers receive a promo code.",
+  },
   cta: { label: "Create your account", href: "/register" },
 };
 
