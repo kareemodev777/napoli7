@@ -15,7 +15,6 @@ import type { CustomerNotificationInput } from "./email";
 import {
   customerStatusMessage,
   notifyCustomerStatusWhatsApp,
-  notifyRiderAssignmentWhatsApp,
   riderAssignmentMessage,
   type RiderAssignmentInput,
 } from "./whatsapp";
@@ -70,13 +69,18 @@ export async function notifyCustomerStatusPhone(
   );
 }
 
-/** Tell the rider they have a delivery — by WhatsApp, else by SMS. */
+/**
+ * Tell the rider they have a delivery — over SMS only.
+ *
+ * The drivers aren't on WhatsApp, and Twilio SMS is set up and reliable, so the
+ * rider channel is deliberately SMS and does not attempt WhatsApp first. (Customer
+ * status updates still go WhatsApp-then-SMS above.) To put riders back on WhatsApp,
+ * wrap this in whatsappThenSms with notifyRiderAssignmentWhatsApp as before.
+ */
 export async function notifyRiderAssignmentPhone(
   input: RiderAssignmentInput,
 ): Promise<PhoneNotifyResult> {
-  return whatsappThenSms(
-    () => notifyRiderAssignmentWhatsApp(input),
-    input.riderPhone,
-    riderAssignmentMessage(input),
-  );
+  const sms = await sendSms(input.riderPhone, riderAssignmentMessage(input));
+  if (sms.sent) return { sent: true, channel: "sms" };
+  return { sent: false, reason: `SMS: ${sms.reason ?? "failed"}.` };
 }

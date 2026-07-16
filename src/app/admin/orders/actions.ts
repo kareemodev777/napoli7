@@ -184,9 +184,9 @@ export async function assignRiderToOrder(
     .eq("id", riderId)
     .maybeSingle();
 
-  // The rider is told over WhatsApp, or by SMS when WhatsApp isn't configured.
-  // Whether it actually reached them is returned to the admin — an assignment the
-  // rider never heard about must not look like a successful one.
+  // The rider is told by SMS (Twilio). Whether it actually reached them is returned
+  // to the admin — an assignment the rider never heard about must not look like a
+  // successful one.
   let notifySent = false;
   let notifyChannel: NotifyChannel | undefined;
   let notifyReason: string | undefined;
