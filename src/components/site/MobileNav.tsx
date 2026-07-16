@@ -271,14 +271,14 @@ export function MobileNav() {
           <a
             href="https://wa.me/971501628577"
             className="flex items-center gap-3 h-11 font-display text-sm hover:opacity-60 transition-opacity"
-            aria-label="WhatsApp us at 050 162 8577"
+            aria-label="WhatsApp us at +971 50 162 8577"
           >
             <MessageCircle
               className="h-4 w-4 shrink-0"
               strokeWidth={1.5}
               aria-hidden
             />
-            WhatsApp 050 162 8577
+            WhatsApp +971 50 162 8577
           </a>
 
           {/* Hours */}

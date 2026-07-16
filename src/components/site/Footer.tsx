@@ -46,7 +46,7 @@ export function Footer() {
             </p>
             <p>
               <a className="hover:underline" href="https://wa.me/971501628577">
-                WhatsApp 050 162 8577
+                WhatsApp +971 50 162 8577
               </a>
             </p>
             <p>
