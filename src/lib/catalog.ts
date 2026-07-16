@@ -1,4 +1,5 @@
 import {
+  compareSizes,
   isSizeId,
   type Category,
   type Product,
@@ -154,7 +155,7 @@ export function normalizeProductSizes(
 function mapProduct(row: ProductRow): Product {
   const sizes: ProductSize[] = (row.product_sizes ?? [])
     .filter((size) => isSizeId(size.size_id))
-    .sort((a, b) => a.position - b.position)
+    .sort((a, b) => compareSizes(a.size_id as SizeId, b.size_id as SizeId))
     .map((size) => ({
       id: size.size_id as SizeId,
       label: size.label,

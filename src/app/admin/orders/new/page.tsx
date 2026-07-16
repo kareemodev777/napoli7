@@ -4,6 +4,7 @@ import { requireAdmin } from "@/lib/auth/require-admin";
 import { createClient } from "@/lib/supabase/server";
 import { getDeliveryZones } from "@/lib/checkout";
 import { ManualOrderForm } from "@/components/admin/ManualOrderForm";
+import { compareSizes, type SizeId } from "@/data/types/catalog";
 
 export const metadata: Metadata = { title: "New phone order" };
 
@@ -25,13 +26,21 @@ export default async function NewOrderPage() {
   const options = (products ?? [])
     .filter((p) => !p.is_temporarily_unavailable)
     .map((p) => {
-      const sizes = (p.product_sizes ?? []).map(
-        (s: { size_id: string; label: string; price_aed: number | string }) => ({
-          sizeId: s.size_id,
-          label: s.label,
-          priceAed: Number(s.price_aed),
-        }),
-      );
+      const sizes = (p.product_sizes ?? [])
+        .map(
+          (s: {
+            size_id: string;
+            label: string;
+            price_aed: number | string;
+          }) => ({
+            sizeId: s.size_id,
+            label: s.label,
+            priceAed: Number(s.price_aed),
+          }),
+        )
+        .sort((a, b) =>
+          compareSizes(a.sizeId as SizeId, b.sizeId as SizeId),
+        );
       return {
         id: p.id,
         name: p.name,

@@ -13,6 +13,21 @@ export function isSizeId(id: string): id is SizeId {
   return SIZE_OPTIONS.some((option) => option.id === id);
 }
 
+// Sizes always read smallest to largest, whatever order the rows were saved in.
+// The stored `position` column can't be trusted for this — the admin size form
+// doesn't set it, so it collapses to 0 — and for a fixed size enum the natural
+// order is what customers expect anyway (Small before a Large, never the reverse).
+const SIZE_RANK: Record<SizeId, number> = {
+  small: 0,
+  regular: 1,
+  large: 2,
+  family: 3,
+};
+
+export function compareSizes(a: SizeId, b: SizeId): number {
+  return SIZE_RANK[a] - SIZE_RANK[b];
+}
+
 export interface Category {
   id: CategoryId;
   label: string;

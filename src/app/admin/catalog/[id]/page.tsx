@@ -19,7 +19,7 @@ import {
 import { money } from "../format";
 import type { CategoryRow, ProductRow } from "../types";
 import { AdminModal } from "@/components/admin/AdminModal";
-import { SIZE_OPTIONS, type SizeId } from "@/data/types/catalog";
+import { compareSizes, SIZE_OPTIONS, type SizeId } from "@/data/types/catalog";
 import { HAS_SUPABASE_SERVICE } from "@/lib/env";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 
@@ -185,7 +185,7 @@ export default async function EditCatalogItemPage({
   const { categories, product, gallery } = data;
   const sizes = product.product_sizes
     .slice()
-    .sort((a, b) => a.position - b.position);
+    .sort((a, b) => compareSizes(a.size_id, b.size_id));
   const ingredients = product.product_customizations
     .slice()
     .sort((a, b) => a.position - b.position);
