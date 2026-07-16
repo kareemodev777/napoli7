@@ -30,8 +30,12 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
     product.sizes.find((s) => s.id === sizeId) ?? product.sizes[0];
   const hasCustomizations = product.customizations.length > 0;
   const unavailable = Boolean(product.isTemporarilyUnavailable) || !orderingOpen;
-  // The same list the Customize screen shows, so the two can never disagree.
+  // Only what's actually on the pizza — the "Included on this pizza" ingredients
+  // the customer can remove. Non-removable rows are add-ons (extra toppings you
+  // can add), not ingredients, so they don't belong in this line. This mirrors the
+  // "Extra ingredients" group in Customize, so the two can never disagree.
   const ingredients = product.customizations
+    .filter((c) => c.removable)
     .map((c) => c.ingredient)
     .join(", ");
 
