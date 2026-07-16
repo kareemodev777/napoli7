@@ -351,6 +351,12 @@ export default async function EditCatalogItemPage({
               </h2>
               <Badge>{ingredients.length} ingredients</Badge>
             </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Tick <strong>Base ingredient</strong> for what the pizza comes with
+              — these are listed on the menu card and can be removed in Customize.
+              Leave it unticked for an <strong>add-on</strong> (an extra topping):
+              add-ons never show on the menu, only under “Add-ons” in Customize.
+            </p>
             <div className="mt-5 grid gap-4">
               {ingredients.map((ingredient) => (
                 <article
@@ -360,7 +366,9 @@ export default async function EditCatalogItemPage({
                   <div className="mb-4 flex flex-wrap items-center gap-2">
                     <strong>{ingredient.ingredient}</strong>
                     <Badge>Extra {money(ingredient.extra_price)} AED</Badge>
-                    <Badge>{ingredient.removable ? "Can remove" : "Fixed"}</Badge>
+                    <Badge>
+                      {ingredient.removable ? "Base · on menu" : "Add-on"}
+                    </Badge>
                   </div>
                   <form
                     action={upsertCustomization}
@@ -395,7 +403,7 @@ export default async function EditCatalogItemPage({
                         type="checkbox"
                         defaultChecked={ingredient.removable}
                       />
-                      Customer can remove
+                      Base ingredient — show on the menu (customer can remove)
                     </label>
                     <div className="flex gap-2 sm:col-span-2 lg:col-span-3">
                       <SaveButton>Save ingredient</SaveButton>
