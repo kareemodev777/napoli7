@@ -39,8 +39,11 @@ export function CartDrawer() {
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetContent side="right" className="w-full gap-0 p-0 sm:max-w-md">
-        <SheetHeader className="border-b border-border p-5">
+      <SheetContent
+        side="right"
+        className="w-full max-h-dvh gap-0 overflow-hidden p-0 sm:max-w-md"
+      >
+        <SheetHeader className="shrink-0 border-b border-border p-5">
           <SheetTitle className="font-display text-2xl uppercase tracking-[1.5px]">
             Your order
           </SheetTitle>
@@ -50,17 +53,22 @@ export function CartDrawer() {
         </SheetHeader>
 
         {!hasItems ? (
-          <div className="flex-1 overflow-y-auto p-5">
+          <div className="min-h-0 flex-1 overflow-y-auto p-5">
             <EmptyCart />
           </div>
         ) : (
           <>
-            <ul className="flex-1 overflow-y-auto px-5">
+            {/* min-h-0 is what makes overflow-y-auto actually scroll: without it a
+                flex child keeps its content's height and the summary below gets
+                pushed off the bottom of the fixed drawer — unreachable on mobile. */}
+            <ul className="min-h-0 flex-1 overflow-y-auto px-5">
               {items.map((item) => (
                 <CartLineItem key={item.id} item={item} />
               ))}
             </ul>
-            <CartSummary />
+            <div className="shrink-0">
+              <CartSummary />
+            </div>
           </>
         )}
       </SheetContent>
