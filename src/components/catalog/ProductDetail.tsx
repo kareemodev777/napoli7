@@ -93,7 +93,7 @@ export function ProductDetail({ product, categoryLabel }: ProductDetailProps) {
           ]}
         />
         <div className="mt-10 grid lg:grid-cols-[1.15fr_1fr] gap-10 lg:gap-16 items-start">
-          <div className="relative aspect-[1/1] sm:aspect-[4/3] bg-muted overflow-hidden rounded-md">
+          <div className="relative aspect-[1/1] sm:aspect-[4/3] bg-white overflow-hidden rounded-md">
             <SmartImage
               src={product.imageUrl}
               alt={`${product.name} from Napoli 7`}

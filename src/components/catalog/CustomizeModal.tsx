@@ -269,7 +269,7 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
         </div>
 
         <aside className="overflow-y-auto px-6 md:px-10 py-6 bg-muted/40">
-          <div className="relative aspect-[4/3] bg-muted overflow-hidden">
+          <div className="relative aspect-[4/3] bg-white overflow-hidden">
             <SmartImage
               src={product.imageUrl}
               alt={`${product.name} from Napoli 7`}

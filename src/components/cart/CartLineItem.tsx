@@ -28,7 +28,7 @@ export function CartLineItem({ item }: { item: CartItem }) {
     <li className="grid grid-cols-[100px_1fr_auto] sm:grid-cols-[120px_1fr_auto] gap-5 border-b border-border py-6">
       <Link
         href={`/menu/${item.slug}`}
-        className="relative aspect-[4/3] bg-muted overflow-hidden block"
+        className="relative aspect-[4/3] bg-white overflow-hidden block"
         aria-label={`${item.name} — view product`}
       >
         <SmartImage

@@ -66,7 +66,7 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
         (unavailable ? "opacity-85" : "hover:border-foreground")
       }
     >
-      <div className="relative aspect-[1/1] overflow-hidden bg-muted sm:aspect-[4/3]">
+      <div className="relative aspect-[1/1] overflow-hidden bg-white sm:aspect-[4/3]">
         <SmartImage
           src={product.imageUrl}
           alt={`${product.name} from Napoli 7`}
