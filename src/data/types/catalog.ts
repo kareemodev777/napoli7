@@ -28,6 +28,19 @@ export function compareSizes(a: SizeId, b: SizeId): number {
   return SIZE_RANK[a] - SIZE_RANK[b];
 }
 
+/**
+ * The size a product card/page should select (and price) on first load. Prefer
+ * Medium (`regular`) — the headline price customers expect on a pizza menu — and
+ * fall back to the smallest available size for products that have no Medium (a
+ * two-size item, a drink). The size selector still lists sizes smallest-to-largest;
+ * this only decides which one starts selected.
+ */
+export function defaultDisplaySizeId(sizes: readonly { id: SizeId }[]): SizeId {
+  return (
+    sizes.find((s) => s.id === "regular")?.id ?? sizes[0]?.id ?? "regular"
+  );
+}
+
 export interface Category {
   id: CategoryId;
   label: string;

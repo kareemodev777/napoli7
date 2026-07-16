@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ShoppingCart, Sliders } from "lucide-react";
 import { SmartImage } from "@/components/ui/SmartImage";
+import { defaultDisplaySizeId } from "@/data/types/catalog";
 import type { Product, SizeId } from "@/data/types/catalog";
 import { useCart } from "@/store/cart";
 import { VegDot } from "./VegDot";
@@ -20,8 +21,8 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
   const addItem = useCart((s) => s.addItem);
   const { availability } = useOrderingAvailability();
   const orderingOpen = availability?.isOpen ?? true;
-  const [sizeId, setSizeId] = useState<SizeId>(
-    product.sizes[0]?.id ?? "regular",
+  const [sizeId, setSizeId] = useState<SizeId>(() =>
+    defaultDisplaySizeId(product.sizes),
   );
   const [modalOpen, setModalOpen] = useState(false);
   const [justAdded, setJustAdded] = useState(false);

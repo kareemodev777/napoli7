@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { SmartImage } from "@/components/ui/SmartImage";
+import { defaultDisplaySizeId } from "@/data/types/catalog";
 import type {
   CartCustomization,
   CustomizationChoice,
@@ -28,8 +29,8 @@ export function ProductDetail({ product, categoryLabel }: ProductDetailProps) {
   const { availability } = useOrderingAvailability();
   const orderingOpen = availability?.isOpen ?? true;
 
-  const [sizeId, setSizeId] = useState<SizeId>(
-    product.sizes[0]?.id ?? "regular",
+  const [sizeId, setSizeId] = useState<SizeId>(() =>
+    defaultDisplaySizeId(product.sizes),
   );
   const [choices, setChoices] = useState<Record<string, CustomizationChoice>>(
     Object.fromEntries(
