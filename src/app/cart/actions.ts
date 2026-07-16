@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import { validatePromo, type PromoResult } from "@/lib/promo";
+import { getMaxPromoCodesPerOrder } from "@/lib/promo-settings";
 import { createClient } from "@/lib/supabase/server";
 import { HAS_SUPABASE } from "@/lib/env";
 
@@ -37,4 +38,14 @@ export async function validatePromoCode(
   }
 
   return validatePromo(parsed.data.code, parsed.data.subtotal, identity);
+}
+
+/**
+ * The live "max promo codes per order" cap, for the client promo field. The field
+ * lives in the always-mounted cart drawer as well as the cart and checkout pages,
+ * so it reads the value itself rather than having it threaded down as a prop. The
+ * server order action re-checks the cap, so this is only to keep the UI honest.
+ */
+export async function loadMaxPromoCodesPerOrder(): Promise<number> {
+  return getMaxPromoCodesPerOrder();
 }

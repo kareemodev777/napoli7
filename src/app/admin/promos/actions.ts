@@ -4,6 +4,7 @@ import { refresh, revalidatePath } from "next/cache";
 import { z } from "zod";
 import { UUID_RE } from "@/lib/uuid";
 import { normalizeCode } from "@/lib/promo";
+import { normalizeMaxPromoCodesPerOrder } from "@/lib/promo-settings";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 
@@ -90,6 +91,36 @@ export async function updateSignupCampaign(formData: FormData) {
 
 function logActionError(action: string, error: unknown) {
   console.error(`[admin/promos] ${action} failed`, error);
+}
+
+/**
+ * Set how many promo codes one order may stack. Stored in the shared
+ * delivery_settings key/value table; read by the cart, checkout, and the order
+ * guard. The value is clamped to a whole number in [1, hard cap] before saving.
+ */
+export async function updateMaxPromoCodesPerOrder(formData: FormData) {
+  await requireAdmin();
+  const parsedValue = Number(formData.get("maxPromoCodesPerOrder"));
+  if (!Number.isFinite(parsedValue)) {
+    logActionError(
+      "updateMaxPromoCodesPerOrder",
+      new Error("Invalid max promo codes value"),
+    );
+    return;
+  }
+
+  const value = normalizeMaxPromoCodesPerOrder(parsedValue);
+  const supabase = createServiceRoleClient();
+  const { error } = await supabase.from("delivery_settings").upsert({
+    key: "max_promo_codes_per_order",
+    value,
+  });
+  if (error) {
+    logActionError("updateMaxPromoCodesPerOrder", error);
+    return;
+  }
+
+  revalidatePromos();
 }
 
 export async function upsertPromo(formData: FormData) {

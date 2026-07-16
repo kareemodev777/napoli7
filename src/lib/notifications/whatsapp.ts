@@ -22,6 +22,8 @@ export function customerStatusMessage(
   input: Omit<CustomerNotificationInput, "to">,
 ): string {
   switch (input.status) {
+    case "received":
+      return `Napoli 7: we’ve received your order ${input.orderNumber} 🍕 — we’ll start preparing it shortly. Thank you!`;
     case "preparing":
       return `Napoli 7: your order ${input.orderNumber} is now being prepared in the kitchen 🍕`;
     case "ready":

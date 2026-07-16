@@ -4,6 +4,10 @@ import { z } from "zod";
 import { UUID_RE } from "@/lib/uuid";
 import { createClient } from "@/lib/supabase/server";
 import { validatePromo, redeemPromo } from "@/lib/promo";
+import {
+  getMaxPromoCodesPerOrder,
+  PROMO_CODES_HARD_CAP,
+} from "@/lib/promo-settings";
 import { resolveDeliveryFee } from "@/lib/checkout";
 import {
   computeOrderFeesAed,
@@ -78,7 +82,9 @@ const placeOrderSchema = z.object({
   pizzaCut: z.boolean().optional(),
   paymentMethod: z.enum(["card", "cod"]),
   // Several codes may be spent on one order (friends pooling free-pizza rewards).
-  promoCodes: z.array(z.string().max(40)).max(10).optional(),
+  // The wire limit is the hard cap; the live per-order cap (admin-set) is enforced
+  // below, after the codes are deduped.
+  promoCodes: z.array(z.string().max(40)).max(PROMO_CODES_HARD_CAP).optional(),
   items: z.array(itemSchema).min(1),
 });
 
@@ -228,6 +234,18 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   const submittedCodes = [
     ...new Set((data.promoCodes ?? []).map((c) => c.trim().toUpperCase())),
   ].filter(Boolean);
+
+  // Enforce the shop's cap on how many codes one order may stack. Only read the
+  // setting when there is more than one code — a single code clears any cap (which
+  // is always ≥ 1), and the vast majority of orders carry none.
+  if (submittedCodes.length > 1) {
+    const maxPromoCodes = await getMaxPromoCodesPerOrder();
+    if (submittedCodes.length > maxPromoCodes) {
+      return {
+        error: `You can apply up to ${maxPromoCodes} promo code${maxPromoCodes === 1 ? "" : "s"} on one order. Remove ${submittedCodes.length - maxPromoCodes} to continue.`,
+      };
+    }
+  }
 
   for (const code of submittedCodes) {
     const promoResult = await validatePromo(code, subtotal);

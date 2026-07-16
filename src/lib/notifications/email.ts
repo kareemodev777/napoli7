@@ -36,7 +36,13 @@ export interface KitchenNotificationInput {
 export interface CustomerNotificationInput {
   to: string;
   orderNumber: string;
-  status: "preparing" | "ready" | "out_for_delivery" | "delivered" | "cancelled";
+  status:
+    | "received"
+    | "preparing"
+    | "ready"
+    | "out_for_delivery"
+    | "delivered"
+    | "cancelled";
 }
 
 function escapeHtml(value: string) {
@@ -255,6 +261,14 @@ export async function notifyCustomerStatusEmail(
     CustomerNotificationInput["status"],
     { subject: string; heading: string; body: string }
   > = {
+    // Unused by the status-email caller (placement sends the richer confirmation
+    // email instead), but required so the copy map stays exhaustive over the
+    // status union that the phone/SMS confirmation now shares.
+    received: {
+      subject: `We’ve received your Napoli 7 order ${n}`,
+      heading: "Order received",
+      body: `We’ve received your order ${n} and will start preparing it shortly.`,
+    },
     preparing: {
       subject: `Your Napoli 7 order ${n} is being prepared`,
       heading: "Your order is being prepared",

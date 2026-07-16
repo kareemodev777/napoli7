@@ -3,12 +3,17 @@ import type { ReactNode } from "react";
 import { Pencil, Plus } from "lucide-react";
 import { DeletePromoButton } from "./DeletePromoButton";
 import { SignupCampaignCard, type RewardProductOption } from "./campaign";
+import { updateMaxPromoCodesPerOrder } from "./actions";
 import { Badge, PromoForm, money } from "./form-components";
 import type { PromoCodeRow } from "./types";
 import { AdminModal } from "@/components/admin/AdminModal";
 import { HAS_SUPABASE_SERVICE } from "@/lib/env";
 import { formatDate } from "@/lib/format-date";
 import { getSignupCampaign } from "@/lib/signup-reward";
+import {
+  getMaxPromoCodesPerOrder,
+  PROMO_CODES_HARD_CAP,
+} from "@/lib/promo-settings";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 
 export const metadata: Metadata = {
@@ -133,9 +138,10 @@ function windowLabel(promo: PromoCodeRow) {
 
 export default async function AdminPromosPage() {
   const promos = await loadPromos();
-  const [campaign, rewardProducts] = await Promise.all([
+  const [campaign, rewardProducts, maxPromoCodes] = await Promise.all([
     getSignupCampaign(),
     loadRewardProducts(),
+    getMaxPromoCodesPerOrder(),
   ]);
   const orderCounts = await loadOrderCounts(promos.map((promo) => promo.code));
   const activeCount = promos.filter((promo) => promo.active).length;
@@ -168,6 +174,54 @@ export default async function AdminPromosPage() {
         {campaign ? (
           <SignupCampaignCard campaign={campaign} products={rewardProducts} />
         ) : null}
+
+        <div className="mt-8 rounded-md border border-border bg-card p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="font-display text-xl uppercase tracking-[0.14em]">
+                Codes per order
+              </h2>
+              <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+                How many promo codes one order may stack. A group at the same
+                address can pool their free-pizza codes onto a single basket —
+                one delivery, one fee — instead of placing a separate order each.
+              </p>
+            </div>
+            <Badge tone="active">Current {maxPromoCodes}</Badge>
+          </div>
+
+          {HAS_SUPABASE_SERVICE ? (
+            <form
+              action={updateMaxPromoCodesPerOrder}
+              className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-end"
+            >
+              <label className="grid gap-2 sm:min-w-[260px]">
+                <span className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+                  Max codes per order (1–{PROMO_CODES_HARD_CAP})
+                </span>
+                <input
+                  name="maxPromoCodesPerOrder"
+                  type="number"
+                  min="1"
+                  max={PROMO_CODES_HARD_CAP}
+                  step="1"
+                  defaultValue={maxPromoCodes}
+                  className="h-11 rounded-md border border-border bg-background px-3 text-sm outline-none transition focus:border-brand"
+                />
+              </label>
+              <button
+                type="submit"
+                className="inline-flex h-11 items-center justify-center rounded-md bg-brand px-4 text-xs font-display uppercase tracking-[0.14em] text-primary-foreground hover:bg-brand-hover"
+              >
+                Save limit
+              </button>
+            </form>
+          ) : (
+            <p className="mt-5 text-sm text-muted-foreground">
+              Supabase service environment is required to edit this value.
+            </p>
+          )}
+        </div>
 
         {!HAS_SUPABASE_SERVICE ? (
           <div className="mt-8 rounded-md border border-border bg-card p-6 text-sm text-muted-foreground">

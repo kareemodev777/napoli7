@@ -28,7 +28,7 @@ export default function DealsPage() {
         intro="Welcome offers, seasonal specials, and bundles from the Napoli 7 kitchen."
       />
       <section className="px-6 md:px-10 py-16 md:py-24">
-        <div className="max-w-[1140px] mx-auto grid lg:grid-cols-[2fr_1fr] gap-10 items-start">
+        <div className="max-w-[760px] mx-auto">
           <article className="border border-border bg-card p-8 md:p-12">
             <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep mb-4">
               {WELCOME_OFFER.eyebrow}
@@ -116,16 +116,6 @@ export default function DealsPage() {
               {WELCOME_OFFER.cta.label}
             </Link>
           </article>
-          <aside className="border-t lg:border-t-0 lg:border-l border-border lg:pl-10 pt-10 lg:pt-0">
-            <p className="font-display text-xs tracking-[0.25em] uppercase text-muted-foreground mb-4">
-              Fine print
-            </p>
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              The kitchen reserves the right to substitute items in case of
-              supply shortage. One promotional code per order. Cannot be combined
-              with other offers unless stated.
-            </p>
-          </aside>
         </div>
       </section>
     </SiteShell>

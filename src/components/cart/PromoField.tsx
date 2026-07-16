@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState, useTransition } from "react";
 import { useCart } from "@/store/cart";
-import { validatePromoCode } from "@/app/cart/actions";
+import {
+  validatePromoCode,
+  loadMaxPromoCodesPerOrder,
+} from "@/app/cart/actions";
+import { DEFAULT_MAX_PROMO_CODES_PER_ORDER } from "@/lib/promo-settings";
 
 /**
  * Promo-code control, shared by the cart summary and the checkout summary.
@@ -34,6 +38,27 @@ export function PromoField({
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
+
+  // How many codes this order may stack — set by the shop in the admin panel. The
+  // field reads it itself (it's rendered in the cart drawer too, with no server
+  // props to hand it down), falling back to the default until the value arrives.
+  // The order action re-checks the cap; this only keeps the UI from letting a
+  // customer add codes that would be rejected at checkout.
+  const [maxCodes, setMaxCodes] = useState(DEFAULT_MAX_PROMO_CODES_PER_ORDER);
+  useEffect(() => {
+    let cancelled = false;
+    loadMaxPromoCodesPerOrder()
+      .then((max) => {
+        if (!cancelled) setMaxCodes(max);
+      })
+      .catch(() => {
+        // Keep the default; the server is the source of truth at checkout.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  const atMax = promos.length >= maxCodes;
 
   // Promos persist in localStorage, so one can outlive its validity — used,
   // expired, or wiped with the database. Re-check each persisted code once the
@@ -103,6 +128,14 @@ export function PromoField({
       setError("That code is already on this order.");
       return;
     }
+    // The shop's cap on how many codes stack on one order. The server enforces it
+    // too; this stops the customer before they add one that would be rejected.
+    if (promos.length >= maxCodes) {
+      setError(
+        `You can add up to ${maxCodes} promo code${maxCodes === 1 ? "" : "s"} on one order.`,
+      );
+      return;
+    }
     startTransition(async () => {
       const result = await validatePromoCode(entered, subtotal);
       if (result.error || !result.code || result.amount == null) {
@@ -145,43 +178,55 @@ export function PromoField({
         </ul>
       ) : null}
 
-      <div className="grid grid-cols-[1fr_auto] gap-2">
-        <input
-          type="text"
-          value={code}
-          onChange={(e) => setCode(e.target.value.toUpperCase())}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              apply();
-            }
-          }}
-          placeholder={promos.length ? "Add another code" : "Promo code"}
-          aria-label="Promo code"
-          aria-describedby={error ? "promo-error" : undefined}
-          aria-invalid={error ? true : undefined}
-          disabled={pending}
-          className="border border-border bg-background px-3 py-2.5 text-sm font-display tracking-[0.1em] uppercase placeholder:text-muted-foreground focus:outline-none focus:border-brand disabled:opacity-60"
-        />
-        <button
-          type="button"
-          onClick={apply}
-          disabled={pending}
-          aria-busy={pending}
-          className="border border-foreground px-4 py-2.5 font-display text-xs tracking-[0.2em] uppercase hover:bg-foreground hover:text-background disabled:opacity-60"
-        >
-          {pending ? "…" : "Apply"}
-        </button>
-        {error ? (
-          <p
-            id="promo-error"
-            role="status"
-            className="col-span-2 text-xs text-muted-foreground mt-1"
+      {atMax ? (
+        <p className="text-xs text-muted-foreground">
+          You&apos;ve added the maximum of {maxCodes} promo code
+          {maxCodes === 1 ? "" : "s"} for one order. Remove one to swap it out.
+        </p>
+      ) : (
+        <div className="grid grid-cols-[1fr_auto] gap-2">
+          <input
+            type="text"
+            value={code}
+            onChange={(e) => setCode(e.target.value.toUpperCase())}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+                apply();
+              }
+            }}
+            placeholder={promos.length ? "Add another code" : "Promo code"}
+            aria-label="Promo code"
+            aria-describedby={error ? "promo-error" : undefined}
+            aria-invalid={error ? true : undefined}
+            disabled={pending}
+            className="border border-border bg-background px-3 py-2.5 text-sm font-display tracking-[0.1em] uppercase placeholder:text-muted-foreground focus:outline-none focus:border-brand disabled:opacity-60"
+          />
+          <button
+            type="button"
+            onClick={apply}
+            disabled={pending}
+            aria-busy={pending}
+            className="border border-foreground px-4 py-2.5 font-display text-xs tracking-[0.2em] uppercase hover:bg-foreground hover:text-background disabled:opacity-60"
           >
-            {error}
-          </p>
-        ) : null}
-      </div>
+            {pending ? "…" : "Apply"}
+          </button>
+          {error ? (
+            <p
+              id="promo-error"
+              role="status"
+              className="col-span-2 text-xs text-muted-foreground mt-1"
+            >
+              {error}
+            </p>
+          ) : maxCodes > 1 && promos.length > 0 ? (
+            <p className="col-span-2 text-xs text-muted-foreground mt-1">
+              {promos.length} of {maxCodes} codes added — pool your group&apos;s
+              codes on one order.
+            </p>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }

@@ -5,6 +5,7 @@ import {
   type KitchenNotificationInput,
 } from "@/lib/notifications/email";
 import { notifyKitchenWhatsApp } from "@/lib/notifications/whatsapp";
+import { notifyCustomerStatusPhone } from "@/lib/notifications/phone";
 
 interface OrderItemRow {
   product_name: string;
@@ -102,6 +103,27 @@ export async function sendKitchenNotificationsForOrder(
       console.warn(
         `[kitchen] customer confirmation NOT sent for ${order.order_number}: ${customerEmail.reason}`,
       );
+    }
+  }
+
+  // The same confirmation to the customer's phone — WhatsApp if configured, SMS
+  // otherwise — so "Order received" arrives by text like every later status does.
+  // Without this, placement was email-only and the customer got no received SMS
+  // even once SMS was configured. Best-effort; never blocks the order.
+  if (order.customer_phone) {
+    try {
+      const phone = await notifyCustomerStatusPhone({
+        customerPhone: order.customer_phone,
+        orderNumber: order.order_number,
+        status: "received",
+      });
+      if (!phone.sent) {
+        console.warn(
+          `[kitchen] customer phone confirmation NOT sent for ${order.order_number}: ${phone.reason}`,
+        );
+      }
+    } catch (e) {
+      console.error("[kitchen] customer phone confirmation threw:", e);
     }
   }
 }
