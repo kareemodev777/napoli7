@@ -53,7 +53,7 @@ export function CartDrawer() {
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetContent
         side="right"
-        className="flex w-full max-h-dvh flex-col gap-0 overflow-hidden p-0 sm:max-w-md"
+        className="flex max-h-dvh flex-col gap-0 overflow-hidden p-0"
       >
         <SheetHeader className="shrink-0 border-b border-border p-5 pr-16">
           <SheetTitle className="font-display text-xl uppercase tracking-[1.5px] sm:text-2xl">

@@ -7,7 +7,7 @@ interface QuantityStepperProps {
   min?: number;
   max?: number;
   onChange: (value: number) => void;
-  size?: "md" | "lg";
+  size?: "sm" | "md" | "lg";
 }
 
 export function QuantityStepper({
@@ -17,7 +17,8 @@ export function QuantityStepper({
   onChange,
   size = "md",
 }: QuantityStepperProps) {
-  const cell = size === "lg" ? "h-12 w-12" : "h-11 w-11";
+  const cell =
+    size === "lg" ? "h-12 w-12" : size === "sm" ? "h-10 w-10" : "h-11 w-11";
   return (
     <div
       role="group"
@@ -39,7 +40,7 @@ export function QuantityStepper({
       <span
         aria-live="polite"
         className={
-          (size === "lg" ? "min-w-12" : "min-w-11") +
+          (size === "lg" ? "min-w-12" : size === "sm" ? "min-w-10" : "min-w-11") +
           " text-center font-display tabular-nums px-1"
         }
       >
