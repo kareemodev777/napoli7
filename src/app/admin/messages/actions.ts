@@ -65,3 +65,22 @@ export async function markMessageRead(messageId: string): Promise<void> {
     .is("read_at", null);
   revalidatePath("/admin/messages");
 }
+
+/**
+ * Mark every unread contact message as read. Opening the Messages inbox — where
+ * each message is shown in full — counts as reading them, so viewing the page
+ * clears the unread badge. Returns how many were newly marked read (0 when the
+ * inbox was already clear, so the caller can skip refreshing the badge).
+ */
+export async function markAllMessagesRead(): Promise<number> {
+  await requireAdmin();
+  if (!HAS_SUPABASE_SERVICE) return 0;
+  const supabase = createServiceRoleClient();
+  const { data } = await supabase
+    .from("contact_messages")
+    .update({ read_at: new Date().toISOString() })
+    .is("read_at", null)
+    .select("id");
+  revalidatePath("/admin/messages");
+  return data?.length ?? 0;
+}

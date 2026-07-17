@@ -5,6 +5,7 @@ import { createServiceRoleClient } from "@/lib/supabase/service";
 import { ResendEmailCell } from "@/components/admin/ResendEmailCell";
 import { MessageReadCell } from "@/components/admin/MessageReadCell";
 import { MessageCell } from "@/components/admin/MessageCell";
+import { MarkMessagesReadOnView } from "@/components/admin/MarkMessagesReadOnView";
 
 export const metadata: Metadata = {
   title: "Messages · Admin",
@@ -61,6 +62,8 @@ export default async function AdminMessagesPage() {
 
   return (
     <section className="px-6 md:px-10 py-12">
+      {/* Opening this page marks the unread messages read and clears the badge. */}
+      <MarkMessagesReadOnView unreadCount={unread} />
       <div className="max-w-[1400px] mx-auto">
         <h1 className="font-display text-3xl md:text-4xl uppercase tracking-[1.5px] leading-tight">
           Contact messages
@@ -68,7 +71,7 @@ export default async function AdminMessagesPage() {
         <p className="mt-3 text-sm text-muted-foreground">
           {messages.length === 0
             ? "No messages yet."
-            : `${messages.length} messages${unread > 0 ? ` · ${unread} unread` : ""}, newest first. Click “New” to mark a message read.`}
+            : `${messages.length} messages${unread > 0 ? ` · ${unread} unread` : ""}, newest first. Opening this page marks them read.`}
         </p>
 
         <div className="mt-10 overflow-x-auto">
