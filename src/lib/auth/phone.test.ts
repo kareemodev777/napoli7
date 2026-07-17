@@ -1,10 +1,49 @@
 import { describe, expect, test } from "bun:test";
-import { isLikelyFakePhone, normalizePhone } from "./phone";
+import {
+  isLikelyFakePhone,
+  normalizePhone,
+  toUaeE164,
+  toUaeNationalDisplay,
+} from "./phone";
 
 describe("normalizePhone", () => {
   test("keeps only digits", () => {
     expect(normalizePhone("+971 50 162 8577")).toBe("971501628577");
     expect(normalizePhone("00971-50-1628577")).toBe("00971501628577");
+  });
+});
+
+describe("toUaeE164", () => {
+  test("national number, spaced or not, gets the +971", () => {
+    expect(toUaeE164("50 123 4567")).toBe("+971501234567");
+    expect(toUaeE164("501234567")).toBe("+971501234567");
+  });
+
+  test("drops a local trunk 0 (050… -> +97150…)", () => {
+    expect(toUaeE164("0501234567")).toBe("+971501234567");
+    expect(toUaeE164("050 123 4567")).toBe("+971501234567");
+  });
+
+  test("accepts a pasted country code", () => {
+    expect(toUaeE164("+971501234567")).toBe("+971501234567");
+    expect(toUaeE164("971501234567")).toBe("+971501234567");
+    expect(toUaeE164("+971 50 123 4567")).toBe("+971501234567");
+  });
+
+  test("empty stays empty", () => {
+    expect(toUaeE164("")).toBe("");
+    expect(toUaeE164("   ")).toBe("");
+  });
+});
+
+describe("toUaeNationalDisplay", () => {
+  test("groups a full mobile as 50 123 4567", () => {
+    expect(toUaeNationalDisplay("+971501234567")).toBe("50 123 4567");
+    expect(toUaeNationalDisplay("0501234567")).toBe("50 123 4567");
+  });
+
+  test("empty stays empty", () => {
+    expect(toUaeNationalDisplay("")).toBe("");
   });
 });
 

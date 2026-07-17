@@ -230,22 +230,27 @@ export function RegisterForm({ otpEnabled = true }: { otpEnabled?: boolean }) {
         required
         hint={
           otpEnabled
-            ? "UAE mobile starting with +9715. We'll text a code to verify it."
-            : "UAE mobile starting with +9715."
+            ? "Enter your number after +971 — e.g. 50 123 4567. We'll text a code to verify it."
+            : "Enter your number after +971 — e.g. 50 123 4567."
         }
       >
-        <Input
-          id="reg-mobile"
-          type="tel"
-          value={form.mobile}
-          onChange={(e) => update("mobile", e.target.value)}
-          required
-          inputMode="tel"
-          autoComplete="tel"
-          placeholder="+9715XXXXXXXX"
-          pattern="^\+9715[0-9]{8}$"
-          disabled={step === "code"}
-        />
+        <div className="flex items-stretch">
+          <span className="inline-flex items-center rounded-l-lg border border-r-0 border-input bg-muted px-2.5 text-sm text-muted-foreground select-none">
+            +971
+          </span>
+          <Input
+            id="reg-mobile"
+            type="tel"
+            value={form.mobile}
+            onChange={(e) => update("mobile", e.target.value)}
+            required
+            inputMode="tel"
+            autoComplete="tel"
+            placeholder="50 123 4567"
+            className="rounded-l-none"
+            disabled={step === "code"}
+          />
+        </div>
       </Field>
       <Field
         id="reg-password"

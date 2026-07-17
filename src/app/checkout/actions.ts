@@ -22,6 +22,7 @@ import {
 import { isRewardPickupOnly } from "@/lib/reward-promo";
 import { checkDeliverability, deliverabilityMessage } from "@/lib/delivery-map";
 import { placeholderEmailForPhone } from "@/lib/auth/placeholder-email";
+import { toUaeE164 } from "@/lib/auth/phone";
 import { planAddressSave, type AddressLike } from "@/lib/saved-address";
 import { sendKitchenNotificationsForOrder } from "@/lib/notifications/kitchen";
 import { pushOrderToPos } from "@/lib/pos/push";
@@ -60,12 +61,17 @@ const deliveryAddressSchema = z.object({
 const placeOrderSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),
-  phone: z
-    .string()
-    .regex(
-      /^\+971[0-9]{8,9}$/,
-      "Enter a valid UAE mobile number starting with +971",
-    ),
+  // The UI collects only the national number under a fixed +971; normalize
+  // whatever the customer typed (50…, 050…, +971…) to E.164 before validating.
+  phone: z.preprocess(
+    (v) => toUaeE164(typeof v === "string" ? v : ""),
+    z
+      .string()
+      .regex(
+        /^\+9715\d{8}$/,
+        "Enter a valid UAE mobile number — e.g. 50 123 4567.",
+      ),
+  ),
   // Optional, like registration: a customer who signed up on their phone alone
   // has no address to give, and must still be able to order. They are reachable
   // by SMS, which is the channel that matters for a pizza.

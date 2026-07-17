@@ -8,6 +8,37 @@ export function normalizePhone(phone: string): string {
   return (phone ?? "").replace(/\D/g, "");
 }
 
+/**
+ * Normalize however a customer types a UAE mobile into E.164 (+9715XXXXXXXX).
+ *
+ * The +971 country code is fixed in the UI and the customer enters only the
+ * national number, but they type it every which way — so this accepts them all:
+ *   "50 123 4567" / "501234567"  -> +971501234567   (the national number)
+ *   "0501234567"                 -> +971501234567   (local trunk 0 dropped)
+ *   "+971501234567" / "971..."   -> +971501234567   (country code they pasted)
+ *
+ * Returns "" for empty input. It does NOT check length — the caller's schema
+ * enforces the final +9715XXXXXXXX shape.
+ */
+export function toUaeE164(input: string): string {
+  let digits = (input ?? "").replace(/\D/g, "");
+  if (!digits) return "";
+  if (digits.startsWith("971")) digits = digits.slice(3); // pasted country code
+  digits = digits.replace(/^0+/, ""); // local trunk 0(s), e.g. 050… -> 50…
+  return digits ? `+971${digits}` : "";
+}
+
+/**
+ * The national part of a UAE mobile for display under the fixed +971 prefix,
+ * grouped as "50 123 4567". Accepts E.164, national, or 0-prefixed input; returns
+ * "" when empty and the raw national digits when they don't form a full mobile.
+ */
+export function toUaeNationalDisplay(input: string): string {
+  const national = toUaeE164(input).replace(/^\+971/, "");
+  const m = national.match(/^(\d{2})(\d{3})(\d{4})$/);
+  return m ? `${m[1]} ${m[2]} ${m[3]}` : national;
+}
+
 function isStrictRun(digits: string): boolean {
   let ascending = true;
   let descending = true;

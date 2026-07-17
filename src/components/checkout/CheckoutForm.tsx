@@ -9,6 +9,7 @@ import {
   type CheckoutInitialDetails,
 } from "@/lib/checkout-prefill";
 import { isRewardPickupOnly } from "@/lib/reward-promo";
+import { toUaeE164, toUaeNationalDisplay } from "@/lib/auth/phone";
 import {
   buildDeliveryMapQuery,
   checkDeliverability,
@@ -396,9 +397,7 @@ export function CheckoutForm({
     const payload: PlaceOrderInput = {
       firstName: String(formData.get("firstName") ?? "").trim(),
       lastName: String(formData.get("lastName") ?? "").trim(),
-      phone: String(formData.get("phone") ?? "")
-        .trim()
-        .replace(/\s+/g, ""),
+      phone: toUaeE164(String(formData.get("phone") ?? "")),
       email: String(formData.get("email") ?? "").trim(),
       deliveryType,
       deliveryAddress: rawAddress,
@@ -498,18 +497,24 @@ export function CheckoutForm({
               id="phone"
               label="Phone"
               required
-              hint="UAE mobile starting with +971"
+              hint="Enter your number after +971 — e.g. 50 123 4567"
             >
-              <Input
-                id="phone"
-                name="phone"
-                type="tel"
-                required
-                placeholder="+971501234567"
-                pattern="^\+971[0-9]{8,9}$"
-                defaultValue={initialDetails.phone ?? ""}
-                autoComplete="tel"
-              />
+              <div className="flex items-stretch">
+                <span className="inline-flex items-center rounded-l-lg border border-r-0 border-input bg-muted px-2.5 text-sm text-muted-foreground select-none">
+                  +971
+                </span>
+                <Input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  required
+                  inputMode="tel"
+                  placeholder="50 123 4567"
+                  className="rounded-l-none"
+                  defaultValue={toUaeNationalDisplay(initialDetails.phone ?? "")}
+                  autoComplete="tel"
+                />
+              </div>
             </Field>
             {/* Optional — order updates go by SMS. An email only adds a receipt. */}
             <Field id="email" label="Email (optional)">

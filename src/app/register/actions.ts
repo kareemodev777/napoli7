@@ -10,7 +10,7 @@ import {
   SITE_URL,
 } from "@/lib/env";
 import { buildEmailVerificationRedirect } from "@/lib/auth/registration";
-import { isLikelyFakePhone } from "@/lib/auth/phone";
+import { isLikelyFakePhone, toUaeE164 } from "@/lib/auth/phone";
 import {
   startPhoneVerification,
   checkPhoneVerification,
@@ -32,13 +32,18 @@ const registerSchema = z
       .email("Enter a valid email, or leave it blank.")
       .optional()
       .or(z.literal("")),
-    mobile: z
-      .string()
-      .trim()
-      .regex(
-        /^\+9715\d{8}$/,
-        "Enter a valid UAE mobile number starting with +9715.",
-      ),
+    // The UI collects only the national number under a fixed +971; normalize
+    // whatever shape the customer typed (50…, 050…, +971…) to E.164 before we
+    // validate, so "0501234567" is accepted and stored as +971501234567.
+    mobile: z.preprocess(
+      (v) => toUaeE164(typeof v === "string" ? v : ""),
+      z
+        .string()
+        .regex(
+          /^\+9715\d{8}$/,
+          "Enter a valid UAE mobile number — e.g. 50 123 4567.",
+        ),
+    ),
     password: z.string().min(8, "Use at least 8 characters."),
     confirmPassword: z.string(),
   })
