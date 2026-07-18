@@ -13,7 +13,7 @@ import {
 } from "./delivery-map";
 import { isInsideAjman } from "./ajman-boundary";
 
-describe("delivery radius (8 km straight-line)", () => {
+describe("delivery radius (7 km straight-line)", () => {
   test("the shop itself is 0 km away and in range", () => {
     expect(distanceFromShopKm(SHOP_LOCATION.lat, SHOP_LOCATION.lng)).toBeCloseTo(
       0,
@@ -92,9 +92,9 @@ describe("deliverability = inside the radius AND inside Ajman", () => {
     expect(result).toMatchObject({ deliverable: false, reason: "outside-radius" });
   });
 
-  // The whole point of the boundary check. These pins pass the 8 km test and
+  // The whole point of the boundary check. These pins pass the 7 km test and
   // would have been accepted before it existed.
-  test("rejects Sharjah even when it is well within 8 km", () => {
+  test("rejects Sharjah even when it is well within 7 km", () => {
     const sharjahNearby: [number, number][] = [
       [25.3442, 55.4813], // ~6.6 km south of the shop, over the Sharjah border
       [25.3622, 55.5413], // ~5.7 km south-east, also Sharjah
@@ -131,7 +131,7 @@ describe("deliverability = inside the radius AND inside Ajman", () => {
 
     const tooFar = checkDeliverability(SHOP_LOCATION.lat + 0.08, SHOP_LOCATION.lng);
     if (tooFar.deliverable) throw new Error("expected an out-of-range rejection");
-    expect(deliverabilityMessage(tooFar)).toContain("8 km");
+    expect(deliverabilityMessage(tooFar)).toContain("7 km");
   });
 });
 

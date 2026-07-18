@@ -56,7 +56,7 @@ export interface ManualOrderResult {
  * uses. A phone order cannot be mispriced by a typo, and staff cannot quietly
  * discount one.
  *
- * Unlike the website, no GPS pin is required. The 8 km / Ajman gate exists because
+ * Unlike the website, no GPS pin is required. The 7 km / Ajman gate exists because
  * a stranger on the internet cannot be trusted to know whether we deliver to them.
  * On the phone, someone is asking — the address is vetted by a human, and refusing
  * the order because a map pin is missing would be absurd.

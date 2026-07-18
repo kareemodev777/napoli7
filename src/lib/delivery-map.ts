@@ -35,7 +35,7 @@ export const SHOP_LOCATION = { lat: 25.4002327, lng: 55.5033167 } as const;
 // Delivery is available only within this straight-line ("as the crow flies")
 // radius of the shop — the courier partner's hard limit. Change this one number
 // to widen/narrow the delivery range.
-export const DELIVERY_RADIUS_KM = 8;
+export const DELIVERY_RADIUS_KM = 7;
 
 const EARTH_RADIUS_KM = 6371;
 const toRad = (deg: number): number => (deg * Math.PI) / 180;
@@ -83,7 +83,7 @@ export type DeliverabilityResult =
  *   1. within DELIVERY_RADIUS_KM straight-line of the shop, AND
  *   2. inside the Ajman emirate.
  *
- * The radius alone is not sufficient — about a third of the 8 km circle lies in
+ * The radius alone is not sufficient — about a third of the 7 km circle lies in
  * Sharjah or in the sea, and Sharjah is excluded no matter how close it is. The
  * area dropdown plays no part here: it is a convenience for the driver, and a
  * customer can pair any area with any street, so the pin is the only thing that

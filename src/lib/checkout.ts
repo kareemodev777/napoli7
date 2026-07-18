@@ -26,7 +26,7 @@ export const DEFAULT_DELIVERY_FEE = 12;
 // field for the driver; whether an order can actually be delivered is decided by
 // the GPS pin (see checkDeliverability in ./delivery-map), not by this list. An
 // area appearing here does not promise every address in it is reachable: Al Helio
-// reaches past the 8 km radius, and pins out there are refused.
+// reaches past the 7 km radius, and pins out there are refused.
 const MOCK_ZONES: DeliveryZone[] = [
   { area: "Al Jurf", fee: 9 },
   { area: "Al Nuaimiya", fee: 9 },

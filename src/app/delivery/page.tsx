@@ -47,15 +47,15 @@ const sections: { heading: string; body: string[] }[] = [
     heading: "Service area",
     body: [
       // Both halves matter. The radius alone would be a false promise: about a
-      // third of an 8 km circle around the shop is Sharjah or open sea, and a
+      // third of a 7 km circle around the shop is Sharjah or open sea, and a
       // pin dropped there is refused at checkout however close it is.
-      `We deliver inside Ajman only, within an 8 km radius of Napoli 7. Sharjah and the other emirates are outside our zone, even where they fall inside that radius.`,
+      `We deliver inside Ajman only, within a 7 km radius of Napoli 7. Sharjah and the other emirates are outside our zone, even where they fall inside that radius.`,
       `Delivery areas in Ajman: ${DELIVERY_AREAS.join(", ")}.`,
-      // Some of these areas are large enough to reach past the 8 km radius, so
+      // Some of these areas are large enough to reach past the 7 km radius, so
       // listing one is not a promise that every address in it is reachable. The
       // map pin at checkout is what confirms it, and it is better to say so here
       // than to let someone fill a basket and get refused at the last step.
-      "The outer edges of some of these areas fall beyond the 8 km radius. Drop your pin on the map at checkout and we'll confirm straight away whether we can reach you.",
+      "The outer edges of some of these areas fall beyond the 7 km radius. Drop your pin on the map at checkout and we'll confirm straight away whether we can reach you.",
       "Outside our delivery area? Choose Pickup, and your order will be ready in approximately 15 minutes.",
     ],
   },

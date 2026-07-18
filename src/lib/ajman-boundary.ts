@@ -1,7 +1,7 @@
 /**
  * Ajman emirate administrative boundary.
  *
- * Delivery is restricted to the Ajman emirate. An 8 km circle drawn around the
+ * Delivery is restricted to the Ajman emirate. A 7 km circle drawn around the
  * shop is NOT a good enough test on its own — roughly a third of that circle
  * falls in Sharjah or in the sea, so the radius must be combined with this
  * polygon (see `isDeliverableLocation` in ./delivery-map).
