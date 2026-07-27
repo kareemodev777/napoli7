@@ -52,7 +52,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 29.0
       }
     ],
@@ -130,7 +130,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 25.0
       }
     ],
@@ -208,7 +208,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 31.0
       }
     ],
@@ -310,7 +310,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 32.0
       }
     ],
@@ -400,7 +400,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 29.0
       }
     ],
@@ -484,7 +484,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 28.0
       }
     ],
@@ -568,7 +568,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 29.0
       }
     ],
@@ -646,7 +646,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 25.0
       }
     ],
@@ -730,7 +730,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 24.0
       }
     ],
@@ -808,7 +808,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 29.0
       }
     ],
@@ -868,7 +868,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 29.0
       }
     ],
@@ -964,7 +964,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 25.0
       }
     ],
@@ -1036,7 +1036,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 35.0
       }
     ],
@@ -1114,7 +1114,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 19.0
       }
     ],
@@ -1192,7 +1192,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 29.0
       }
     ],
@@ -1288,7 +1288,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 27.0
       }
     ],
@@ -1378,7 +1378,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 30.0
       }
     ],
@@ -1450,7 +1450,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 29.0
       }
     ],
@@ -1528,7 +1528,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 31.0
       }
     ],
@@ -1606,7 +1606,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 34.0
       }
     ],
@@ -1696,7 +1696,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 34.0
       }
     ],
@@ -1768,7 +1768,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 36.0
       }
     ],
@@ -1846,7 +1846,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 39.0
       }
     ],
@@ -2158,7 +2158,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 13.0
       }
     ],
@@ -2212,7 +2212,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 13.0
       }
     ],
@@ -2254,7 +2254,7 @@ export const PRODUCTS: Product[] = [
       {
         "id": "small",
         "label": "Small",
-        "detail": "24 cm",
+        "detail": "23 cm",
         "price": 13.0
       }
     ],
