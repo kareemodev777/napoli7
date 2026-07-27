@@ -5,12 +5,17 @@ import { Trash2 } from "lucide-react";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { useCart } from "@/store/cart";
 import type { CartItem } from "@/store/cart";
+import { useCartDrawer } from "@/store/cart-drawer";
 import { QuantityStepper } from "@/components/catalog/QuantityStepper";
 import { PriceBadge } from "@/components/catalog/PriceBadge";
 
 export function CartLineItem({ item }: { item: CartItem }) {
   const updateQuantity = useCart((s) => s.updateQuantity);
   const removeItem = useCart((s) => s.removeItem);
+  // Close the drawer when the customer taps through to a product — otherwise it
+  // lingers over the page, and tapping a product they're already viewing would
+  // leave it open with no route change to dismiss it.
+  const closeCart = useCartDrawer((s) => s.closeCart);
 
   const customSummary = item.customizations
     .map((c) => {
@@ -33,6 +38,7 @@ export function CartLineItem({ item }: { item: CartItem }) {
     <li className="flex gap-4 border-b border-border py-5">
       <Link
         href={`/menu/${item.slug}`}
+        onClick={closeCart}
         className="relative aspect-square w-16 sm:w-24 shrink-0 overflow-hidden rounded-md bg-white block"
         aria-label={`${item.name} — view product`}
       >
@@ -52,6 +58,7 @@ export function CartLineItem({ item }: { item: CartItem }) {
           <div className="min-w-0">
             <Link
               href={`/menu/${item.slug}`}
+              onClick={closeCart}
               className="font-display text-base font-medium leading-tight hover:text-brand"
             >
               {item.name}

@@ -89,6 +89,7 @@ export function CartDrawer() {
             </div>
             <Link
               href="/menu"
+              onClick={closeCart}
               className="inline-flex min-h-[48px] items-center bg-brand px-8 py-3 font-display text-sm uppercase tracking-[0.2em] text-primary-foreground hover:bg-brand-hover"
             >
               View menu
@@ -143,12 +144,14 @@ export function CartDrawer() {
                 <div className="space-y-2">
                   <Link
                     href="/checkout"
+                    onClick={closeCart}
                     className="inline-flex min-h-[52px] w-full items-center justify-center bg-brand px-6 font-display text-sm uppercase tracking-[0.2em] text-primary-foreground hover:bg-brand-hover"
                   >
                     Checkout
                   </Link>
                   <Link
                     href="/cart"
+                    onClick={closeCart}
                     className="inline-flex min-h-[48px] w-full items-center justify-center border border-foreground px-6 font-display text-xs uppercase tracking-[0.2em] hover:bg-foreground hover:text-background"
                   >
                     View cart
@@ -161,6 +164,7 @@ export function CartDrawer() {
                   </div>
                   <Link
                     href="/location"
+                    onClick={closeCart}
                     className="inline-flex min-h-[48px] w-full items-center justify-center border border-foreground px-6 font-display text-xs uppercase tracking-[0.2em] hover:bg-foreground hover:text-background"
                   >
                     See opening hours
