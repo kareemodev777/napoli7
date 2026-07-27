@@ -14,6 +14,8 @@ import { useCart } from "@/store/cart";
 import { useCartDrawer } from "@/store/cart-drawer";
 import { useMounted } from "@/lib/use-mounted";
 import { useOrderingAvailability } from "@/lib/use-ordering-availability";
+import { useMenuDiscount } from "@/components/pricing/MenuDiscountProvider";
+import { menuDiscountAmountAed } from "@/lib/menu-discount";
 import { formatAed } from "@/components/catalog/PriceBadge";
 import { CartLineItem } from "./CartLineItem";
 
@@ -34,8 +36,16 @@ export function CartDrawer() {
   const closeCart = useCartDrawer((s) => s.closeCart);
   const items = useCart((s) => s.items);
   const subtotal = useCart((s) => s.subtotal());
+  const promos = useCart((s) => s.promos);
   const discount = useCart((s) => s.discount());
-  const total = useCart((s) => s.total());
+
+  // Active site-wide sale (Grand Opening – 50% OFF), shown live so the customer
+  // sees it the moment they add a pizza. Guests only, doesn't stack with codes,
+  // and comes off the items only — the server re-applies it authoritatively.
+  const sale = useMenuDiscount();
+  const autoMenuDiscount =
+    promos.length === 0 ? menuDiscountAmountAed(subtotal, sale) : 0;
+  const total = Math.max(0, subtotal - discount - autoMenuDiscount);
   const hydrated = useMounted();
   const pathname = usePathname();
   const { availability } = useOrderingAvailability();
@@ -105,6 +115,15 @@ export function CartDrawer() {
                   <div className="flex items-baseline justify-between gap-3">
                     <dt className="text-muted-foreground">Discount</dt>
                     <dd className="tabular-nums">−{formatAed(discount)}</dd>
+                  </div>
+                ) : autoMenuDiscount > 0 ? (
+                  <div className="flex items-baseline justify-between gap-3">
+                    <dt className="text-muted-foreground">
+                      {sale.label || `${sale.percent}% off menu`}
+                    </dt>
+                    <dd className="tabular-nums text-basil">
+                      −{formatAed(autoMenuDiscount)}
+                    </dd>
                   </div>
                 ) : null}
                 <div className="flex items-baseline justify-between gap-3 border-t border-border pt-2">
