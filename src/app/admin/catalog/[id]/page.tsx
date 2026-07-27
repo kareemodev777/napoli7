@@ -70,7 +70,7 @@ function AddPriceModal({
         <Field
           label="Detail"
           name="detail"
-          hint={'Shown to customers, e.g. "30 cm" (medium) or "24 cm" (small).'}
+          hint={'Shown to customers, e.g. "30 cm" (medium) or "23 cm" (small).'}
         />
         <Field
           label="Price"
@@ -229,7 +229,7 @@ export default async function EditCatalogItemPage({
                 {product.description}
               </p>
               <div className="mt-4 flex flex-wrap gap-2">
-                <Badge>Main {money(product.price_aed)} AED</Badge>
+                <Badge>Menu price {money(product.price_aed)} AED</Badge>
                 <Badge>{sizes.length} prices</Badge>
                 <Badge>{ingredients.length} ingredients</Badge>
                 {product.is_veg ? <Badge>Vegetarian</Badge> : null}
