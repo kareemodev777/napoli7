@@ -216,8 +216,11 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
         </button>
       </header>
 
-      <div className="grid md:grid-cols-[1.1fr_1fr] max-h-[70vh] md:max-h-[65vh] overflow-hidden">
-        <div className="overflow-y-auto px-6 md:px-10 py-6 border-b md:border-b-0 md:border-r border-border">
+      {/* Mobile: one natural scroll so the extras/add-ons read as the main
+          content and it's obvious there's more below. Desktop: two independent
+          columns (customizations | image + summary). */}
+      <div className="max-h-[70vh] overflow-y-auto md:grid md:grid-cols-[1.1fr_1fr] md:max-h-[65vh] md:overflow-hidden">
+        <div className="px-6 md:px-10 py-6 border-b md:border-b-0 md:border-r border-border md:overflow-y-auto">
           {product.sizes.length > 1 ? (
             <div className="mb-6">
               <p className="font-display text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-2">
@@ -268,8 +271,11 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
           )}
         </div>
 
-        <aside className="overflow-y-auto px-6 md:px-10 py-6 bg-muted/40">
-          <div className="relative aspect-[4/3] bg-white overflow-hidden">
+        <aside className="px-6 md:px-10 py-6 bg-muted/40 md:overflow-y-auto">
+          {/* The image is decorative here and, on mobile, it pushed the extras
+              and add-ons off-screen so people didn't realise there was more to
+              choose. Show it only in the desktop side column. */}
+          <div className="relative aspect-[4/3] bg-white overflow-hidden hidden md:block">
             <SmartImage
               src={product.imageUrl}
               alt={`${product.name} from Napoli 7`}
@@ -285,7 +291,7 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
             )}
           </div>
 
-          <p className="mt-5 text-sm text-muted-foreground leading-relaxed">
+          <p className="mt-0 md:mt-5 text-sm text-muted-foreground leading-relaxed">
             {product.description}
           </p>
 
