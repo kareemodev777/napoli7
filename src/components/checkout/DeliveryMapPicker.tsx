@@ -69,7 +69,16 @@ async function reverseGeocode(
       address?: Record<string, string>;
     };
     const a = data.address ?? {};
-    const street = a.road;
+    // Build the street line from the road plus any building/house number the
+    // geocoder resolved, so the auto-filled field reads like a real address
+    // ("Sheikh Rashid bin Abdul Aziz St, Bldg 213") rather than a bare road.
+    const road = a.road;
+    const houseNumber = a.house_number ?? a.building;
+    const street = road
+      ? houseNumber
+        ? `${road}, Bldg ${houseNumber}`
+        : road
+      : undefined;
     const area =
       a.neighbourhood ??
       a.suburb ??

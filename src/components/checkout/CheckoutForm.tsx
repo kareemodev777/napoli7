@@ -229,10 +229,12 @@ export function CheckoutForm({
     setCoords(loc);
     if (!address) return;
 
-    // Fill the street from the reverse-geocoded address only when the field is
-    // empty, so we never clobber what the customer typed themselves.
+    // The pin is the source of truth for the address, so every drop/drag
+    // re-fills the street and area from the reverse-geocoded result. Both stay
+    // editable afterwards — the customer refines anything the geocoder missed —
+    // but they never have to type the address from scratch.
     const streetValue = address.street ?? address.full;
-    if (streetValue && !street.trim()) {
+    if (streetValue) {
       setStreet(streetValue);
       setSelectedAddressId(NEW_ADDRESS);
     }
@@ -302,6 +304,9 @@ export function CheckoutForm({
     [coords],
   );
   const pinAccepted = deliveryType !== "delivery" || deliverability.deliverable;
+  // A deliverable pin means the location is set from the map — the street field
+  // stops being required and the address fields read as "confirm", not "enter".
+  const pinProvidesLocation = deliverability.deliverable;
   // Short form of the same rejection, for the submit button face.
   const pinBlockedLabel =
     pinAccepted || deliverability.deliverable
@@ -381,10 +386,22 @@ export function CheckoutForm({
     const form = e.currentTarget;
     const formData = new FormData(form);
 
+    // Street is optional once a valid pin is set, but the order record still
+    // needs a locator. When the customer leaves it blank (e.g. the geocoder
+    // resolved no road), fall back to the pin's coordinates so the driver has a
+    // concrete GPS reference and the value clears the server's length check.
+    const typedStreet = String(formData.get("street") ?? "").trim();
+    const resolvedStreet =
+      typedStreet.length >= 5
+        ? typedStreet
+        : coords
+          ? `Map pin — GPS ${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)}`
+          : typedStreet;
+
     const rawAddress =
       deliveryType === "delivery"
         ? {
-            street: String(formData.get("street") ?? ""),
+            street: resolvedStreet,
             area: String(formData.get("area") ?? ""),
             flat: String(formData.get("flat") ?? "") || undefined,
             notes: String(formData.get("addressNotes") ?? "") || undefined,
@@ -547,104 +564,24 @@ export function CheckoutForm({
           </div>
 
           {deliveryType === "delivery" ? (
-            <div className="space-y-5">
-              {savedAddresses.length > 0 ? (
-                <Field id="savedAddress" label="Use a saved address">
-                  <select
-                    id="savedAddress"
-                    value={selectedAddressId}
-                    onChange={(e) => applySavedAddress(e.target.value)}
-                    className="w-full border border-border bg-background px-3 py-2.5 text-sm font-display tracking-[0.1em] uppercase focus:outline-none focus:border-brand"
-                  >
-                    {savedAddresses.map((a) => (
-                      <option key={a.id} value={a.id}>
-                        {a.label} — {a.street}
-                        {a.isDefault ? " (default)" : ""}
-                      </option>
-                    ))}
-                    <option value={NEW_ADDRESS}>New address</option>
-                  </select>
-                </Field>
-              ) : null}
-              <div className="grid sm:grid-cols-2 gap-5">
-                <Field
-                  id="area"
-                  label="Area in Ajman"
-                  required
-                  hint={
-                    areaSupported
-                      ? `Delivery fee: ${formatAed(zoneFee)}`
-                      : "We don't deliver to that area yet — switch to pickup."
-                  }
-                >
-                  <select
-                    id="area"
-                    name="area"
-                    required
-                    value={area}
-                    onChange={(e) => setArea(e.target.value)}
-                    aria-invalid={!areaSupported}
-                    className={
-                      "w-full border bg-background px-3 py-2.5 text-sm font-display tracking-[0.1em] uppercase focus:outline-none focus:border-brand " +
-                      (areaSupported ? "border-border" : "border-flag-red")
-                    }
-                  >
-                    {zones.length === 0 ? (
-                      <option value="">No delivery areas available</option>
-                    ) : null}
-                    {zones.map((z) => (
-                      <option key={z.area} value={z.area}>
-                        {z.area}
-                      </option>
-                    ))}
-                  </select>
-                </Field>
-                <Field id="street" label="Street + building" required>
-                  <Input
-                    id="street"
-                    name="street"
-                    required
-                    placeholder="Sheikh Rashid bin Abdul Aziz St, Building 213"
-                    value={street}
-                    ref={streetInputRef}
-                    onChange={(e) => {
-                      setStreet(e.target.value);
-                      setSelectedAddressId(NEW_ADDRESS);
-                    }}
-                    autoComplete="street-address"
-                  />
-                </Field>
-                <Field id="flat" label="Flat / apartment">
-                  <Input
-                    id="flat"
-                    name="flat"
-                    value={flat}
-                    onChange={(e) => setFlat(e.target.value)}
-                  />
-                </Field>
-                <Field id="addressNotes" label="Delivery instructions">
-                  <Input
-                    id="addressNotes"
-                    name="addressNotes"
-                    value={addressNotes}
-                    onChange={(e) => setAddressNotes(e.target.value)}
-                  />
-                </Field>
-              </div>
+            <div className="space-y-6">
+              {/* Step 1 — the map comes first. The customer taps "Use my
+                  location" or drops/drags the pin, and that single action both
+                  sets the GPS point the driver navigates by and fills the
+                  address fields below. */}
               <div className="border border-border bg-card p-4 space-y-3">
-                <div className="flex items-center justify-between gap-4">
-                  <div>
-                    <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep">
-                      Drop your delivery pin
-                    </p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Tap the map to set your exact spot — the driver gets this
-                      GPS point. Drag the pin to fine-tune it.
-                    </p>
-                  </div>
+                <div>
+                  <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep">
+                    1 · Set your location
+                  </p>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Tap “Use my location”, or tap/drag the pin to your exact
+                    spot. We’ll fill in your area and street automatically — the
+                    driver navigates by this GPS point.
+                  </p>
                 </div>
                 <DeliveryMapPicker value={coords} onChange={handlePinChange} />
-                {deliverability.deliverable ? (
+                {pinProvidesLocation ? (
                   <p className="text-xs text-muted-foreground">
                     Pin set · {deliverability.distanceKm.toFixed(1)} km from the
                     shop, inside Ajman — within our {DELIVERY_RADIUS_KM} km
@@ -655,6 +592,118 @@ export function CheckoutForm({
                     {deliverabilityMessage(deliverability)}
                   </p>
                 )}
+              </div>
+
+              {/* Step 2 — the address, auto-completed from the pin. Editable,
+                  but no longer something the customer has to type once a valid
+                  pin is set. */}
+              <div className="space-y-5">
+                <p className="font-display text-xs tracking-[0.25em] uppercase text-azure-deep">
+                  2 · {pinProvidesLocation ? "Confirm your address" : "Your address"}
+                  {pinProvidesLocation ? (
+                    <span className="ml-2 font-sans normal-case tracking-normal text-[11px] text-muted-foreground">
+                      filled from your pin — edit if anything’s off
+                    </span>
+                  ) : null}
+                </p>
+                {savedAddresses.length > 0 ? (
+                  <Field id="savedAddress" label="Use a saved address">
+                    <select
+                      id="savedAddress"
+                      value={selectedAddressId}
+                      onChange={(e) => applySavedAddress(e.target.value)}
+                      className="w-full border border-border bg-background px-3 py-2.5 text-sm font-display tracking-[0.1em] uppercase focus:outline-none focus:border-brand"
+                    >
+                      {savedAddresses.map((a) => (
+                        <option key={a.id} value={a.id}>
+                          {a.label} — {a.street}
+                          {a.isDefault ? " (default)" : ""}
+                        </option>
+                      ))}
+                      <option value={NEW_ADDRESS}>New address</option>
+                    </select>
+                  </Field>
+                ) : null}
+                <div className="grid sm:grid-cols-2 gap-5">
+                  <Field
+                    id="area"
+                    label="Area in Ajman"
+                    required
+                    hint={
+                      areaSupported
+                        ? `Delivery fee: ${formatAed(zoneFee)}`
+                        : "We don't deliver to that area yet — switch to pickup."
+                    }
+                  >
+                    <select
+                      id="area"
+                      name="area"
+                      required
+                      value={area}
+                      onChange={(e) => setArea(e.target.value)}
+                      aria-invalid={!areaSupported}
+                      className={
+                        "w-full border bg-background px-3 py-2.5 text-sm font-display tracking-[0.1em] uppercase focus:outline-none focus:border-brand " +
+                        (areaSupported ? "border-border" : "border-flag-red")
+                      }
+                    >
+                      {zones.length === 0 ? (
+                        <option value="">No delivery areas available</option>
+                      ) : null}
+                      {zones.map((z) => (
+                        <option key={z.area} value={z.area}>
+                          {z.area}
+                        </option>
+                      ))}
+                    </select>
+                  </Field>
+                  <Field
+                    id="street"
+                    label="Street + building"
+                    required={!pinProvidesLocation}
+                    hint={
+                      pinProvidesLocation
+                        ? "Optional — your pin already sets the location."
+                        : undefined
+                    }
+                  >
+                    <Input
+                      id="street"
+                      name="street"
+                      required={!pinProvidesLocation}
+                      placeholder="Sheikh Rashid bin Abdul Aziz St, Building 213"
+                      value={street}
+                      ref={streetInputRef}
+                      onChange={(e) => {
+                        setStreet(e.target.value);
+                        setSelectedAddressId(NEW_ADDRESS);
+                      }}
+                      autoComplete="street-address"
+                    />
+                  </Field>
+                </div>
+
+                {/* Step 3 & 4 — the only things the customer must add by hand. */}
+                <div className="grid sm:grid-cols-2 gap-5">
+                  <Field id="flat" label="Flat / apartment">
+                    <Input
+                      id="flat"
+                      name="flat"
+                      placeholder="e.g. Flat 302"
+                      value={flat}
+                      onChange={(e) => setFlat(e.target.value)}
+                    />
+                  </Field>
+                  <Field id="addressNotes" label="Delivery instructions">
+                    <Input
+                      id="addressNotes"
+                      name="addressNotes"
+                      placeholder="e.g. Call on arrival, gate code 1234"
+                      value={addressNotes}
+                      onChange={(e) => setAddressNotes(e.target.value)}
+                    />
+                  </Field>
+                </div>
               </div>
             </div>
           ) : (
