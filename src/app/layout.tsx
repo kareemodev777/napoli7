@@ -3,6 +3,8 @@ import { Inter, Inter_Tight } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import { RecoveryRedirect } from "@/components/auth/RecoveryRedirect";
+import { MenuDiscountProvider } from "@/components/pricing/MenuDiscountProvider";
+import { getMenuDiscountCached } from "@/lib/menu-discount.server";
 import "./globals.css";
 
 const inter = Inter({
@@ -35,12 +37,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const enableVercelInsights = Boolean(process.env.VERCEL);
+  const menuDiscount = await getMenuDiscountCached();
 
   return (
     <html
@@ -55,7 +58,9 @@ export default function RootLayout({
           Skip to content
         </a>
         <RecoveryRedirect />
-        {children}
+        <MenuDiscountProvider value={menuDiscount}>
+          {children}
+        </MenuDiscountProvider>
         {enableVercelInsights ? (
           <>
             <Analytics />

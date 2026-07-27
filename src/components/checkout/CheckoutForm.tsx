@@ -38,6 +38,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useCart } from "@/store/cart";
+import { useMenuDiscount } from "@/components/pricing/MenuDiscountProvider";
+import { menuDiscountAmountAed } from "@/lib/menu-discount";
 import { useMounted } from "@/lib/use-mounted";
 import { placeOrder, type PlaceOrderInput } from "@/app/checkout/actions";
 import { formatAed } from "@/components/catalog/PriceBadge";
@@ -130,6 +132,15 @@ export function CheckoutForm({
   const promos = useCart((s) => s.promos);
   const discount = useCart((s) => s.discount());
   const clearCart = useCart((s) => s.clear);
+
+  // Active site-wide sale (e.g. Grand Opening – 50% OFF). It applies automatically
+  // to every order's item subtotal, but does NOT stack with promo/reward codes, so
+  // it only kicks in when no code is applied — mirroring the server (placeOrder).
+  // The server re-reads and re-applies it; this is the live quote the customer sees.
+  const sale = useMenuDiscount();
+  const autoMenuDiscount =
+    promos.length === 0 ? menuDiscountAmountAed(subtotal, sale) : 0;
+  const totalDiscount = Math.min(subtotal, discount + autoMenuDiscount);
 
   const hydrated = useMounted();
   // A stale cart holds items saved against an older (or demo) menu whose ids
@@ -273,7 +284,7 @@ export function CheckoutForm({
     subtotalAed: subtotal,
     deliveryFeeAed: deliveryFee,
     serviceFeeAed: serviceFee,
-    discountAed: discount,
+    discountAed: totalDiscount,
   });
   const deliveryMapQuery = useMemo(
     () =>
@@ -878,6 +889,10 @@ export function CheckoutForm({
               }
             >
               −{formatAed(discount)}
+            </Row>
+          ) : autoMenuDiscount > 0 ? (
+            <Row label={sale.label || `${sale.percent}% off menu`}>
+              <span className="text-basil">−{formatAed(autoMenuDiscount)}</span>
             </Row>
           ) : null}
           <Row label="Delivery fee">

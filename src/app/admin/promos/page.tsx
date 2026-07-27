@@ -3,8 +3,10 @@ import type { ReactNode } from "react";
 import { Pencil, Plus } from "lucide-react";
 import { DeletePromoButton } from "./DeletePromoButton";
 import { SignupCampaignCard, type RewardProductOption } from "./campaign";
-import { updateMaxPromoCodesPerOrder } from "./actions";
+import { updateMaxPromoCodesPerOrder, updateMenuDiscount } from "./actions";
 import { Badge, PromoForm, money } from "./form-components";
+import { resolveMenuDiscount } from "@/lib/menu-discount";
+import { getMenuDiscount } from "@/lib/menu-discount.server";
 import type { PromoCodeRow } from "./types";
 import { AdminModal } from "@/components/admin/AdminModal";
 import { HAS_SUPABASE_SERVICE } from "@/lib/env";
@@ -129,6 +131,18 @@ function usageLabel(promo: PromoCodeRow) {
   return `${promo.times_used} / ${promo.max_uses} used`;
 }
 
+/** Format a stored timestamp as the Ajman (+04) calendar day (yyyy-mm-dd) for a
+ *  <input type="date">, so the picker shows the same day the sale runs on. */
+function toDubaiDate(iso: string | null): string {
+  if (!iso) return "";
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Dubai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date(iso));
+}
+
 function windowLabel(promo: PromoCodeRow) {
   if (!promo.valid_from && !promo.valid_until) return "Always valid";
   const from = promo.valid_from ? formatDate(promo.valid_from) : "now";
@@ -138,11 +152,14 @@ function windowLabel(promo: PromoCodeRow) {
 
 export default async function AdminPromosPage() {
   const promos = await loadPromos();
-  const [campaign, rewardProducts, maxPromoCodes] = await Promise.all([
-    getSignupCampaign(),
-    loadRewardProducts(),
-    getMaxPromoCodesPerOrder(),
-  ]);
+  const [campaign, rewardProducts, maxPromoCodes, menuDiscount] =
+    await Promise.all([
+      getSignupCampaign(),
+      loadRewardProducts(),
+      getMaxPromoCodesPerOrder(),
+      getMenuDiscount(),
+    ]);
+  const menuDiscountState = resolveMenuDiscount(menuDiscount);
   const orderCounts = await loadOrderCounts(promos.map((promo) => promo.code));
   const activeCount = promos.filter((promo) => promo.active).length;
   const cappedCount = promos.filter(
@@ -214,6 +231,112 @@ export default async function AdminPromosPage() {
                 className="inline-flex h-11 items-center justify-center rounded-md bg-brand px-4 text-xs font-display uppercase tracking-[0.14em] text-primary-foreground hover:bg-brand-hover"
               >
                 Save limit
+              </button>
+            </form>
+          ) : (
+            <p className="mt-5 text-sm text-muted-foreground">
+              Supabase service environment is required to edit this value.
+            </p>
+          )}
+        </div>
+
+        <div className="mt-8 rounded-md border border-border bg-card p-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <h2 className="font-display text-xl uppercase tracking-[0.14em]">
+                Automatic menu discount
+              </h2>
+              <p className="mt-2 max-w-xl text-sm text-muted-foreground">
+                A site-wide sale (e.g. Grand Opening – 50% OFF) applied
+                automatically to every order&rsquo;s items — no code, no login.
+                Delivery and service fees are never discounted. Set the percent
+                and the start/end dates; leave a date blank for no bound.
+              </p>
+            </div>
+            <Badge
+              tone={
+                menuDiscountState.active
+                  ? "active"
+                  : menuDiscount.enabled
+                    ? "warning"
+                    : undefined
+              }
+            >
+              {menuDiscountState.active
+                ? `Live · ${menuDiscount.percent}% off`
+                : menuDiscount.enabled
+                  ? "Enabled · outside window"
+                  : "Off"}
+            </Badge>
+          </div>
+
+          {HAS_SUPABASE_SERVICE ? (
+            <form
+              action={updateMenuDiscount}
+              className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+            >
+              <label className="flex items-center gap-2 text-sm sm:col-span-2 lg:col-span-4">
+                <input
+                  type="checkbox"
+                  name="menu_discount_enabled"
+                  defaultChecked={menuDiscount.enabled}
+                  className="h-4 w-4"
+                />
+                <span>Enable the sale</span>
+              </label>
+              <label className="grid gap-2">
+                <span className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+                  Discount %
+                </span>
+                <input
+                  name="menu_discount_percent"
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="1"
+                  defaultValue={menuDiscount.percent}
+                  className="h-11 rounded-md border border-border bg-background px-3 text-sm outline-none transition focus:border-brand"
+                />
+              </label>
+              <label className="grid gap-2">
+                <span className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+                  Label (shown to customers)
+                </span>
+                <input
+                  name="menu_discount_label"
+                  type="text"
+                  defaultValue={menuDiscount.label}
+                  placeholder="Grand Opening – 50% OFF"
+                  className="h-11 rounded-md border border-border bg-background px-3 text-sm outline-none transition focus:border-brand"
+                />
+              </label>
+              <label className="grid gap-2">
+                <span className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+                  Start date
+                </span>
+                <input
+                  name="menu_discount_start"
+                  type="date"
+                  defaultValue={toDubaiDate(menuDiscount.startsAt)}
+                  className="h-11 rounded-md border border-border bg-background px-3 text-sm outline-none transition focus:border-brand"
+                />
+              </label>
+              <label className="grid gap-2">
+                <span className="text-xs uppercase tracking-[0.14em] text-muted-foreground">
+                  End date
+                </span>
+                <input
+                  name="menu_discount_end"
+                  type="date"
+                  defaultValue={toDubaiDate(menuDiscount.endsAt)}
+                  className="h-11 rounded-md border border-border bg-background px-3 text-sm outline-none transition focus:border-brand"
+                />
+              </label>
+              <button
+                type="submit"
+                className="inline-flex h-11 items-center justify-center rounded-md bg-brand px-4 text-xs font-display uppercase tracking-[0.14em] text-primary-foreground hover:bg-brand-hover sm:col-span-2 lg:col-span-4 lg:w-fit"
+              >
+                Save sale
               </button>
             </form>
           ) : (

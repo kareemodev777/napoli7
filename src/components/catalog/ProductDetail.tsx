@@ -14,7 +14,8 @@ import { Breadcrumb } from "./Breadcrumb";
 import { CustomizationRow } from "./CustomizationRow";
 import { QuantityStepper } from "./QuantityStepper";
 import { SizeSelector } from "./SizeSelector";
-import { PriceBadge, formatAed } from "./PriceBadge";
+import { formatAed } from "./PriceBadge";
+import { SalePrice } from "@/components/pricing/SalePrice";
 import { VegDot } from "./VegDot";
 import { SpicyDot } from "./SpicyDot";
 import { useOrderingAvailability } from "@/lib/use-ordering-availability";
@@ -123,7 +124,10 @@ export function ProductDetail({ product, categoryLabel }: ProductDetailProps) {
             </div>
 
             <div className="mt-6">
-              <PriceBadge amount={selectedSize.price} size="lg" />
+              <SalePrice
+                amount={selectedSize.price}
+                className="text-[22px] font-display tracking-tight"
+              />
             </div>
 
             <p className="mt-6 text-base md:text-lg text-muted-foreground leading-relaxed max-w-[55ch]">

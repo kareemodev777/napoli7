@@ -20,6 +20,8 @@ import {
   type CanonicalOrderItem,
 } from "@/lib/checkout-pricing";
 import { isRewardPickupOnly } from "@/lib/reward-promo";
+import { resolveMenuDiscount, menuDiscountAmountAed } from "@/lib/menu-discount";
+import { getMenuDiscount } from "@/lib/menu-discount.server";
 import { checkDeliverability, deliverabilityMessage } from "@/lib/delivery-map";
 import { placeholderEmailForPhone } from "@/lib/auth/placeholder-email";
 import { toUaeE164 } from "@/lib/auth/phone";
@@ -262,6 +264,25 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
     if (promoResult.isReward) {
       rewardCount += 1;
       rewardDiscount += promoResult.amount;
+    }
+  }
+
+  // Grand Opening (or any active site-wide sale): an automatic, codeless discount
+  // on the whole item subtotal — but for GUESTS ONLY. Signed-in customers get the
+  // Free Pizza reward instead, so the two promotions never combine: a logged-in
+  // order never receives the sale, and a guest order never has a reward code. It
+  // also does not stack with any manually-applied code. Read fresh (never cached)
+  // so an expired sale is never honoured. Folded into `discount` here, it is
+  // capped below and — like every discount — comes off the items only, never the
+  // delivery or service fee.
+  if (appliedPromos.length === 0 && HAS_SUPABASE) {
+    const authClient = await createClient();
+    const {
+      data: { user: saleUser },
+    } = await authClient.auth.getUser();
+    if (!saleUser) {
+      const sale = resolveMenuDiscount(await getMenuDiscount());
+      discount += menuDiscountAmountAed(subtotal, sale);
     }
   }
 

@@ -10,7 +10,7 @@ import { VegDot } from "./VegDot";
 import { SpicyDot } from "./SpicyDot";
 import { SizeSelector } from "./SizeSelector";
 import { CustomizeModal } from "./CustomizeModal";
-import { formatAed } from "./PriceBadge";
+import { SalePrice } from "@/components/pricing/SalePrice";
 import { useOrderingAvailability } from "@/lib/use-ordering-availability";
 
 interface MenuProductCardProps {
@@ -151,8 +151,8 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
         ) : null}
 
         <div className="mt-2 flex items-center justify-between gap-3 pt-3 border-t border-border">
-          <span className="font-display text-base tabular-nums">
-            {formatAed(selectedSize.price)}
+          <span className="font-display text-base">
+            <SalePrice amount={selectedSize.price} />
           </span>
           {hasCustomizations ? (
             <button

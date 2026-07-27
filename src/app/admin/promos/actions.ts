@@ -1,10 +1,12 @@
 "use server";
 
-import { refresh, revalidatePath } from "next/cache";
+import { refresh, revalidatePath, updateTag } from "next/cache";
 import { z } from "zod";
 import { UUID_RE } from "@/lib/uuid";
 import { normalizeCode } from "@/lib/promo";
 import { normalizeMaxPromoCodesPerOrder } from "@/lib/promo-settings";
+import { normalizeMenuDiscountPercent } from "@/lib/menu-discount";
+import { MENU_DISCOUNT_CACHE_TAG } from "@/lib/menu-discount.server";
 import { requireAdmin } from "@/lib/auth/require-admin";
 import { createServiceRoleClient } from "@/lib/supabase/service";
 
@@ -120,6 +122,50 @@ export async function updateMaxPromoCodesPerOrder(formData: FormData) {
     return;
   }
 
+  revalidatePromos();
+}
+
+/**
+ * Configure the automatic, site-wide menu discount (the Grand Opening – 50% OFF
+ * sale). Codeless: while enabled and inside its window every order gets `percent`
+ * off its item subtotal, applied at checkout by placeOrder. Dates come from the
+ * admin as calendar days and are pinned to the Asia/Dubai day boundaries.
+ */
+export async function updateMenuDiscount(formData: FormData) {
+  await requireAdmin();
+
+  const enabled = formData.get("menu_discount_enabled") === "on";
+  const percent = normalizeMenuDiscountPercent(
+    Number(formData.get("menu_discount_percent")),
+  );
+  const label = String(formData.get("menu_discount_label") ?? "").trim();
+  const startDate = String(formData.get("menu_discount_start") ?? "").trim();
+  const endDate = String(formData.get("menu_discount_end") ?? "").trim();
+  // A calendar day → the full local day in Ajman (+04): starts at 00:00, the end
+  // date is inclusive through 23:59:59. Empty means "no bound".
+  const startsAt = startDate ? `${startDate} 00:00:00+04` : null;
+  const endsAt = endDate ? `${endDate} 23:59:59+04` : null;
+
+  const supabase = createServiceRoleClient();
+  const { error } = await supabase.from("menu_discount").upsert({
+    id: 1,
+    enabled,
+    percent,
+    starts_at: startsAt,
+    ends_at: endsAt,
+    label,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) {
+    logActionError("updateMenuDiscount", error);
+    return;
+  }
+
+  // The sale shows on every storefront price (menu, product, cart, checkout) and
+  // is read via the tagged cache in the root layout — bust both.
+  updateTag(MENU_DISCOUNT_CACHE_TAG);
+  revalidatePath("/menu");
+  revalidatePath("/", "layout");
   revalidatePromos();
 }
 

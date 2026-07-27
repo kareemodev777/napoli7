@@ -4,6 +4,8 @@ import Link from "next/link";
 import { useCart } from "@/store/cart";
 import { formatAed } from "@/components/catalog/PriceBadge";
 import { PromoField } from "@/components/cart/PromoField";
+import { useMenuDiscount } from "@/components/pricing/MenuDiscountProvider";
+import { menuDiscountAmountAed } from "@/lib/menu-discount";
 import { useOrderingAvailability } from "@/lib/use-ordering-availability";
 import {
   amountToFreeDeliveryAed,
@@ -17,7 +19,14 @@ export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
   const itemCount = useCart((s) => s.totalQuantity());
   const promos = useCart((s) => s.promos);
   const discount = useCart((s) => s.discount());
-  const total = useCart((s) => s.total());
+
+  // Active site-wide sale (e.g. Grand Opening – 50% OFF), shown here as a live
+  // quote. It doesn't stack with promo codes, and — like every discount — comes off
+  // the items only, never the fees. The server re-applies it authoritatively.
+  const sale = useMenuDiscount();
+  const autoMenuDiscount =
+    promos.length === 0 ? menuDiscountAmountAed(subtotal, sale) : 0;
+  const total = Math.max(0, subtotal - discount - autoMenuDiscount);
 
   const freeDelivery = qualifiesForFreeDelivery(subtotal);
   const toFreeDelivery = amountToFreeDeliveryAed(subtotal);
@@ -45,6 +54,10 @@ export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
             }
           >
             <span>−{formatAed(discount)}</span>
+          </Row>
+        ) : autoMenuDiscount > 0 ? (
+          <Row label={sale.label || `${sale.percent}% off menu`}>
+            <span className="text-basil">−{formatAed(autoMenuDiscount)}</span>
           </Row>
         ) : null}
         {/* The cart has no delivery type or zone yet, so both fees are quoted,
