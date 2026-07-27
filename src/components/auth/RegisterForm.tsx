@@ -211,17 +211,18 @@ export function RegisterForm({ otpEnabled = true }: { otpEnabled?: boolean }) {
           />
         </Field>
       </div>
-      {/* Optional: the mobile is the identity, and SMS is how we verify it. An
-          email only buys the customer emailed receipts. */}
-      <Field id="reg-email" label="Email (optional)">
+      {/* Required: an account can't be used to log in without an email, so we
+          collect one up front. Order receipts and updates go here too. */}
+      <Field id="reg-email" label="Email" required>
         <Input
           id="reg-email"
           type="email"
           value={form.email}
           onChange={(e) => update("email", e.target.value)}
+          required
           autoComplete="email"
           disabled={step === "code"}
-          placeholder="For emailed receipts — leave blank if you prefer"
+          placeholder="you@example.com"
         />
       </Field>
       <Field

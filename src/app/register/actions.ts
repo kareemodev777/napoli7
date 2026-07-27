@@ -23,15 +23,14 @@ const registerSchema = z
   .object({
     firstName: z.string().min(1),
     lastName: z.string().min(1),
-    // Optional. The mobile is the identity — SMS is how we verify a customer —
-    // and an email is a nice-to-have for receipts. An empty string means "none";
-    // a non-empty one still has to be a real address.
+    // Required. A customer can't log in without an email address, so we won't
+    // create an account without one — an empty field is rejected here, and the
+    // value must be a real address.
     email: z
       .string()
       .trim()
-      .email("Enter a valid email, or leave it blank.")
-      .optional()
-      .or(z.literal("")),
+      .min(1, "Enter your email address.")
+      .email("Enter a valid email address."),
     // The UI collects only the national number under a fixed +971; normalize
     // whatever shape the customer typed (50…, 050…, +971…) to E.164 before we
     // validate, so "0501234567" is accepted and stored as +971501234567.
