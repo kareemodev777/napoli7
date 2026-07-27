@@ -171,11 +171,9 @@ export function CheckoutForm({
   );
   const [paymentMethod, setPaymentMethod] = useState<"card" | "cod">("card");
   const [pizzaCut, setPizzaCut] = useState(false);
-  // Cash on delivery is pickup-only: for delivery the effective method is always
-  // card, regardless of the last pickup selection. Derived (not stored) so we
-  // never call setState from an effect.
-  const effectivePaymentMethod: "card" | "cod" =
-    deliveryType === "delivery" ? "card" : paymentMethod;
+  // The selected method applies to both fulfilment types — cash is accepted on
+  // delivery (paid to the driver) and at pickup (paid at the counter).
+  const effectivePaymentMethod: "card" | "cod" = paymentMethod;
   // GPS pin the customer drops on the map — sent to the driver and used to block
   // out-of-Ajman deliveries.
   const [coords, setCoords] = useState<PickedLocation | null>(null);
@@ -769,41 +767,30 @@ export function CheckoutForm({
 
         <Section title="Payment">
           <div className="max-w-md border border-border bg-brand/10 p-4 space-y-4">
-            {deliveryType === "pickup" ? (
-              <>
-                <p className="font-display text-sm tracking-[0.1em] uppercase">
-                  Choose payment method
-                </p>
-                <div className="grid grid-cols-2 gap-px bg-border border border-border w-fit">
-                  <Toggle
-                    active={paymentMethod === "card"}
-                    onClick={() => setPaymentMethod("card")}
-                  >
-                    Card
-                  </Toggle>
-                  <Toggle
-                    active={paymentMethod === "cod"}
-                    onClick={() => setPaymentMethod("cod")}
-                  >
-                    Cash on delivery
-                  </Toggle>
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  Card, Apple Pay, and Google Pay are still available. Cash on
-                  delivery is for pickup orders only.
-                </p>
-              </>
-            ) : (
-              <>
-                <p className="font-display text-sm tracking-[0.1em] uppercase">
-                  Card payment
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  We accept cards, Apple Pay, and Google Pay. Delivery orders
-                  can’t use cash on delivery.
-                </p>
-              </>
-            )}
+            <p className="font-display text-sm tracking-[0.1em] uppercase">
+              Choose payment method
+            </p>
+            <div className="grid grid-cols-2 gap-px bg-border border border-border w-fit">
+              <Toggle
+                active={paymentMethod === "card"}
+                onClick={() => setPaymentMethod("card")}
+              >
+                Card
+              </Toggle>
+              <Toggle
+                active={paymentMethod === "cod"}
+                onClick={() => setPaymentMethod("cod")}
+              >
+                {deliveryType === "delivery" ? "Cash on delivery" : "Cash at pickup"}
+              </Toggle>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {paymentMethod === "card"
+                ? "Card, Apple Pay, and Google Pay are supported."
+                : deliveryType === "delivery"
+                  ? "Pay the driver in cash when your order arrives."
+                  : "Pay in cash when you collect your order."}
+            </p>
             {STRIPE_TEST_MODE ? (
               <p className="text-xs text-muted-foreground">
                 Test mode: card{" "}
@@ -854,8 +841,8 @@ export function CheckoutForm({
             `Minimum ${formatAed(deliveryMinSubtotalAed)} in items for delivery`
           ) : pinBlockedLabel ? (
             pinBlockedLabel
-          ) : paymentMethod === "cod" && deliveryType === "pickup" ? (
-            "Place pickup order"
+          ) : paymentMethod === "cod" ? (
+            deliveryType === "delivery" ? "Place delivery order" : "Place pickup order"
           ) : (
             "Continue to secure payment"
           )}

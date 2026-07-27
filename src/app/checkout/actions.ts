@@ -130,9 +130,6 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   if (data.deliveryType === "delivery" && !data.deliveryAddress) {
     return { error: "Add a delivery address or switch to pickup." };
   }
-  if (data.deliveryType === "delivery" && data.paymentMethod === "cod") {
-    return { error: "Cash on delivery is available for pickup orders only." };
-  }
 
   const orderingAvailability = await getOrderingAvailability();
   if (!orderingAvailability.isOpen) {
@@ -460,8 +457,8 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   }
 
   // Card orders are fulfilled by the Stripe webhook after payment succeeds.
-  // COD pickup orders are fulfilled immediately here so the kitchen and POS
-  // get the ticket without waiting for a payment callback.
+  // Cash orders (delivery or pickup) are fulfilled immediately here so the
+  // kitchen and POS get the ticket without waiting for a payment callback.
   if (data.paymentMethod === "cod") {
     try {
       await sendKitchenNotificationsForOrder(order.id);

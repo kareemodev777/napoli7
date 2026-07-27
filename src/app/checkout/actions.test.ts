@@ -17,10 +17,11 @@ mock.module("@/lib/delivery-settings", () => ({
   getDeliveryOrderTotalAed: ({ subtotalAed, deliveryFeeAed, discountAed }: { subtotalAed: number; deliveryFeeAed: number; discountAed: number; }) => subtotalAed + deliveryFeeAed - discountAed,
   getDeliveryMinimumSubtotalAed: async () => 0,
   meetsDeliveryMinimumAed: () => true,
+  computeOrderFeesAed: () => ({ deliveryFeeAed: 9, serviceFeeAed: 3 }),
 }));
 mock.module("@/lib/delivery-map", () => ({
-  isWithinDeliveryRadius: () => true,
-  distanceFromShopKm: () => 0,
+  checkDeliverability: () => ({ deliverable: true, distanceKm: 0 }),
+  deliverabilityMessage: () => "",
   DELIVERY_RADIUS_KM: 7,
 }));
 mock.module("@/lib/saved-address", () => ({
@@ -145,7 +146,7 @@ test("pickup COD order triggers kitchen and POS handoff", async () => {
   expect(pushOrderToPos).toHaveBeenCalledTimes(1);
 });
 
-test("delivery COD is rejected before checkout submission", async () => {
+test("delivery COD order is accepted and placed without a payment redirect", async () => {
   const result = await placeOrder({
     firstName: "AK",
     lastName: "Smoke",
@@ -175,5 +176,9 @@ test("delivery COD is rejected before checkout submission", async () => {
     ],
   });
 
-  expect(result.error).toBe("Cash on delivery is available for pickup orders only.");
+  // Cash orders are placed immediately (no Stripe redirect), for delivery as
+  // well as pickup.
+  expect(result.error).toBeUndefined();
+  expect(result.orderId).toBe("order-1");
+  expect(result.paymentUrl).toBeUndefined();
 });
