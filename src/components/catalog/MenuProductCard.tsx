@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { ShoppingCart, Sliders } from "lucide-react";
+import { Plus, Check, Sliders } from "lucide-react";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { defaultDisplaySizeId } from "@/data/types/catalog";
 import type { Product, SizeId } from "@/data/types/catalog";
@@ -76,11 +76,36 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
           className="object-contain p-3 sm:p-4"
         />
         {(product.isVeg || product.isSpicy) && (
-          <div className="absolute top-3 right-3 flex items-center gap-2">
+          <div className="absolute top-3 left-3 flex items-center gap-2">
             {product.isVeg ? <VegDot /> : null}
             {product.isSpicy ? <SpicyDot /> : null}
           </div>
         )}
+        {/* Primary quick-add — a "+" straight on the pizza. One tap adds the
+            currently selected size; it bounces to a checkmark to confirm. */}
+        {!unavailable ? (
+          <button
+            type="button"
+            onClick={handleQuickAdd}
+            aria-label={
+              justAdded
+                ? `${product.name} added to cart`
+                : `Add ${product.name} to cart`
+            }
+            className={
+              "absolute top-3 right-3 h-11 w-11 inline-flex items-center justify-center rounded-full text-primary-foreground shadow-md transition-colors " +
+              (justAdded
+                ? "bg-flag-green animate-quick-add-pop"
+                : "bg-brand hover:bg-brand-hover active:scale-95")
+            }
+          >
+            {justAdded ? (
+              <Check className="h-5 w-5" strokeWidth={2.5} aria-hidden />
+            ) : (
+              <Plus className="h-6 w-6" strokeWidth={2.5} aria-hidden />
+            )}
+          </button>
+        ) : null}
         {unavailable ? (
           <div className="absolute inset-x-0 bottom-0 bg-black/70 text-white text-center px-3 py-2 font-display text-[10px] tracking-[0.2em] uppercase">
             Momentarily unavailable
@@ -129,43 +154,24 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
           <span className="font-display text-base tabular-nums">
             {formatAed(selectedSize.price)}
           </span>
-          <div className="flex items-center gap-2">
-            {hasCustomizations ? (
-              <button
-                type="button"
-                onClick={() => setModalOpen(true)}
-                disabled={unavailable}
-                className="inline-flex items-center gap-1.5 border border-border h-10 px-3 font-display text-[11px] tracking-[0.2em] uppercase hover:border-foreground hover:bg-muted disabled:opacity-50 disabled:hover:border-border disabled:hover:bg-transparent"
-                aria-label={`Customize ${product.name}`}
-              >
-                <Sliders
-                  className="h-3.5 w-3.5"
-                  strokeWidth={1.5}
-                  aria-hidden
-                />
-                Customize
-              </button>
-            ) : null}
+          {hasCustomizations ? (
             <button
               type="button"
-              onClick={handleQuickAdd}
-              aria-label={`Add ${product.name} to cart`}
+              onClick={() => setModalOpen(true)}
               disabled={unavailable}
-              className="h-10 w-10 inline-flex items-center justify-center bg-brand text-primary-foreground hover:bg-brand-hover relative disabled:opacity-50 disabled:hover:bg-brand"
+              className="inline-flex items-center gap-1.5 border border-border h-10 px-3 font-display text-[11px] tracking-[0.2em] uppercase hover:border-foreground hover:bg-muted disabled:opacity-50 disabled:hover:border-border disabled:hover:bg-transparent"
+              aria-label={`Customize ${product.name}`}
             >
-              <ShoppingCart className="h-5 w-5" strokeWidth={1.75} aria-hidden />
-              {justAdded ? (
-                <span
-                  role="status"
-                  aria-live="polite"
-                  className="absolute -top-2 right-full mr-2 whitespace-nowrap font-display text-[10px] tracking-[0.2em] uppercase bg-foreground text-background px-2 py-1"
-                >
-                  Added
-                </span>
-              ) : null}
+              <Sliders className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden />
+              Customize
             </button>
-          </div>
+          ) : null}
         </div>
+        {/* Screen-reader confirmation for the on-image quick add, since the
+            visual bounce/checkmark alone isn't announced. */}
+        <span role="status" aria-live="polite" className="sr-only">
+          {justAdded ? `${product.name} added to cart` : ""}
+        </span>
       </div>
 
       {hasCustomizations && modalOpen ? (
