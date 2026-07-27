@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Plus, Check, Sliders } from "lucide-react";
+import { Plus, Minus, Trash2, Sliders } from "lucide-react";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { defaultDisplaySizeId } from "@/data/types/catalog";
 import type { Product, SizeId } from "@/data/types/catalog";
@@ -19,6 +19,8 @@ interface MenuProductCardProps {
 
 export function MenuProductCard({ product }: MenuProductCardProps) {
   const addItem = useCart((s) => s.addItem);
+  const updateQuantity = useCart((s) => s.updateQuantity);
+  const removeItem = useCart((s) => s.removeItem);
   const { availability } = useOrderingAvailability();
   const orderingOpen = availability?.isOpen ?? true;
   const [sizeId, setSizeId] = useState<SizeId>(() =>
@@ -29,6 +31,12 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
 
   const selectedSize =
     product.sizes.find((s) => s.id === sizeId) ?? product.sizes[0];
+  // The cart line for a quick add (this size, no customizations) — mirrors the id
+  // the store builds, so the "+" turns into a live quantity control for it.
+  const lineId = `${product.id}#${selectedSize.id}#`;
+  const qtyInCart = useCart(
+    (s) => s.items.find((it) => it.id === lineId)?.quantity ?? 0,
+  );
   const hasCustomizations = product.customizations.length > 0;
   const unavailable = Boolean(product.isTemporarilyUnavailable) || !orderingOpen;
   // Only what's actually on the pizza — the "Included on this pizza" ingredients
@@ -57,7 +65,18 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
       sizeDetail: selectedSize.detail,
     });
     setJustAdded(true);
-    window.setTimeout(() => setJustAdded(false), 1500);
+    window.setTimeout(() => setJustAdded(false), 600);
+  }
+
+  function handleIncrement() {
+    updateQuantity(lineId, qtyInCart + 1);
+  }
+
+  // At one, the left control removes the line (a trash icon); above one it steps
+  // the quantity down.
+  function handleDecrement() {
+    if (qtyInCart <= 1) removeItem(lineId);
+    else updateQuantity(lineId, qtyInCart - 1);
   }
 
   return (
@@ -81,30 +100,57 @@ export function MenuProductCard({ product }: MenuProductCardProps) {
             {product.isSpicy ? <SpicyDot /> : null}
           </div>
         )}
-        {/* Primary quick-add — a "+" straight on the pizza. One tap adds the
-            currently selected size; it bounces to a checkmark to confirm. */}
+        {/* Primary quick-add straight on the pizza. A "+" until it's in the cart,
+            then a live quantity control (remove / count / add) for this size. */}
         {!unavailable ? (
-          <button
-            type="button"
-            onClick={handleQuickAdd}
-            aria-label={
-              justAdded
-                ? `${product.name} added to cart`
-                : `Add ${product.name} to cart`
-            }
-            className={
-              "absolute top-3 right-3 h-11 w-11 inline-flex items-center justify-center rounded-full text-primary-foreground shadow-md transition-colors " +
-              (justAdded
-                ? "bg-flag-green animate-quick-add-pop"
-                : "bg-brand hover:bg-brand-hover active:scale-95")
-            }
-          >
-            {justAdded ? (
-              <Check className="h-5 w-5" strokeWidth={2.5} aria-hidden />
-            ) : (
+          qtyInCart === 0 ? (
+            <button
+              type="button"
+              onClick={handleQuickAdd}
+              aria-label={`Add ${product.name} to cart`}
+              className="absolute top-3 right-3 h-11 w-11 inline-flex items-center justify-center rounded-full bg-brand text-primary-foreground shadow-md transition-colors hover:bg-brand-hover active:scale-95"
+            >
               <Plus className="h-6 w-6" strokeWidth={2.5} aria-hidden />
-            )}
-          </button>
+            </button>
+          ) : (
+            <div
+              className={
+                "absolute top-3 right-3 inline-flex items-center rounded-full bg-brand text-primary-foreground shadow-md " +
+                (justAdded ? "animate-quick-add-pop" : "")
+              }
+            >
+              <button
+                type="button"
+                onClick={handleDecrement}
+                aria-label={
+                  qtyInCart <= 1
+                    ? `Remove ${product.name} from cart`
+                    : `Reduce ${product.name} quantity`
+                }
+                className="flex h-11 w-10 items-center justify-center rounded-l-full transition-colors hover:bg-brand-hover"
+              >
+                {qtyInCart <= 1 ? (
+                  <Trash2 className="h-4 w-4" strokeWidth={1.75} aria-hidden />
+                ) : (
+                  <Minus className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+                )}
+              </button>
+              <span
+                aria-live="polite"
+                className="min-w-6 text-center font-display text-sm tabular-nums"
+              >
+                {qtyInCart}
+              </span>
+              <button
+                type="button"
+                onClick={handleIncrement}
+                aria-label={`Add another ${product.name}`}
+                className="flex h-11 w-10 items-center justify-center rounded-r-full transition-colors hover:bg-brand-hover"
+              >
+                <Plus className="h-4 w-4" strokeWidth={2.25} aria-hidden />
+              </button>
+            </div>
+          )
         ) : null}
         {unavailable ? (
           <div className="absolute inset-x-0 bottom-0 bg-black/70 text-white text-center px-3 py-2 font-display text-[10px] tracking-[0.2em] uppercase">
