@@ -33,7 +33,7 @@ values (
   1,
   true,
   '/images/grand-opening.webp',
-  'Grand Opening — 50% OFF the entire menu',
+  'Grand Opening 50% OFF the entire menu',
   'From 28 July to 28 August, every item is half price. No account, no code — order as a guest and the 50% is applied automatically at checkout.',
   'link',
   'Order now',
