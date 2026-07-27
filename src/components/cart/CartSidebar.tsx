@@ -5,6 +5,8 @@ import { Plus, Minus, Trash2, ArrowRight, ShoppingBag } from "lucide-react";
 import { SmartImage } from "@/components/ui/SmartImage";
 import { useCart, type CartItem } from "@/store/cart";
 import { useMounted } from "@/lib/use-mounted";
+import { useMenuDiscount } from "@/components/pricing/MenuDiscountProvider";
+import { menuDiscountAmountAed } from "@/lib/menu-discount";
 import { formatAed } from "@/components/catalog/PriceBadge";
 import {
   amountToFreeDeliveryAed,
@@ -18,9 +20,17 @@ export function CartSidebar() {
   const items = useCart((s) => s.items);
   const subtotal = useCart((s) => s.subtotal());
   const totalQty = useCart((s) => s.totalQuantity());
+  const promos = useCart((s) => s.promos);
   const updateQuantity = useCart((s) => s.updateQuantity);
   const removeItem = useCart((s) => s.removeItem);
   const mounted = useMounted();
+
+  // Grand Opening – 50% OFF (guests only, doesn't stack with codes). Shown here so
+  // the customer sees the saving as they build the order; the server re-applies it.
+  const sale = useMenuDiscount();
+  const autoMenuDiscount =
+    promos.length === 0 ? menuDiscountAmountAed(subtotal, sale) : 0;
+  const checkoutTotal = Math.max(0, subtotal - autoMenuDiscount);
 
   const hasItems = mounted && items.length > 0;
   const progress = mounted
@@ -96,6 +106,11 @@ export function CartSidebar() {
           >
             {formatAed(subtotal)}
           </Row>
+          {autoMenuDiscount > 0 ? (
+            <Row label={sale.label || `${sale.percent}% off menu`}>
+              <span className="text-basil">−{formatAed(autoMenuDiscount)}</span>
+            </Row>
+          ) : null}
           {/* Quotes, not charges — the cart has no delivery type or zone yet.
               Checkout settles both, and pickup pays neither. */}
           <Row label={`Delivery fee · ${formatAed(STANDARD_DELIVERY_FEE_AED)}`}>
@@ -132,7 +147,7 @@ export function CartSidebar() {
         >
           <span>Checkout</span>
           <span className="flex items-center gap-2 tabular-nums">
-            {formatAed(subtotal)}
+            {formatAed(checkoutTotal)}
             <ArrowRight className="h-4 w-4" strokeWidth={1.5} aria-hidden />
           </span>
         </Link>
