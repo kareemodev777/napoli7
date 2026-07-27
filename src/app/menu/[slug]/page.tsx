@@ -15,6 +15,12 @@ interface Params {
   slug: string;
 }
 
+// Without this the product pages are generated once and frozen — a price edit
+// updated the /menu grid (which had its own revalidate) but never these pages,
+// so an item's own page could keep showing an old price indefinitely. Match the
+// grid so both self-heal on the same short window.
+export const revalidate = 60;
+
 export async function generateStaticParams(): Promise<Params[]> {
   const slugs = await getProductSlugs();
   return slugs.map((slug) => ({ slug }));

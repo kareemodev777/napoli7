@@ -52,6 +52,50 @@ function boolFromForm(formData: FormData, key: string) {
   return formData.get(key) === "on";
 }
 
+// Smallest-to-largest, so "the price customers see" resolves to the same row the
+// storefront prices from: Medium (regular) when the product has it, else the
+// smallest available size. Mirrors defaultDisplaySizeId in data/types/catalog.
+const SIZE_RANK: Record<string, number> = {
+  small: 0,
+  regular: 1,
+  large: 2,
+  family: 3,
+};
+
+// products.price_aed is the "base price" the related-item cards, the homepage
+// grid, and the SEO tags read — but the menu itself prices every item from its
+// size rows. The two used to be editable independently, so an owner could raise
+// the base price and watch the menu ignore it (it reads the Medium size). Keep
+// the base price mirroring that same displayed size after any size change, so a
+// price is set in exactly one place and every surface agrees.
+async function syncProductBasePrice(
+  supabase: ReturnType<typeof createServiceRoleClient>,
+  productId: string,
+) {
+  const { data: sizes, error } = await supabase
+    .from("product_sizes")
+    .select("size_id, price_aed")
+    .eq("product_id", productId);
+  // No rows means the product falls back to its own price_aed as a single
+  // "Regular" (see normalizeProductSizes) — leave that seed value untouched.
+  if (error || !sizes || sizes.length === 0) return;
+
+  const display =
+    sizes.find((size) => size.size_id === "regular") ??
+    sizes
+      .slice()
+      .sort(
+        (a, b) => (SIZE_RANK[a.size_id] ?? 99) - (SIZE_RANK[b.size_id] ?? 99),
+      )[0];
+  if (!display) return;
+
+  const { error: updateError } = await supabase
+    .from("products")
+    .update({ price_aed: display.price_aed })
+    .eq("id", productId);
+  if (updateError) logActionError("syncProductBasePrice", updateError);
+}
+
 function revalidateCatalog() {
   revalidatePath("/admin/catalog");
   revalidatePath("/admin/catalog/[id]", "page");
@@ -175,6 +219,7 @@ export async function upsertSize(formData: FormData) {
     return;
   }
 
+  await syncProductBasePrice(supabase, payload.product_id);
   revalidateCatalog();
 }
 
@@ -184,12 +229,20 @@ export async function deleteSize(formData: FormData) {
   if (!id) return;
 
   const supabase = createServiceRoleClient();
+  // Capture the owning product before the row is gone, so the base price can be
+  // re-derived from whatever sizes remain.
+  const { data: row } = await supabase
+    .from("product_sizes")
+    .select("product_id")
+    .eq("id", id)
+    .maybeSingle();
   const { error } = await supabase.from("product_sizes").delete().eq("id", id);
   if (error) {
     logActionError("deleteSize", error);
     return;
   }
 
+  if (row?.product_id) await syncProductBasePrice(supabase, row.product_id);
   revalidateCatalog();
 }
 

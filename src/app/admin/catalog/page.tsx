@@ -284,7 +284,7 @@ export default async function AdminCatalogPage() {
                       </p>
 
                       <div className="mt-4 flex flex-wrap gap-2">
-                        <Badge>Main {money(product.price_aed)} AED</Badge>
+                        <Badge>Menu price {money(product.price_aed)} AED</Badge>
                         <Badge>{sizes.length} prices</Badge>
                         <Badge>{ingredients.length} ingredients</Badge>
                         {product.is_veg ? <Badge>Vegetarian</Badge> : null}

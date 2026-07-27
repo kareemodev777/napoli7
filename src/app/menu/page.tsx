@@ -4,7 +4,10 @@ import { PageHero } from "@/components/site/PageHero";
 import { MenuLayout } from "@/components/catalog/MenuLayout";
 import { getActiveProducts, getCatalogCategories } from "@/lib/catalog";
 
-export const revalidate = 3600;
+// Short window so an owner's price edit shows on the storefront within a minute
+// even if on-demand revalidation (revalidatePath in the catalog actions) does
+// not reach this deployment. The menu is small, so regenerating it is cheap.
+export const revalidate = 60;
 
 export const metadata: Metadata = {
   title: "Menu",

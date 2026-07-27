@@ -199,13 +199,29 @@ export function ProductForm({
         defaultValue={product?.description}
         required
       />
-      <Field
-        label="Main price"
-        name="price_aed"
-        type="number"
-        defaultValue={product ? Number(product.price_aed) : 0}
-        required
-      />
+      {/* An existing item is priced entirely in the "Prices and sizes" table
+          below — that's what customers pay, and products.price_aed is kept in
+          sync with it automatically (see syncProductBasePrice). Exposing a
+          second "Main price" box here is what let owners edit a number that the
+          menu then ignored, so on edit we only carry the current value through.
+          A brand-new item has no sizes yet, so it needs a starting price to seed
+          its single "Regular"; the real per-size prices are added afterwards. */}
+      {product ? (
+        <input
+          type="hidden"
+          name="price_aed"
+          value={Number(product.price_aed)}
+        />
+      ) : (
+        <Field
+          label="Starting price"
+          name="price_aed"
+          type="number"
+          defaultValue={0}
+          required
+          hint="Set the real Small / Medium prices on the item page after saving."
+        />
+      )}
       {showImageUpload ? (
         <ImageUploadField
           defaultValue={product?.image_url ?? ""}
