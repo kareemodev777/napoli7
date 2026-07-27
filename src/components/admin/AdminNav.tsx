@@ -9,6 +9,7 @@ import {
   Image as ImageIcon,
   LayoutDashboard,
   Map,
+  Megaphone,
   MessageSquareText,
   Pizza,
   TicketPercent,
@@ -57,7 +58,8 @@ const navGroups: { label: string; items: NavItem[] }[] = [
     items: [
       { label: "Delivery", href: "/admin/delivery-zones", description: "Areas and fees", icon: Map },
       { label: "Opening hours", href: "/admin/opening-hours", description: "Checkout availability", icon: Clock },
-      { label: "Promos", href: "/admin/promos", description: "Discount codes", icon: TicketPercent },
+      { label: "Promos", href: "/admin/promos", description: "Codes & the auto sale", icon: TicketPercent },
+      { label: "Marketing popup", href: "/admin/marketing-popup", description: "Storefront announcement", icon: Megaphone },
     ],
   },
 ];
