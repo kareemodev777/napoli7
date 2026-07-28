@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { useCart } from "@/store/cart";
 import { formatAed } from "./PriceBadge";
+import { SalePrice } from "@/components/pricing/SalePrice";
 import { SizeSelector } from "./SizeSelector";
 import { VegDot } from "./VegDot";
 import { SpicyDot } from "./SpicyDot";
@@ -305,7 +306,9 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
                 </span>
               ) : null}
             </Row>
-            <Row label="Base">{formatAed(selectedSize.price)}</Row>
+            <Row label="Base">
+              <SalePrice amount={selectedSize.price} />
+            </Row>
             {cartCustomizations.length > 0 ? (
               <div>
                 <p className="font-display text-[10px] tracking-[0.25em] uppercase text-muted-foreground mb-2">
@@ -370,8 +373,8 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
           <p className="font-display text-[10px] tracking-[0.25em] uppercase text-muted-foreground">
             Total
           </p>
-          <p className="font-display text-xl tabular-nums">
-            {formatAed(lineTotal)}
+          <p className="font-display text-xl">
+            <SalePrice amount={lineTotal} className="text-xl" />
           </p>
         </div>
         <button
