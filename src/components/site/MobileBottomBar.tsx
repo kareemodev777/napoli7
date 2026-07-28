@@ -6,6 +6,8 @@ import { usePathname } from "next/navigation";
 import { useCart } from "@/store/cart";
 import { useCartDrawer } from "@/store/cart-drawer";
 import { useMounted } from "@/lib/use-mounted";
+import { useMenuDiscount } from "@/components/pricing/MenuDiscountProvider";
+import { menuDiscountAmountAed } from "@/lib/menu-discount";
 import { formatAed } from "@/components/catalog/PriceBadge";
 import { useOrderingAvailability } from "@/lib/use-ordering-availability";
 
@@ -29,16 +31,23 @@ export function MobileBottomBar() {
   const pathname = usePathname();
   const totalQty = useCart((s) => s.totalQuantity());
   const subtotal = useCart((s) => s.subtotal());
+  const promos = useCart((s) => s.promos);
   const openCart = useCartDrawer((s) => s.openCart);
   const mounted = useMounted();
   const { availability } = useOrderingAvailability();
   const orderingOpen = availability?.isOpen ?? true;
 
+  // Reflect the Grand Opening sale (guests only, doesn't stack with codes) so the
+  // pill matches the drawer and checkout instead of quoting the pre-discount total.
+  const sale = useMenuDiscount();
+  const autoMenuDiscount =
+    promos.length === 0 ? menuDiscountAmountAed(subtotal, sale) : 0;
+
   if (isSuppressed(pathname)) return null;
 
   // Guard cart values behind `mounted` to avoid hydration mismatch.
   const qty = mounted ? totalQty : 0;
-  const amount = mounted ? subtotal : 0;
+  const amount = mounted ? Math.max(0, subtotal - autoMenuDiscount) : 0;
 
   return (
     <nav
