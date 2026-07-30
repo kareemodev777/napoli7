@@ -38,8 +38,8 @@ export const SERVICE_FEE_AED = 3;
 export const STANDARD_DELIVERY_FEE_AED = 9;
 
 /** At or above this item subtotal, the delivery fee is waived (the service fee is
- *  not). Measured against the ITEM SUBTOTAL, like the delivery minimum — fees do
- *  not count toward it, and neither does a promo discount. */
+ *  not). Measured against the item subtotal AFTER discounts — a 100 AED order at
+ *  50% off is a 50 AED basket and still pays delivery. Fees never count toward it. */
 export const FREE_DELIVERY_MIN_SUBTOTAL_AED = 80;
 
 export interface OrderFeesAed {
@@ -53,22 +53,27 @@ export interface OrderFeesAed {
  * so they cannot disagree about what an order costs.
  *
  * Pickup pays neither fee. Delivery always pays the service fee, and pays the
- * zone's delivery fee unless the subtotal has earned free delivery.
+ * zone's delivery fee unless the DISCOUNTED subtotal has earned free delivery —
+ * free delivery is judged on what the customer actually pays for the items, not
+ * the pre-discount price.
  */
 export function computeOrderFeesAed({
   deliveryType,
   subtotalAed,
   zoneFeeAed,
+  discountAed = 0,
 }: {
   deliveryType: "delivery" | "pickup";
   subtotalAed: number;
   zoneFeeAed: number;
+  discountAed?: number;
 }): OrderFeesAed {
   if (deliveryType !== "delivery") {
     return { deliveryFeeAed: 0, serviceFeeAed: 0 };
   }
+  const netSubtotalAed = Math.max(0, subtotalAed - discountAed);
   return {
-    deliveryFeeAed: qualifiesForFreeDelivery(subtotalAed) ? 0 : zoneFeeAed,
+    deliveryFeeAed: qualifiesForFreeDelivery(netSubtotalAed) ? 0 : zoneFeeAed,
     serviceFeeAed: SERVICE_FEE_AED,
   };
 }

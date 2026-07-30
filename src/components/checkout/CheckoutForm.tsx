@@ -274,10 +274,14 @@ export function CheckoutForm({
       deliveryType: deliveryType === "delivery" && matchedZone ? "delivery" : "pickup",
       subtotalAed: subtotal,
       zoneFeeAed: zoneFee,
+      discountAed: totalDiscount,
     });
+  // Free delivery is earned on what's actually paid for the items — subtotal
+  // minus every discount — never the pre-discount price.
+  const netSubtotal = Math.max(0, subtotal - totalDiscount);
   const freeDeliveryEarned =
-    deliveryType === "delivery" && qualifiesForFreeDelivery(subtotal);
-  const toFreeDelivery = amountToFreeDeliveryAed(subtotal);
+    deliveryType === "delivery" && qualifiesForFreeDelivery(netSubtotal);
+  const toFreeDelivery = amountToFreeDeliveryAed(netSubtotal);
   const orderTotal = getDeliveryOrderTotalAed({
     subtotalAed: subtotal,
     deliveryFeeAed: deliveryFee,

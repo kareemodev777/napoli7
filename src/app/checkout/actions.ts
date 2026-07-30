@@ -331,12 +331,14 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
       };
     }
     // Both fees are derived, never taken from the client: the zone fee is waived
-    // above the free-delivery threshold, the service fee never is.
+    // only when the DISCOUNTED subtotal clears the free-delivery threshold, the
+    // service fee never is.
     ({ deliveryFeeAed: deliveryFee, serviceFeeAed: serviceFee } =
       computeOrderFeesAed({
         deliveryType: "delivery",
         subtotalAed: subtotal,
         zoneFeeAed: zone.fee,
+        discountAed: discount,
       }));
     // The 13 AED delivery minimum does NOT apply to a reward order — the client
     // was explicit. The upgrade rule above is what guards a reward delivery, and

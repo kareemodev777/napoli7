@@ -56,6 +56,28 @@ describe("service fee and free delivery", () => {
     ).toEqual({ deliveryFeeAed: 0, serviceFeeAed: 3 });
   });
 
+  // Free delivery is earned on what's actually paid for the items, not the
+  // pre-discount price. A 100 AED order at 50% off is a 50 AED basket.
+  test("free delivery is judged on the discounted subtotal", () => {
+    expect(
+      computeOrderFeesAed({
+        deliveryType: "delivery",
+        subtotalAed: 100,
+        zoneFeeAed: 9,
+        discountAed: 50, // net 50 → below 80, still pays delivery
+      }),
+    ).toEqual({ deliveryFeeAed: 9, serviceFeeAed: 3 });
+
+    expect(
+      computeOrderFeesAed({
+        deliveryType: "delivery",
+        subtotalAed: 180,
+        zoneFeeAed: 9,
+        discountAed: 90, // net 90 → clears 80, delivery waived
+      }),
+    ).toEqual({ deliveryFeeAed: 0, serviceFeeAed: 3 });
+  });
+
   test("the free-delivery threshold is inclusive at 80 AED", () => {
     expect(qualifiesForFreeDelivery(79.99)).toBe(false);
     expect(qualifiesForFreeDelivery(80)).toBe(true);

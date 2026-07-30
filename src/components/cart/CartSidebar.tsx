@@ -37,8 +37,11 @@ export function CartSidebar() {
     ? Math.min(100, (subtotal / DEFAULT_DELIVERY_MIN_SUBTOTAL_AED) * 100)
     : 0;
   const remaining = Math.max(0, DEFAULT_DELIVERY_MIN_SUBTOTAL_AED - subtotal);
-  const freeDelivery = mounted && qualifiesForFreeDelivery(subtotal);
-  const toFreeDelivery = amountToFreeDeliveryAed(subtotal);
+  // Free delivery is judged on the discounted item subtotal, not the pre-discount
+  // price — a big order a sale takes below the threshold still pays delivery.
+  const netSubtotal = Math.max(0, subtotal - autoMenuDiscount);
+  const freeDelivery = mounted && qualifiesForFreeDelivery(netSubtotal);
+  const toFreeDelivery = amountToFreeDeliveryAed(netSubtotal);
 
   return (
     <aside

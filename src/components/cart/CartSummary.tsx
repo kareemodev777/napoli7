@@ -28,8 +28,11 @@ export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
     promos.length === 0 ? menuDiscountAmountAed(subtotal, sale) : 0;
   const total = Math.max(0, subtotal - discount - autoMenuDiscount);
 
-  const freeDelivery = qualifiesForFreeDelivery(subtotal);
-  const toFreeDelivery = amountToFreeDeliveryAed(subtotal);
+  // Free delivery is judged on the discounted item subtotal, not the pre-discount
+  // price — a big order that a sale takes below the threshold still pays delivery.
+  const netSubtotal = Math.max(0, subtotal - discount - autoMenuDiscount);
+  const freeDelivery = qualifiesForFreeDelivery(netSubtotal);
+  const toFreeDelivery = amountToFreeDeliveryAed(netSubtotal);
 
   const { availability } = useOrderingAvailability();
   const orderingOpen = availability?.isOpen ?? true;
