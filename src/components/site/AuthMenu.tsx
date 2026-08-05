@@ -34,6 +34,12 @@ export function useAuthState(): AuthState {
       .getUser()
       .then((res: { data: { user: unknown | null } }) => {
         if (active) setState(res.data.user ? "in" : "out");
+      })
+      // A blocked or failed lookup must not strand the UI in "loading" forever —
+      // an ad-blocker or offline blip would otherwise leave the header showing a
+      // permanent spinner-ish placeholder. Treat "we couldn't tell" as signed out.
+      .catch(() => {
+        if (active) setState("out");
       });
     const { data: sub } = supabase.auth.onAuthStateChange(
       (_event: AuthChangeEvent, session: Session | null) => {

@@ -25,8 +25,8 @@ export function CartSidebar() {
   const removeItem = useCart((s) => s.removeItem);
   const mounted = useMounted();
 
-  // Grand Opening – 50% OFF (guests only, doesn't stack with codes). Shown here so
-  // the customer sees the saving as they build the order; the server re-applies it.
+  // Grand Opening – 50% OFF (every customer, doesn't stack with codes). Shown here
+  // so the customer sees the saving as they build the order; the server re-applies it.
   const sale = useMenuDiscount();
   const autoMenuDiscount =
     promos.length === 0 ? menuDiscountAmountAed(subtotal, sale) : 0;

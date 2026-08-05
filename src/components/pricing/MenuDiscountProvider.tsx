@@ -1,7 +1,6 @@
 "use client";
 
 import { createContext, useContext, useMemo } from "react";
-import { useAuthState } from "@/components/site/AuthMenu";
 import {
   INACTIVE_SNAPSHOT,
   resolveMenuDiscount,
@@ -14,13 +13,15 @@ const MenuDiscountContext =
 
 /**
  * Ships the raw sale config to the client once (from the root layout) and
- * resolves it against two things: the browser clock (so the start/end boundary
- * flips without a round-trip) and the customer's auth state.
+ * resolves it against the browser clock, so the start/end boundary flips without
+ * a round-trip.
  *
- * The Grand Opening 50% is for GUESTS ONLY — signed-in customers get the Free
- * Pizza reward instead. So the sale is gated to signed-out visitors here, exactly
- * as the checkout server action gates the actual discount. Auth is resolved on
- * the client (see useAuthState) so storefront pages stay statically rendered.
+ * The sale applies to EVERY visitor, signed in or not — matching the server
+ * (placeOrder). It deliberately does not depend on auth: it used to be withheld
+ * from signed-in customers, which both made the same basket cost double once you
+ * logged in and meant a failed/blocked auth lookup silently hid the sale
+ * altogether. Codes are what the sale doesn't combine with, and the cart/checkout
+ * enforce that by only applying it when no promo is attached.
  */
 export function MenuDiscountProvider({
   value,
@@ -29,14 +30,10 @@ export function MenuDiscountProvider({
   value: MenuDiscount;
   children: React.ReactNode;
 }) {
-  const authState = useAuthState();
-
-  const snapshot = useMemo<MenuDiscountSnapshot>(() => {
-    // Only guests see the sale. While auth is still resolving ("loading") we
-    // withhold it too, so a signed-in customer never flashes a sale price.
-    if (authState !== "out") return INACTIVE_SNAPSHOT;
-    return resolveMenuDiscount(value);
-  }, [value, authState]);
+  const snapshot = useMemo<MenuDiscountSnapshot>(
+    () => resolveMenuDiscount(value),
+    [value],
+  );
 
   return (
     <MenuDiscountContext.Provider value={snapshot}>
@@ -45,8 +42,7 @@ export function MenuDiscountProvider({
   );
 }
 
-/** The resolved sale (active + percent + label) for the current visitor — always
- *  inactive for signed-in customers. */
+/** The resolved sale (active + percent + label) for the current visitor. */
 export function useMenuDiscount(): MenuDiscountSnapshot {
   return useContext(MenuDiscountContext);
 }

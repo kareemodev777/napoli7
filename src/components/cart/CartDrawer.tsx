@@ -40,7 +40,7 @@ export function CartDrawer() {
   const discount = useCart((s) => s.discount());
 
   // Active site-wide sale (Grand Opening – 50% OFF), shown live so the customer
-  // sees it the moment they add a pizza. Guests only, doesn't stack with codes,
+  // sees it the moment they add a pizza. Every customer, doesn't stack with codes,
   // and comes off the items only — the server re-applies it authoritatively.
   const sale = useMenuDiscount();
   const autoMenuDiscount =

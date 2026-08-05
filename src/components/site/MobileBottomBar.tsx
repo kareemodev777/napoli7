@@ -37,8 +37,8 @@ export function MobileBottomBar() {
   const { availability } = useOrderingAvailability();
   const orderingOpen = availability?.isOpen ?? true;
 
-  // Reflect the Grand Opening sale (guests only, doesn't stack with codes) so the
-  // pill matches the drawer and checkout instead of quoting the pre-discount total.
+  // Reflect the Grand Opening sale (every customer, doesn't stack with codes) so
+  // the pill matches the drawer and checkout instead of the pre-discount total.
   const sale = useMenuDiscount();
   const autoMenuDiscount =
     promos.length === 0 ? menuDiscountAmountAed(subtotal, sale) : 0;

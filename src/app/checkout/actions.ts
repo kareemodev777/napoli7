@@ -265,22 +265,17 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
   }
 
   // Grand Opening (or any active site-wide sale): an automatic, codeless discount
-  // on the whole item subtotal — but for GUESTS ONLY. Signed-in customers get the
-  // Free Pizza reward instead, so the two promotions never combine: a logged-in
-  // order never receives the sale, and a guest order never has a reward code. It
-  // also does not stack with any manually-applied code. Read fresh (never cached)
-  // so an expired sale is never honoured. Folded into `discount` here, it is
-  // capped below and — like every discount — comes off the items only, never the
-  // delivery or service fee.
-  if (appliedPromos.length === 0 && HAS_SUPABASE) {
-    const authClient = await createClient();
-    const {
-      data: { user: saleUser },
-    } = await authClient.auth.getUser();
-    if (!saleUser) {
-      const sale = resolveMenuDiscount(await getMenuDiscount());
-      discount += menuDiscountAmountAed(subtotal, sale);
-    }
+  // on the whole item subtotal, for EVERY customer — signed in or not. It used to
+  // be withheld from signed-in customers on the grounds that they get the Free
+  // Pizza reward instead, but that punished people for having an account: the same
+  // basket cost double once you logged in. The no-stacking rule is what keeps the
+  // two promotions apart — an order that applies a reward (or any other code) takes
+  // that instead of the sale, never both. Read fresh (never cached) so an expired
+  // sale is never honoured. Folded into `discount` here, it is capped below and —
+  // like every discount — comes off the items only, never the fees.
+  if (appliedPromos.length === 0) {
+    const sale = resolveMenuDiscount(await getMenuDiscount());
+    discount += menuDiscountAmountAed(subtotal, sale);
   }
 
   // Cap the total at the value of the goods. Stripe is sent the line items and
