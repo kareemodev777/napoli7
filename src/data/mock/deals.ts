@@ -30,11 +30,11 @@ export const GRAND_OPENING_DEAL: FeaturedDeal = {
   eyebrow: "Grand Opening",
   title: "50% off the entire menu",
   intro:
-    "We're open in Ajman — and every item on the menu is half price to celebrate. No account, no coupon, no code: order as a guest and the 50% comes off automatically at checkout.",
+    "We're open in Ajman — and every item on the menu is half price to celebrate. No coupon, no code, nothing to claim: the 50% comes off automatically at checkout, whether you have an account or not.",
   points: [
     "50% off all menu items — applied automatically",
-    "No registration, voucher or coupon code required",
-    "Order as a guest, for pickup or delivery",
+    "No voucher or coupon code required",
+    "Signed in or ordering as a guest, for pickup or delivery",
     "Delivery and service fees are charged as normal (not discounted)",
   ],
   validity: "Valid 28 July – 28 August 2026",
