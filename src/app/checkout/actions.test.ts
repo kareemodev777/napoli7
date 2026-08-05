@@ -22,7 +22,6 @@ mock.module("@/lib/delivery-settings", () => ({
 mock.module("@/lib/delivery-map", () => ({
   checkDeliverability: () => ({ deliverable: true, distanceKm: 0 }),
   deliverabilityMessage: () => "",
-  DELIVERY_RADIUS_KM: 7,
 }));
 mock.module("@/lib/saved-address", () => ({
   planAddressSave: () => ({ shouldSave: false, makeDefault: false }),

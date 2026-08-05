@@ -315,7 +315,8 @@ export async function placeOrder(input: unknown): Promise<PlaceOrderResult> {
       };
     }
     // The authoritative out-of-zone guard. The customer must drop a GPS pin, and
-    // it must clear BOTH the radius and the Ajman boundary. The area dropdown is
+    // it must land inside the Ajman border — the courier covers the whole
+    // emirate, so distance from the shop is not a factor. The area dropdown is
     // not consulted for this: it is a convenience field, and any area can be
     // paired with any street, so only the pin decides.
     const { lat, lng } = data.deliveryAddress;

@@ -8,19 +8,19 @@ import {
   deliverabilityMessage,
   distanceFromShopKm,
   haversineKm,
-  isWithinDeliveryRadius,
   SHOP_LOCATION,
 } from "./delivery-map";
-import { isInsideAjman } from "./ajman-boundary";
+import { isInsideAjman, isInsideAjmanMainland } from "./ajman-boundary";
 
-describe("delivery radius (7 km straight-line)", () => {
-  test("the shop itself is 0 km away and in range", () => {
+// A real Ajman address well past the old 7 km circle — the inland strip of the
+// emirate. It is the case this whole change exists for.
+const FAR_INSIDE_AJMAN: [number, number] = [25.51, 55.375];
+
+describe("distance from the shop (informational only)", () => {
+  test("the shop itself is 0 km away", () => {
     expect(distanceFromShopKm(SHOP_LOCATION.lat, SHOP_LOCATION.lng)).toBeCloseTo(
       0,
       5,
-    );
-    expect(isWithinDeliveryRadius(SHOP_LOCATION.lat, SHOP_LOCATION.lng)).toBe(
-      true,
     );
   });
 
@@ -28,20 +28,6 @@ describe("delivery radius (7 km straight-line)", () => {
     const d = haversineKm(25.4, 55.5, 25.41, 55.5);
     expect(d).toBeGreaterThan(1.0);
     expect(d).toBeLessThan(1.2);
-  });
-
-  test("a point just inside the radius is accepted, just outside is rejected", () => {
-    // ~0.05° north ≈ 5.5 km (in range); ~0.08° north ≈ 8.9 km (out of range).
-    expect(
-      isWithinDeliveryRadius(SHOP_LOCATION.lat + 0.05, SHOP_LOCATION.lng),
-    ).toBe(true);
-    expect(
-      isWithinDeliveryRadius(SHOP_LOCATION.lat + 0.08, SHOP_LOCATION.lng),
-    ).toBe(false);
-  });
-
-  test("rejects non-finite coordinates", () => {
-    expect(isWithinDeliveryRadius(Number.NaN, 55.5)).toBe(false);
   });
 
   test("builds a driver GPS maps link", () => {
@@ -78,29 +64,44 @@ describe("Ajman boundary", () => {
   test("rejects non-finite coordinates", () => {
     expect(isInsideAjman(Number.NaN, 55.5)).toBe(false);
   });
+
+  // The exclaves are Ajman, so isInsideAjman says yes — but they are 50 km and
+  // 85 km inland and no courier goes there, so the delivery zone excludes them.
+  test("the inland exclaves are Ajman but not the delivery zone", () => {
+    const exclaves: [number, number][] = [
+      [25.32, 55.99], // Al Manama
+      [24.82, 56.05], // Masfout
+    ];
+    for (const [lat, lng] of exclaves) {
+      expect(isInsideAjman(lat, lng)).toBe(true);
+      expect(isInsideAjmanMainland(lat, lng)).toBe(false);
+    }
+  });
 });
 
-describe("deliverability = inside the radius AND inside Ajman", () => {
-  test("accepts a pin that clears both checks", () => {
+describe("deliverability = inside the Ajman border, at any distance", () => {
+  test("accepts a pin inside Ajman", () => {
     const result = checkDeliverability(SHOP_LOCATION.lat, SHOP_LOCATION.lng);
     expect(result.deliverable).toBe(true);
     expect(result.distanceKm).toBeCloseTo(0, 5);
   });
 
-  test("rejects a pin beyond the radius", () => {
-    const result = checkDeliverability(SHOP_LOCATION.lat + 0.08, SHOP_LOCATION.lng);
-    expect(result).toMatchObject({ deliverable: false, reason: "outside-radius" });
+  // The reason for the change: the courier now covers the whole emirate, so a
+  // pin the old 7 km circle refused is accepted purely for being inside Ajman.
+  test("accepts a pin far past the old 7 km radius, since it is inside Ajman", () => {
+    const [lat, lng] = FAR_INSIDE_AJMAN;
+    expect(distanceFromShopKm(lat, lng)).toBeGreaterThan(7);
+    expect(checkDeliverability(lat, lng).deliverable).toBe(true);
   });
 
-  // The whole point of the boundary check. These pins pass the 7 km test and
-  // would have been accepted before it existed.
-  test("rejects Sharjah even when it is well within 7 km", () => {
+  // Distance never rescues a pin either: Sharjah is refused however close it is.
+  test("rejects Sharjah even when it is nearer than parts of Ajman", () => {
     const sharjahNearby: [number, number][] = [
       [25.3442, 55.4813], // ~6.6 km south of the shop, over the Sharjah border
       [25.3622, 55.5413], // ~5.7 km south-east, also Sharjah
     ];
     for (const [lat, lng] of sharjahNearby) {
-      expect(isWithinDeliveryRadius(lat, lng)).toBe(true);
+      expect(distanceFromShopKm(lat, lng)).toBeLessThan(7);
       expect(checkDeliverability(lat, lng)).toMatchObject({
         deliverable: false,
         reason: "outside-ajman",
@@ -108,10 +109,16 @@ describe("deliverability = inside the radius AND inside Ajman", () => {
     }
   });
 
-  test("rejects a pin dropped in the sea inside the radius", () => {
+  test("rejects a pin dropped in the sea just off the shop", () => {
     // ~5.3 km north-west of the shop, out in the Gulf.
-    expect(isWithinDeliveryRadius(25.4442, 55.4833)).toBe(true);
     expect(checkDeliverability(25.4442, 55.4833)).toMatchObject({
+      deliverable: false,
+      reason: "outside-ajman",
+    });
+  });
+
+  test("rejects a pin in an Ajman exclave — inside the emirate, outside the zone", () => {
+    expect(checkDeliverability(24.82, 56.05)).toMatchObject({
       deliverable: false,
       reason: "outside-ajman",
     });
@@ -129,9 +136,9 @@ describe("deliverability = inside the radius AND inside Ajman", () => {
     if (sharjah.deliverable) throw new Error("expected Sharjah to be rejected");
     expect(deliverabilityMessage(sharjah)).toContain("Ajman");
 
-    const tooFar = checkDeliverability(SHOP_LOCATION.lat + 0.08, SHOP_LOCATION.lng);
-    if (tooFar.deliverable) throw new Error("expected an out-of-range rejection");
-    expect(deliverabilityMessage(tooFar)).toContain("7 km");
+    const noPin = checkDeliverability(null, null);
+    if (noPin.deliverable) throw new Error("expected a missing pin to be rejected");
+    expect(deliverabilityMessage(noPin)).toContain("Drop a pin");
   });
 });
 

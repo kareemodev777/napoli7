@@ -1,10 +1,10 @@
 /**
  * Ajman emirate administrative boundary.
  *
- * Delivery is restricted to the Ajman emirate. A 7 km circle drawn around the
- * shop is NOT a good enough test on its own — roughly a third of that circle
- * falls in Sharjah or in the sea, so the radius must be combined with this
- * polygon (see `isDeliverableLocation` in ./delivery-map).
+ * This polygon IS the delivery zone. There is no distance limit any more: the
+ * courier covers the whole emirate, so a pin qualifies purely by falling inside
+ * the border (see `checkDeliverability` in ./delivery-map). Sharjah is excluded
+ * however close it sits to the shop, which is exactly what the border encodes.
  *
  * Source: OpenStreetMap relation 3766482 (boundary=administrative,
  * admin_level=4), outer rings only, coordinates as [lat, lng] to match Leaflet.
@@ -12,11 +12,12 @@
  *   https://nominatim.openstreetmap.org/search?q=Ajman&format=json&polygon_geojson=1
  *
  * Ajman is a multipolygon: the coastal territory plus two inland exclaves. The
- * exclaves are far outside the delivery radius, but they are included so that
- * `isInsideAjman` means what its name says.
+ * exclaves are part of the emirate and so belong in `isInsideAjman`, but they
+ * are 47 km and 74 km inland and NOT part of the delivery zone — see
+ * `isInsideAjmanMainland`, which is what delivery actually tests against.
  */
 export const AJMAN_BOUNDARY_RINGS: readonly (readonly (readonly [number, number])[])[] = [
-  // Main coastal territory (Ajman city) — the only part within delivery range.
+  // Main coastal territory (Ajman city) — the delivery zone.
   [
     [25.570083, 55.235075], [25.398917, 55.422971], [25.398339, 55.423412], [25.398313, 55.423440],
     [25.397405, 55.424270], [25.396496, 55.424975], [25.394134, 55.426953], [25.393601, 55.427319],
@@ -83,26 +84,48 @@ export const AJMAN_BOUNDARY_RINGS: readonly (readonly (readonly [number, number]
 ];
 
 /**
- * Ray-casting point-in-polygon test against the Ajman boundary.
+ * The mainland (coastal) Ajman ring — the delivery zone border, and the green
+ * outline drawn on the checkout map. The two inland exclaves are deliberately
+ * excluded: they are legally Ajman but sit 47 km and 74 km out in the mountains,
+ * well past anywhere a pizza can travel.
+ */
+export const AJMAN_MAINLAND_RING = AJMAN_BOUNDARY_RINGS[0];
+
+/**
+ * Ray-casting point-in-polygon test.
  *
- * Counts how many times a ray cast east from the point crosses a boundary edge;
- * an odd number of crossings means the point is inside. Each ring is treated as
+ * Counts how many times a ray cast east from the point crosses a ring edge; an
+ * odd number of crossings means the point is inside. The ring is treated as
  * implicitly closed (the last vertex joins back to the first).
  */
+function isInsideRing(
+  ring: readonly (readonly [number, number])[],
+  lat: number,
+  lng: number,
+): boolean {
+  let inside = false;
+  for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
+    const [latI, lngI] = ring[i];
+    const [latJ, lngJ] = ring[j];
+    const straddlesRay = latI > lat !== latJ > lat;
+    if (!straddlesRay) continue;
+    const lngAtCrossing = ((lngJ - lngI) * (lat - latI)) / (latJ - latI) + lngI;
+    if (lng < lngAtCrossing) inside = !inside;
+  }
+  return inside;
+}
+
+/** Whether a point falls inside the Ajman emirate, exclaves included. */
 export function isInsideAjman(lat: number, lng: number): boolean {
   if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+  return AJMAN_BOUNDARY_RINGS.some((ring) => isInsideRing(ring, lat, lng));
+}
 
-  return AJMAN_BOUNDARY_RINGS.some((ring) => {
-    let inside = false;
-    for (let i = 0, j = ring.length - 1; i < ring.length; j = i++) {
-      const [latI, lngI] = ring[i];
-      const [latJ, lngJ] = ring[j];
-      const straddlesRay = latI > lat !== latJ > lat;
-      if (!straddlesRay) continue;
-      const lngAtCrossing =
-        ((lngJ - lngI) * (lat - latI)) / (latJ - latI) + lngI;
-      if (lng < lngAtCrossing) inside = !inside;
-    }
-    return inside;
-  });
+/**
+ * Whether a point falls inside mainland Ajman — the delivery zone. This is the
+ * test delivery uses; `isInsideAjman` is the wider legal answer.
+ */
+export function isInsideAjmanMainland(lat: number, lng: number): boolean {
+  if (!Number.isFinite(lat) || !Number.isFinite(lng)) return false;
+  return isInsideRing(AJMAN_MAINLAND_RING, lat, lng);
 }

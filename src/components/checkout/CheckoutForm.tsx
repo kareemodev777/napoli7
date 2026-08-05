@@ -14,7 +14,6 @@ import {
   buildDeliveryMapQuery,
   checkDeliverability,
   deliverabilityMessage,
-  DELIVERY_RADIUS_KM,
 } from "@/lib/delivery-map";
 import type {
   PickedLocation,
@@ -310,7 +309,7 @@ export function CheckoutForm({
       discountAed: discount,
       minimumAed: deliveryMinSubtotalAed,
     });
-  // Delivery requires a pin that clears both the radius and the Ajman boundary.
+  // Delivery requires a pin inside the Ajman border — that is the whole test.
   // Advisory only — the server re-runs the same check before the order is taken.
   const deliverability = useMemo(
     () => checkDeliverability(coords?.lat, coords?.lng),
@@ -326,9 +325,7 @@ export function CheckoutForm({
       ? null
       : deliverability.reason === "no-pin"
         ? "Drop your delivery pin on the map"
-        : deliverability.reason === "outside-ajman"
-          ? "Pin is outside Ajman — we deliver in Ajman only"
-          : `Pin is outside our ${DELIVERY_RADIUS_KM} km delivery range`;
+        : "Pin is outside Ajman — we deliver in Ajman only";
   // A reward order unlocks delivery only once it carries food VALUE beyond the
   // free pizzas the codes pay for — a bigger pizza (the free Small swapped for a
   // Large), a second pizza, a focaccia, a dessert. Drinks don't count. One upgrade
@@ -596,9 +593,8 @@ export function CheckoutForm({
                 <DeliveryMapPicker value={coords} onChange={handlePinChange} />
                 {pinProvidesLocation ? (
                   <p className="text-xs text-muted-foreground">
-                    Pin set · {deliverability.distanceKm.toFixed(1)} km from the
-                    shop, inside Ajman — within our {DELIVERY_RADIUS_KM} km
-                    range. ✓
+                    Pin set · inside Ajman, {deliverability.distanceKm.toFixed(1)}{" "}
+                    km from the shop — we deliver here. ✓
                   </p>
                 ) : (
                   <p className="text-xs text-flag-red">
