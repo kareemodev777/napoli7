@@ -26,7 +26,7 @@ const DeliveryMapPicker = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="grid h-[280px] md:h-[360px] w-full place-items-center border border-border bg-background text-sm text-muted-foreground">
+      <div className="grid h-[320px] md:h-[420px] w-full place-items-center border border-border bg-background text-sm text-muted-foreground">
         Loading map…
       </div>
     ),
@@ -585,9 +585,9 @@ export function CheckoutForm({
                     1 · Set your location
                   </p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Tap “Use my location”, or tap/drag the pin to your exact
-                    spot. We’ll fill in your area and street automatically — the
-                    driver navigates by this GPS point.
+                    Tap “Use my location”, or drag the map until the pin sits on
+                    your building. We’ll fill in your area and street
+                    automatically — the driver navigates by this GPS point.
                   </p>
                 </div>
                 <DeliveryMapPicker value={coords} onChange={handlePinChange} />
