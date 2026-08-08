@@ -16,11 +16,16 @@ import { popupSignature, type MarketingPopup as PopupConfig } from "@/lib/market
 const SEEN_PREFIX = "n7-popup:";
 
 /**
- * The admin-configurable storefront popup. Opens once per browser session
- * (immediately or after `delaySeconds`), showing the configured image + message
- * and a call-to-action: a link, a copy-code button, or a redeem-to-cart button.
- * It re-appears in a new session whenever the admin changes its content (the
- * session key is derived from a signature of that content).
+ * The admin-configurable storefront popup. Opens exactly once per browser
+ * session (immediately or after `delaySeconds`), showing the configured image +
+ * message and a call-to-action: a link, a copy-code button, or a redeem-to-cart
+ * button.
+ *
+ * Once shown it stays gone for the rest of the session — closing it any way at
+ * all counts, and navigating between pages never brings it back. It returns in a
+ * new session, or sooner if the admin edits its content (the session key is a
+ * signature of that content, so a reworded popup reaches people who already
+ * dismissed the old one).
  */
 export function MarketingPopup({ config }: { config: PopupConfig }) {
   const router = useRouter();
@@ -34,8 +39,7 @@ export function MarketingPopup({ config }: { config: PopupConfig }) {
 
   const signature = popupSignature(config);
 
-  // Open once per session after the configured delay, unless already seen. Marks
-  // itself seen as soon as it opens so it won't reappear on the next navigation.
+  // Open once per session after the configured delay, unless already seen.
   useEffect(() => {
     if (!config.enabled) return;
     const key = `${SEEN_PREFIX}${signature}`;
@@ -44,22 +48,29 @@ export function MarketingPopup({ config }: { config: PopupConfig }) {
     } catch {
       // sessionStorage unavailable (private mode) — just show it this once.
     }
-    // Open after the delay, but do NOT mark it seen just for showing. It's only
-    // "handled" for the session once the customer engages (Order now / Maybe
-    // later). Closing another way — the X, clicking outside, or Escape — leaves
-    // it un-dismissed, so it opens again on the next page they land on.
-    const timer = window.setTimeout(
-      () => setOpen(true),
-      Math.max(0, config.delaySeconds) * 1000,
-    );
+    const timer = window.setTimeout(() => {
+      // Claim the session slot at the moment it OPENS, not when the customer
+      // engages with it. Being shown is the once-per-session event, however the
+      // customer then gets rid of it — the X, a click outside, Escape, or a
+      // button. Previously only "Order now"/"Maybe later" counted as handled,
+      // so anyone who closed it the obvious way met it again on every single
+      // page they visited for the rest of their session.
+      try {
+        sessionStorage.setItem(key, "1");
+      } catch {
+        /* ignore */
+      }
+      setOpen(true);
+    }, Math.max(0, config.delaySeconds) * 1000);
     return () => window.clearTimeout(timer);
   }, [config.enabled, config.delaySeconds, signature]);
 
   if (!config.enabled) return null;
 
-  // Remember, for this browser session, that the customer acted on the popup, so
-  // it stops reappearing. Keyed by content signature, so editing the popup makes
-  // it show again even to someone who dismissed the old one.
+  // Belt and braces: opening already claimed the session slot, so this is a
+  // no-op in the normal case. It matters only if that first write failed —
+  // Safari, for one, can throw on storage early in a page's life and succeed
+  // moments later.
   function markHandled() {
     try {
       sessionStorage.setItem(`${SEEN_PREFIX}${signature}`, "1");
@@ -68,7 +79,6 @@ export function MarketingPopup({ config }: { config: PopupConfig }) {
     }
   }
 
-  // "Maybe later" / "Order now" — an explicit choice, so don't show it again.
   function dismiss() {
     markHandled();
     setOpen(false);
