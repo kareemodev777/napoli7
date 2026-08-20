@@ -77,26 +77,6 @@ export function Hero({
         </div>
       </div>
 
-      {/* Welcome offer sticker — bottom-right, brand azure */}
-      <Link
-        href="/deals"
-        aria-label="Your first small Margherita on us for pickup — sign up to claim"
-        className="absolute right-2 sm:right-6 md:right-12 bottom-2 sm:bottom-8 md:bottom-12 z-10 w-[88px] h-[88px] sm:w-[140px] sm:h-[140px] md:w-[170px] md:h-[170px] grid place-items-center text-white font-display hover:rotate-0 -rotate-[8deg] transition-transform duration-500"
-        style={{
-          background: "var(--color-brand)",
-          clipPath:
-            "polygon(50% 0%, 58% 8%, 68% 3%, 73% 13%, 84% 11%, 86% 22%, 96% 25%, 94% 36%, 100% 45%, 94% 54%, 100% 65%, 90% 70%, 92% 81%, 81% 83%, 79% 94%, 68% 90%, 60% 98%, 50% 92%, 40% 98%, 32% 90%, 21% 94%, 19% 83%, 8% 81%, 10% 70%, 0% 65%, 6% 54%, 0% 45%, 6% 36%, 4% 25%, 14% 22%, 16% 11%, 27% 13%, 32% 3%, 42% 8%)",
-        }}
-      >
-        <span className="text-center leading-tight px-3">
-          <span className="block text-[11px] tracking-[0.2em] uppercase">
-            First Pizza
-          </span>
-          <span className="block text-lg italic font-medium mt-1 normal-case tracking-normal">
-            on us
-          </span>
-        </span>
-      </Link>
     </section>
   );
 }
