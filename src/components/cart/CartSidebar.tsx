@@ -123,9 +123,11 @@ export function CartSidebar() {
               "At checkout"
             )}
           </Row>
-          <Row label={`Service fee · ${formatAed(SERVICE_FEE_AED)}`}>
-            On delivery
-          </Row>
+          {SERVICE_FEE_AED > 0 ? (
+            <Row label={`Service fee · ${formatAed(SERVICE_FEE_AED)}`}>
+              On delivery
+            </Row>
+          ) : null}
         </dl>
 
         {hasItems && !freeDelivery ? (

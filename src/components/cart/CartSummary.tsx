@@ -72,15 +72,19 @@ export function CartSummary({ ctaHref = "/checkout" }: { ctaHref?: string }) {
             "At checkout"
           )}
         </Row>
-        <Row label={`Service fee · ${SERVICE_FEE_AED} AED`}>
-          On delivery orders
-        </Row>
+        {SERVICE_FEE_AED > 0 ? (
+          <Row label={`Service fee · ${SERVICE_FEE_AED} AED`}>
+            On delivery orders
+          </Row>
+        ) : null}
       </dl>
 
       {!freeDelivery && subtotal > 0 ? (
         <p className="mt-3 text-xs text-muted-foreground">
-          Add {formatAed(toFreeDelivery)} more for free delivery — the{" "}
-          {formatAed(SERVICE_FEE_AED)} service fee still applies.
+          Add {formatAed(toFreeDelivery)} more for free delivery
+          {SERVICE_FEE_AED > 0
+            ? ` — the ${formatAed(SERVICE_FEE_AED)} service fee still applies.`
+            : "."}
         </p>
       ) : null}
 
