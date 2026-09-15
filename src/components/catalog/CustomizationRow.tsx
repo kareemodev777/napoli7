@@ -39,12 +39,22 @@ export function CustomizationRow({
           Default
         </Choice>
         {customization.extraPrice !== null ? (
-          <Choice id={`${baseId}-extra`} value="extra">
+          <Choice
+            id={`${baseId}-extra`}
+            value="extra"
+            selected={value === "extra"}
+            onClear={() => onChange("default")}
+          >
             Extra +{formatAed(customization.extraPrice)}
           </Choice>
         ) : null}
         {customization.removable ? (
-          <Choice id={`${baseId}-without`} value="without">
+          <Choice
+            id={`${baseId}-without`}
+            value="without"
+            selected={value === "without"}
+            onClear={() => onChange("default")}
+          >
             Without
           </Choice>
         ) : null}
@@ -53,13 +63,25 @@ export function CustomizationRow({
   );
 }
 
+/**
+ * One option in the row. "Extra" and "Without" also turn OFF when pressed again,
+ * returning the ingredient to Default — a radio group alone cannot be un-picked,
+ * so choosing "Without" by mistake used to strand you: the only way back was to
+ * find and press "Default", which reads as a third choice rather than as undo.
+ * Radix fires no change event when the selected item is pressed, so the clear is
+ * hung off the click itself.
+ */
 function Choice({
   id,
   value,
+  selected = false,
+  onClear,
   children,
 }: {
   id: string;
   value: CustomizationChoice;
+  selected?: boolean;
+  onClear?: () => void;
   children: React.ReactNode;
 }) {
   return (
@@ -67,7 +89,14 @@ function Choice({
       htmlFor={id}
       className="inline-flex items-center gap-2 border border-border px-3 py-2 text-xs font-display tracking-[0.1em] uppercase has-[:checked]:bg-brand has-[:checked]:text-primary-foreground has-[:checked]:border-brand cursor-pointer"
     >
-      <RadioGroupItem id={id} value={value} className="sr-only" />
+      <RadioGroupItem
+        id={id}
+        value={value}
+        className="sr-only"
+        onClick={() => {
+          if (selected) onClear?.();
+        }}
+      />
       <span>{children}</span>
     </Label>
   );
