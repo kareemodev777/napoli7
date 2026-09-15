@@ -113,3 +113,56 @@ export function deliverabilityMessage(result: DeliverabilityFailure): string {
 export function buildGoogleMapsEmbedUrl(query: string): string {
   return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=17&output=embed`;
 }
+
+/**
+ * Above this radius a browser location fix is a guess, not a building. The
+ * Geolocation API reports `coords.accuracy` in metres, and it varies by three
+ * orders of magnitude depending on what produced the fix: a real GPS lock is
+ * 5–20 m, a WiFi trilateration 30–150 m, a cell-tower or IP estimate anything
+ * from hundreds of metres to several kilometres. Presenting the last kind as a
+ * rooftop pin is how a delivery ends up in the wrong neighbourhood.
+ */
+export const PRECISE_FIX_ACCURACY_M = 150;
+
+/**
+ * The zoom at which a location fix should be shown: close enough to place a
+ * building when the fix earns it, wide enough to make an uncertain one obviously
+ * uncertain. Zooming to 17 regardless is what makes a 3 km estimate look like a
+ * doorstep — the customer accepts a confident-looking pin and never drags it.
+ */
+export function zoomForAccuracyM(accuracyM: number | null | undefined): number {
+  if (accuracyM == null || !Number.isFinite(accuracyM) || accuracyM <= 0) {
+    return 16;
+  }
+  if (accuracyM <= 50) return 17;
+  if (accuracyM <= PRECISE_FIX_ACCURACY_M) return 16;
+  if (accuracyM <= 500) return 15;
+  if (accuracyM <= 1500) return 14;
+  return 13;
+}
+
+/** Strip case, punctuation and spacing so "Al-Jurf 1" and "al jurf 1" compare equal. */
+function normalizeAreaName(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+/**
+ * Whether the neighbourhood a pin reverse-geocoded to is plausibly the delivery
+ * area the customer selected. Deliberately generous — it only has to catch a pin
+ * that is in a genuinely different part of town, so "Al Jurf" vs "Al Jurf 2"
+ * agrees while "Muntazy" vs "Al Rashidiya" does not.
+ *
+ * Existence of a mismatch is advisory, never a block: the pin decides
+ * deliverability (see {@link checkDeliverability}) and Nominatim names some
+ * neighbourhoods in ways no dropdown will ever contain.
+ */
+export function pinAreaAgreesWith(
+  chosenArea: string | null | undefined,
+  pinArea: string | null | undefined,
+): boolean {
+  const chosen = normalizeAreaName(chosenArea ?? "");
+  const pin = normalizeAreaName(pinArea ?? "");
+  // Nothing to disagree with.
+  if (!chosen || !pin) return true;
+  return chosen === pin || chosen.includes(pin) || pin.includes(chosen);
+}
