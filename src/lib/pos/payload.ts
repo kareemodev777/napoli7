@@ -20,6 +20,8 @@ export interface PosCustomization {
   ingredient: string;
   choice: "default" | "extra" | "without";
   extraPrice: number;
+  /** Helpings of this extra; absent means one. See CartCustomization. */
+  extraQuantity?: number;
 }
 
 export interface PosOrderItemRow {
@@ -208,13 +210,15 @@ function customizationMeta(
       if (c.choice === "without") {
         return { key: c.ingredient, value: "without" };
       }
-      // "extra" — carry the upcharge so the kitchen/POS sees the price delta.
+      // "extra" — carry the count and the upcharge so the kitchen sees both how
+      // many helpings to put on and what was charged for them. extraPrice is the
+      // per-helping rate, so the total is rate x count.
+      const helpings = c.extraQuantity ?? 1;
+      const label = helpings > 1 ? `extra x${helpings}` : "extra";
+      const charged = c.extraPrice * helpings;
       return {
         key: c.ingredient,
-        value:
-          c.extraPrice > 0
-            ? `extra (+${money(c.extraPrice)})`
-            : "extra",
+        value: charged > 0 ? `${label} (+${money(charged)})` : label,
       };
     });
 }

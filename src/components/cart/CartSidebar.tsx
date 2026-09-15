@@ -190,9 +190,12 @@ function CartRow({
 }) {
   const customSummary = item.customizations
     .map((c) => {
+      const helpings = c.extraQuantity ?? 1;
       const action =
         c.choice === "extra"
-          ? "Extra"
+          ? helpings > 1
+            ? `Extra x${helpings}`
+            : "Extra"
           : c.choice === "without"
             ? "Without"
             : "";

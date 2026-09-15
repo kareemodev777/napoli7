@@ -79,7 +79,11 @@ function toReorderItem(
   const matchedSize = exactSize ?? sizes.find((size) => size.size_id === "regular") ?? sizes[0];
   const extras = (item.customizations ?? []).reduce(
     (sum, customization) =>
-      customization.choice === "extra" ? sum + customization.extraPrice : sum,
+      customization.choice === "extra"
+        ? // extraPrice is the per-helping rate, so several helpings cost several
+          // times it -- summing the bare rate under-counted a reordered basket.
+          sum + customization.extraPrice * (customization.extraQuantity ?? 1)
+        : sum,
     0,
   );
 

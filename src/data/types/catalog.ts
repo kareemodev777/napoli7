@@ -85,5 +85,16 @@ export type CustomizationChoice = "default" | "extra" | "without";
 export interface CartCustomization {
   ingredient: string;
   choice: CustomizationChoice;
+  /** The per-helping rate, NOT the line total. Multiply by `extraQuantity`. */
   extraPrice: number;
+  /**
+   * Helpings of this extra (1..MAX_EXTRA_QUANTITY, see `@/lib/checkout-pricing`).
+   * Only meaningful when `choice` is "extra"; absent means one.
+   *
+   * Optional on purpose, so carts already persisted in customers' browsers stay
+   * valid — an "extra" written before this field existed has always meant one
+   * helping, which is exactly what absent decodes to. No cart-store version bump
+   * is needed for the same reason.
+   */
+  extraQuantity?: number;
 }

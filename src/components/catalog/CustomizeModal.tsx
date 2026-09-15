@@ -10,6 +10,10 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { useCart } from "@/store/cart";
+import {
+  clampExtraQuantity,
+  MAX_EXTRA_QUANTITY,
+} from "@/lib/checkout-pricing";
 import { formatAed } from "./PriceBadge";
 import { SalePrice } from "@/components/pricing/SalePrice";
 import { SizeSelector } from "./SizeSelector";
@@ -75,6 +79,10 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
       ),
   );
   const [qty, setQty] = useState(1);
+  // Helpings per extra, keyed by ingredient. Only read when that ingredient's
+  // choice is "extra"; it survives a toggle off and on so a customer who
+  // un-ticks an extra by accident does not lose their count.
+  const [helpings, setHelpings] = useState<Record<string, number>>({});
 
   const selectedSize: ProductSize =
     product.sizes.find((s) => s.id === selectedSizeId) ?? product.sizes[0];
@@ -84,15 +92,24 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
       .filter(
         (c) => choices[c.ingredient] && choices[c.ingredient] !== "default",
       )
-      .map((c) => ({
-        ingredient: c.ingredient,
-        choice: choices[c.ingredient],
-        extraPrice: choices[c.ingredient] === "extra" ? (c.extraPrice ?? 0) : 0,
-      }));
-  }, [choices, product.customizations]);
+      .map((c) => {
+        const isExtra = choices[c.ingredient] === "extra";
+        return {
+          ingredient: c.ingredient,
+          choice: choices[c.ingredient],
+          extraPrice: isExtra ? (c.extraPrice ?? 0) : 0,
+          ...(isExtra
+            ? { extraQuantity: clampExtraQuantity(helpings[c.ingredient]) }
+            : {}),
+        };
+      });
+  }, [choices, helpings, product.customizations]);
 
   const unitPrice = useMemo(() => {
-    const extras = cartCustomizations.reduce((sum, c) => sum + c.extraPrice, 0);
+    const extras = cartCustomizations.reduce(
+      (sum, c) => sum + c.extraPrice * (c.extraQuantity ?? 1),
+      0,
+    );
     return selectedSize.price + extras;
   }, [cartCustomizations, selectedSize.price]);
 
@@ -110,6 +127,21 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
     });
   }
 
+  /** Step the helpings for an extra. Going below one turns the extra off, so the
+   *  minus key keeps meaning the same thing all the way down. */
+  function stepHelpings(ingredient: string, delta: number) {
+    const current = clampExtraQuantity(helpings[ingredient]);
+    const next = current + delta;
+    if (next < 1) {
+      setChoice(ingredient, "default");
+      return;
+    }
+    setHelpings((prev) => ({
+      ...prev,
+      [ingredient]: clampExtraQuantity(next),
+    }));
+  }
+
   // Split customizations so the choice is clear: removable items are ingredients
   // already on the pizza (remove / add extra), while non-removable items are
   // add-ons (extra toppings to add).
@@ -118,6 +150,9 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
     .sort((a, b) => a.position - b.position);
   const extras = sortedCustomizations.filter((c) => c.removable);
   const addOns = sortedCustomizations.filter((c) => !c.removable);
+
+  const helpingsFor = (ingredient: string) =>
+    clampExtraQuantity(helpings[ingredient]);
 
   function renderRow(c: Product["customizations"][number]) {
     const value = choices[c.ingredient] ?? "default";
@@ -136,7 +171,9 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
                   ? `Add +${formatAed(c.extraPrice)}`
                   : "Optional"
               : value === "extra"
-                ? `Extra +${formatAed(c.extraPrice ?? 0)}`
+                ? helpingsFor(c.ingredient) > 1
+                  ? `Extra x${helpingsFor(c.ingredient)} +${formatAed((c.extraPrice ?? 0) * helpingsFor(c.ingredient))}`
+                  : `Extra +${formatAed(c.extraPrice ?? 0)}`
                 : "Removed"}
           </p>
         </div>
@@ -151,17 +188,52 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
             </ToggleButton>
           ) : null}
           {c.extraPrice !== null ? (
-            <ToggleButton
-              active={value === "extra"}
-              onClick={() => setChoice(c.ingredient, "extra")}
-              ariaLabel={
-                c.removable
-                  ? `Add extra ${c.ingredient}`
-                  : `Add ${c.ingredient}`
-              }
-            >
-              <Plus className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden />
-            </ToggleButton>
+            value === "extra" ? (
+              // Once it is on, the same control counts helpings. Minus at one
+              // turns it back off, so the key never changes meaning.
+              <div className="inline-flex items-center border border-foreground">
+                <button
+                  type="button"
+                  onClick={() => stepHelpings(c.ingredient, -1)}
+                  aria-label={
+                    helpingsFor(c.ingredient) > 1
+                      ? `One less ${c.ingredient}`
+                      : `Remove extra ${c.ingredient}`
+                  }
+                  className="h-9 w-9 inline-flex items-center justify-center hover:bg-muted"
+                >
+                  <Minus className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden />
+                </button>
+                <span
+                  aria-live="polite"
+                  aria-label={`${helpingsFor(c.ingredient)} x ${c.ingredient}`}
+                  className="min-w-7 text-center font-display text-sm tabular-nums"
+                >
+                  {helpingsFor(c.ingredient)}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => stepHelpings(c.ingredient, 1)}
+                  disabled={helpingsFor(c.ingredient) >= MAX_EXTRA_QUANTITY}
+                  aria-label={`One more ${c.ingredient}`}
+                  className="h-9 w-9 inline-flex items-center justify-center hover:bg-muted disabled:opacity-40"
+                >
+                  <Plus className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden />
+                </button>
+              </div>
+            ) : (
+              <ToggleButton
+                active={false}
+                onClick={() => setChoice(c.ingredient, "extra")}
+                ariaLabel={
+                  c.removable
+                    ? `Add extra ${c.ingredient}`
+                    : `Add ${c.ingredient}`
+                }
+              >
+                <Plus className="h-3.5 w-3.5" strokeWidth={1.5} aria-hidden />
+              </ToggleButton>
+            )
           ) : null}
         </div>
       </li>
@@ -321,11 +393,17 @@ function CustomizeForm({ product, initialSize, onClose }: FormProps) {
                       className="flex justify-between gap-3"
                     >
                       <span>
-                        {c.choice === "extra" ? "Extra" : "Without"}{" "}
+                        {c.choice === "extra"
+                          ? (c.extraQuantity ?? 1) > 1
+                            ? `Extra x${c.extraQuantity}`
+                            : "Extra"
+                          : "Without"}{" "}
                         {c.ingredient}
                       </span>
                       <span className="tabular-nums text-muted-foreground">
-                        {c.extraPrice ? `+${formatAed(c.extraPrice)}` : "—"}
+                        {c.extraPrice
+                          ? `+${formatAed(c.extraPrice * (c.extraQuantity ?? 1))}`
+                          : "—"}
                       </span>
                     </li>
                   ))}

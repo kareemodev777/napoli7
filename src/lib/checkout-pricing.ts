@@ -1,10 +1,32 @@
 export type CheckoutSizeId = "small" | "regular" | "large" | "family";
 export type CheckoutCustomizationChoice = "default" | "extra" | "without";
 
+/**
+ * How many helpings of one extra a customer may order. Three is what was asked
+ * for; five leaves headroom. It is deliberately small — a stepper that reaches
+ * double figures is a typo waiting to be charged for.
+ */
+export const MAX_EXTRA_QUANTITY = 5;
+
+/** 1..MAX, whole. Anything absent, fractional or out of range becomes a sane
+ *  count rather than an error: a cart saved before extras had a quantity at all
+ *  carries no field, and that has always meant one helping. */
+export function clampExtraQuantity(value: number | undefined | null): number {
+  if (value == null || !Number.isFinite(value)) return 1;
+  return Math.max(1, Math.min(MAX_EXTRA_QUANTITY, Math.round(value)));
+}
+
 export interface CheckoutCustomizationInput {
   ingredient: string;
   choice: CheckoutCustomizationChoice;
   extraPrice: number;
+  /**
+   * Helpings of this extra, 1..{@link MAX_EXTRA_QUANTITY}. Only meaningful when
+   * `choice` is "extra"; absent means one. The PRICE is never taken from the
+   * client — only the count is — so the worst a tampered value can do is ask for
+   * more of something at the catalogue's own rate.
+   */
+  extraQuantity?: number;
 }
 
 export interface CheckoutCartItemInput {
@@ -115,11 +137,16 @@ export function canonicalizeCheckoutCart(
             error: `${catalogCustomization.ingredient} can no longer be added extra. Remove it from the cart and try again.`,
           };
         }
-        unitPrice += Number(extra);
+        // The count comes from the customer; the rate comes from the catalogue.
+        const helpings = clampExtraQuantity(customization.extraQuantity);
+        unitPrice += Number(extra) * helpings;
         canonicalCustomizations.push({
           ingredient: catalogCustomization.ingredient,
           choice: "extra",
+          // Unit rate, not the line total -- every display multiplies it by the
+          // count, and storing the product of the two would double it.
           extraPrice: money(Number(extra)),
+          extraQuantity: helpings,
         });
       } else if (customization.choice === "without") {
         if (!catalogCustomization.removable) {

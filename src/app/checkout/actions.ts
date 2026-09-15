@@ -17,6 +17,7 @@ import {
 } from "@/lib/delivery-settings";
 import {
   canonicalizeCheckoutCart,
+  MAX_EXTRA_QUANTITY,
   type CanonicalOrderItem,
 } from "@/lib/checkout-pricing";
 import { isRewardPickupOnly } from "@/lib/reward-promo";
@@ -36,6 +37,9 @@ const customizationSchema = z.object({
   ingredient: z.string(),
   choice: z.enum(["default", "extra", "without"]),
   extraPrice: z.number().min(0),
+  // Optional: a cart saved before extras could be ordered more than once has no
+  // such field, and absent has always meant one helping.
+  extraQuantity: z.number().int().min(1).max(MAX_EXTRA_QUANTITY).optional(),
 });
 
 const itemSchema = z.object({

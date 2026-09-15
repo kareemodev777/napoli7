@@ -2,7 +2,9 @@
 
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
+import { Minus, Plus } from "lucide-react";
 import { formatAed } from "./PriceBadge";
+import { MAX_EXTRA_QUANTITY } from "@/lib/checkout-pricing";
 import type {
   CustomizationChoice,
   ProductCustomization,
@@ -12,12 +14,17 @@ interface CustomizationRowProps {
   customization: ProductCustomization;
   value: CustomizationChoice;
   onChange: (next: CustomizationChoice) => void;
+  /** Helpings when `value` is "extra". 1 unless the customer stepped it up. */
+  helpings: number;
+  onHelpingsChange: (next: number) => void;
 }
 
 export function CustomizationRow({
   customization,
   value,
   onChange,
+  helpings,
+  onHelpingsChange,
 }: CustomizationRowProps) {
   const baseId = `cust-${customization.position}-${customization.ingredient.replace(/\s+/g, "-")}`;
   const labelId = `${baseId}-label`;
@@ -59,6 +66,48 @@ export function CustomizationRow({
           </Choice>
         ) : null}
       </RadioGroup>
+      {/* Only once "Extra" is chosen, and only where there is a rate to charge.
+          Stepping below one puts the ingredient back to Default, so the minus
+          key means the same thing at every count. */}
+      {value === "extra" && customization.extraPrice !== null ? (
+        <div className="md:col-start-2 flex items-center justify-end gap-3">
+          <div className="inline-flex items-center border border-border">
+            <button
+              type="button"
+              onClick={() =>
+                helpings > 1 ? onHelpingsChange(helpings - 1) : onChange("default")
+              }
+              aria-label={
+                helpings > 1
+                  ? `One less ${customization.ingredient}`
+                  : `Remove extra ${customization.ingredient}`
+              }
+              className="h-9 w-9 inline-flex items-center justify-center hover:bg-muted"
+            >
+              <Minus className="h-3.5 w-3.5" strokeWidth={1.7} aria-hidden />
+            </button>
+            <span
+              aria-live="polite"
+              aria-label={`${helpings} x ${customization.ingredient}`}
+              className="min-w-8 text-center font-display text-sm tabular-nums"
+            >
+              {helpings}
+            </span>
+            <button
+              type="button"
+              onClick={() => onHelpingsChange(helpings + 1)}
+              disabled={helpings >= MAX_EXTRA_QUANTITY}
+              aria-label={`One more ${customization.ingredient}`}
+              className="h-9 w-9 inline-flex items-center justify-center hover:bg-muted disabled:opacity-40"
+            >
+              <Plus className="h-3.5 w-3.5" strokeWidth={1.7} aria-hidden />
+            </button>
+          </div>
+          <span className="text-xs tabular-nums text-muted-foreground">
+            +{formatAed(customization.extraPrice * helpings)}
+          </span>
+        </div>
+      ) : null}
     </div>
   );
 }

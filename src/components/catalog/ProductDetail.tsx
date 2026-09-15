@@ -12,6 +12,7 @@ import type {
 import { useCart } from "@/store/cart";
 import { Breadcrumb } from "./Breadcrumb";
 import { CustomizationRow } from "./CustomizationRow";
+import { clampExtraQuantity } from "@/lib/checkout-pricing";
 import { QuantityStepper } from "./QuantityStepper";
 import { SizeSelector } from "./SizeSelector";
 import { formatAed } from "./PriceBadge";
@@ -40,6 +41,9 @@ export function ProductDetail({ product, categoryLabel }: ProductDetailProps) {
   );
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
+  // Helpings per extra, keyed by ingredient; 1 unless stepped up. Kept apart from
+  // `choices` so toggling an extra off and on does not lose the count.
+  const [helpings, setHelpings] = useState<Record<string, number>>({});
 
   const selectedSize =
     product.sizes.find((s) => s.id === sizeId) ?? product.sizes[0];
@@ -50,15 +54,24 @@ export function ProductDetail({ product, categoryLabel }: ProductDetailProps) {
       .filter(
         (c) => choices[c.ingredient] && choices[c.ingredient] !== "default",
       )
-      .map((c) => ({
-        ingredient: c.ingredient,
-        choice: choices[c.ingredient],
-        extraPrice: choices[c.ingredient] === "extra" ? (c.extraPrice ?? 0) : 0,
-      }));
-  }, [choices, product.customizations]);
+      .map((c) => {
+        const isExtra = choices[c.ingredient] === "extra";
+        return {
+          ingredient: c.ingredient,
+          choice: choices[c.ingredient],
+          extraPrice: isExtra ? (c.extraPrice ?? 0) : 0,
+          ...(isExtra
+            ? { extraQuantity: clampExtraQuantity(helpings[c.ingredient]) }
+            : {}),
+        };
+      });
+  }, [choices, helpings, product.customizations]);
 
   const unitPrice = useMemo(() => {
-    const extras = cartCustomizations.reduce((sum, c) => sum + c.extraPrice, 0);
+    const extras = cartCustomizations.reduce(
+      (sum, c) => sum + c.extraPrice * (c.extraQuantity ?? 1),
+      0,
+    );
     return selectedSize.price + extras;
   }, [cartCustomizations, selectedSize.price]);
 
@@ -166,6 +179,13 @@ export function ProductDetail({ product, categoryLabel }: ProductDetailProps) {
                           setChoices((prev) => ({
                             ...prev,
                             [c.ingredient]: next,
+                          }))
+                        }
+                        helpings={clampExtraQuantity(helpings[c.ingredient])}
+                        onHelpingsChange={(next) =>
+                          setHelpings((prev) => ({
+                            ...prev,
+                            [c.ingredient]: clampExtraQuantity(next),
                           }))
                         }
                       />
