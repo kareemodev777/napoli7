@@ -9,6 +9,7 @@ import { HAS_POS, HAS_SUPABASE_SERVICE, POS_WEBHOOK_URL } from "@/lib/env";
 import { postToPos, type PosPostResult } from "./client";
 import {
   orderRowToWooOrder,
+  unmappedLineItems,
   type PosOrderRow,
   type SiteOrderStatus,
 } from "./payload";
@@ -76,6 +77,31 @@ export async function pushOrderToPos(orderId: string): Promise<void> {
     }
 
     const body = orderRowToWooOrder(order as unknown as PosOrderRow);
+
+    // Don't send an order the POS is certain to reject. It refuses the whole
+    // order when any line is unresolvable, and answers with a bare HTTP 500 that
+    // names nothing — so the admin saw "failed" with no way to tell which item
+    // was at fault, or that the fault was a missing SKU at all. Fail here
+    // instead, and say exactly what is unmapped.
+    const unmapped = unmappedLineItems(body);
+    if (unmapped.length > 0) {
+      const message = `No POS SKU for: ${unmapped.join("; ")}. The POS rejects the whole order when a line cannot be resolved — add these to POS_SKU_ENTRIES in src/lib/pos/sku-map.ts.`;
+      console.error(`[pos] order ${order.order_number} not sent — ${message}`);
+      await recordPush({
+        orderId: order.id,
+        orderNumber: order.order_number,
+        kind: "create",
+        endpoint: POS_WEBHOOK_URL,
+        result: { ok: false, error: message, attempts: 0 },
+        payload: body,
+      });
+      await supabase
+        .from("orders")
+        .update({ pos_sync_status: "failed", pos_synced_at: null })
+        .eq("id", order.id);
+      return;
+    }
+
     const result = await postToPos(POS_WEBHOOK_URL, body, {
       idempotencyKey: order.order_number,
     });

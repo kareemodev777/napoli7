@@ -445,3 +445,18 @@ export function statusToWooUpdate(
     meta_data: [{ key: "order_status", value: status }],
   };
 }
+
+/**
+ * Product lines the POS has no SKU for.
+ *
+ * The POS resolves every line item against its own catalogue — by SKU, or by an
+ * exact name match when the SKU is blank — and rejects the WHOLE order if even
+ * one line cannot be resolved, rather than creating a partial invoice. So an
+ * unmapped product does not lose itself a line; it loses the kitchen the order.
+ *
+ * Only `line_items` are checked. Fees travel in `fee_lines` and are mapped
+ * separately (see the delivery-charge note above).
+ */
+export function unmappedLineItems(body: WooOrderBody): string[] {
+  return body.line_items.filter((li) => !li.sku).map((li) => li.name);
+}

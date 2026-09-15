@@ -5,6 +5,7 @@ import {
   statusToWooUpdate,
   siteStatusToWoo,
   splitName,
+  unmappedLineItems,
   type PosOrderRow,
 } from "./payload";
 
@@ -82,13 +83,15 @@ describe("resolvePosSku", () => {
     expect(resolvePosSku("Margherita", "Small")).toBe("SMA-0035");
   });
 
-  test("handles region-prefixed menu names", () => {
-    expect(resolvePosSku("Indian - Spicy Chicken Kebab", "Small")).toBe(
-      "SMA-0046",
-    );
-    expect(resolvePosSku("Egyptian - Merguez (Egyptian Sausage)", "Small")).toBe(
-      "SMA-0053",
-    );
+  // The site dropped the country prefixes from the Ajman Pizza Collection; the
+  // POS kept them. Lookup follows the SITE name, because that is what an order
+  // line carries. This used to assert the prefixed names and passed while every
+  // order containing one of these products was being refused by the POS.
+  test("Ajman Pizza Collection items resolve under their current site names", () => {
+    expect(resolvePosSku("Spicy Chicken Kebab", "Small")).toBe("SMA-0046");
+    expect(resolvePosSku("Merguez (Sausage)", "Small")).toBe("SMA-0053");
+    expect(resolvePosSku("Pepperoni", "Medium")).toBe("AME-0022");
+    expect(resolvePosSku("Camel Kebab", "Medium")).toBe("UAE-0015");
   });
 
   test("a single-size product carries no size label and maps to regular", () => {
@@ -436,5 +439,50 @@ describe("statusToWooUpdate", () => {
       status: "completed",
       meta_data: [{ key: "order_status", value: "delivered" }],
     });
+  });
+});
+
+describe("unmappedLineItems", () => {
+  test("an order of catalogued products has nothing unmapped", () => {
+    const body = orderRowToWooOrder(baseRow());
+    expect(unmappedLineItems(body)).toEqual([]);
+  });
+
+  // The failure behind N7-00135 / N7-00136: the POS refuses the WHOLE order when
+  // one line cannot be resolved, so this has to be caught before we post, and it
+  // has to name the item — the POS's own answer is a bare 500.
+  test("names the product and size the POS has no SKU for", () => {
+    const body = orderRowToWooOrder(
+      baseRow({
+        order_items: [
+          {
+            product_id: "prod-1",
+            product_name: "Margherita",
+            base_price_aed: 28,
+            quantity: 1,
+            line_total_aed: 28,
+            customizations: [],
+            size_label: "Medium",
+          },
+          {
+            product_id: "prod-9",
+            product_name: "Truffle Prosciutto",
+            base_price_aed: 78,
+            quantity: 1,
+            line_total_aed: 78,
+            customizations: [],
+            size_label: "Medium",
+          },
+        ],
+      }),
+    );
+    expect(unmappedLineItems(body)).toEqual(["Truffle Prosciutto (Medium)"]);
+  });
+
+  test("the delivery and service fees are never counted as unmapped", () => {
+    const body = orderRowToWooOrder(
+      baseRow({ delivery_type: "delivery", delivery_fee_aed: 9, service_fee_aed: 3 }),
+    );
+    expect(unmappedLineItems(body)).toEqual([]);
   });
 });

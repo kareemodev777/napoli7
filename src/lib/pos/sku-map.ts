@@ -1,5 +1,17 @@
-// Generated from the live Napoli7 POS catalog.
-// Keep this file in sync if the POS team changes SKUs or prices.
+// Bridges our product names to the POS's own catalogue.
+//
+// `name` is OUR product name and is what an order line is looked up by;
+// `posName`/`sku`/`posPrice` are the POS's record of the same item. The two
+// exist separately because the names drift: the site dropped the country
+// prefixes from the Ajman Pizza Collection ("American - Pepperoni" became
+// "Pepperoni") while the POS kept them, and because only `name` was left
+// untouched, ten products stopped resolving. A line with no SKU is rejected by
+// the POS, and it rejects the WHOLE order with it, so those orders never
+// reached the kitchen at all (N7-00135, N7-00136).
+//
+// When a product is renamed on the site, change `name` here and nothing else.
+// When the POS changes a SKU or price, change theirs and leave `name` alone.
+// `sku-map.test.ts` fails if a product on the live menu has no entry.
 
 export interface PosSkuEntry {
   name: string;
@@ -12,7 +24,7 @@ export interface PosSkuEntry {
 
 export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
   {
-    name: "Indian - Spicy Chicken Kebab",
+    name: "Spicy Chicken Kebab",
     size: "regular",
     price: 43,
     sku: "IND-0012",
@@ -20,7 +32,7 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
     posPrice: 43,
   },
   {
-    name: "Indian - Spicy Chicken Kebab",
+    name: "Spicy Chicken Kebab",
     size: "small",
     price: 29,
     sku: "SMA-0046",
@@ -60,7 +72,7 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
     posPrice: 32,
   },
   {
-    name: "Pakistan - Mutton Kebab",
+    name: "Mutton Kebab",
     size: "regular",
     price: 45,
     sku: "PAK-0014",
@@ -68,7 +80,7 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
     posPrice: 45,
   },
   {
-    name: "Pakistan - Mutton Kebab",
+    name: "Mutton Kebab",
     size: "small",
     price: 32,
     sku: "SMA-0048",
@@ -76,7 +88,7 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
     posPrice: 32,
   },
   {
-    name: "UAE - Camel Kebab",
+    name: "Camel Kebab",
     size: "regular",
     price: 43,
     sku: "UAE-0015",
@@ -84,7 +96,7 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
     posPrice: 43,
   },
   {
-    name: "UAE - Camel Kebab",
+    name: "Camel Kebab",
     size: "small",
     price: 29,
     sku: "SMA-0049",
@@ -92,7 +104,7 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
     posPrice: 29,
   },
   {
-    name: "Bangladesh - Spicy Beef Kebab",
+    name: "Spicy Beef Kebab",
     size: "regular",
     price: 43,
     sku: "BAN-0016",
@@ -100,7 +112,7 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
     posPrice: 43,
   },
   {
-    name: "Bangladesh - Spicy Beef Kebab",
+    name: "Spicy Beef Kebab",
     size: "small",
     price: 28,
     sku: "SMA-0050",
@@ -124,7 +136,7 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
     posPrice: 29,
   },
   {
-    name: "Filipino - Chicken Adobo",
+    name: "Chicken Adobo",
     size: "regular",
     price: 39,
     sku: "FIL-0018",
@@ -132,7 +144,7 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
     posPrice: 39,
   },
   {
-    name: "Filipino - Chicken Adobo",
+    name: "Chicken Adobo",
     size: "small",
     price: 25,
     sku: "SMA-0052",
@@ -140,7 +152,7 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
     posPrice: 25,
   },
   {
-    name: "Egyptian - Merguez (Egyptian Sausage)",
+    name: "Merguez (Sausage)",
     size: "regular",
     price: 36,
     sku: "EGY-0019",
@@ -148,7 +160,7 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
     posPrice: 36,
   },
   {
-    name: "Egyptian - Merguez (Egyptian Sausage)",
+    name: "Merguez (Sausage)",
     size: "small",
     price: 24,
     sku: "SMA-0053",
@@ -156,7 +168,7 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
     posPrice: 24,
   },
   {
-    name: "Ethiopian - Kitfo",
+    name: "Kitfo",
     size: "regular",
     price: 43,
     sku: "ETH-0020",
@@ -164,7 +176,7 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
     posPrice: 43,
   },
   {
-    name: "Ethiopian - Kitfo",
+    name: "Kitfo",
     size: "small",
     price: 29,
     sku: "SMA-0054",
@@ -172,7 +184,7 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
     posPrice: 29,
   },
   {
-    name: "American - Legend Chicken",
+    name: "Legend Chicken",
     size: "regular",
     price: 43,
     sku: "AME-0021",
@@ -180,7 +192,7 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
     posPrice: 43,
   },
   {
-    name: "American - Legend Chicken",
+    name: "Legend Chicken",
     size: "small",
     price: 29,
     sku: "SMA-0055",
@@ -188,7 +200,7 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
     posPrice: 29,
   },
   {
-    name: "American - Pepperoni",
+    name: "Pepperoni",
     size: "regular",
     price: 38,
     sku: "AME-0022",
@@ -196,7 +208,7 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
     posPrice: 38,
   },
   {
-    name: "American - Pepperoni",
+    name: "Pepperoni",
     size: "small",
     price: 25,
     sku: "SMA-0056",
@@ -204,7 +216,7 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
     posPrice: 25,
   },
   {
-    name: "American - Hawaiian",
+    name: "Hawaiian",
     size: "regular",
     price: 49,
     sku: "AME-0023",
@@ -212,7 +224,7 @@ export const POS_SKU_ENTRIES: readonly PosSkuEntry[] = [
     posPrice: 49,
   },
   {
-    name: "American - Hawaiian",
+    name: "Hawaiian",
     size: "small",
     price: 35,
     sku: "SMA-0057",
