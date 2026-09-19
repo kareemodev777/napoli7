@@ -123,9 +123,11 @@ export function CartSidebar() {
               "At checkout"
             )}
           </Row>
-          <Row label={`Service fee · ${formatAed(SERVICE_FEE_AED)}`}>
-            On delivery
-          </Row>
+          {SERVICE_FEE_AED > 0 ? (
+            <Row label={`Service fee · ${formatAed(SERVICE_FEE_AED)}`}>
+              On delivery
+            </Row>
+          ) : null}
         </dl>
 
         {hasItems && !freeDelivery ? (
@@ -188,9 +190,12 @@ function CartRow({
 }) {
   const customSummary = item.customizations
     .map((c) => {
+      const helpings = c.extraQuantity ?? 1;
       const action =
         c.choice === "extra"
-          ? "Extra"
+          ? helpings > 1
+            ? `Extra x${helpings}`
+            : "Extra"
           : c.choice === "without"
             ? "Without"
             : "";

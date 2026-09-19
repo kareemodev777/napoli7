@@ -8,7 +8,10 @@ import {
   deliverabilityMessage,
   distanceFromShopKm,
   haversineKm,
+  pinAreaAgreesWith,
+  PRECISE_FIX_ACCURACY_M,
   SHOP_LOCATION,
+  zoomForAccuracyM,
 } from "./delivery-map";
 import { isInsideAjman, isInsideAjmanMainland } from "./ajman-boundary";
 
@@ -161,5 +164,59 @@ describe("delivery map helpers", () => {
     const query = "Al Jurf 2, Ajman, UAE";
     expect(buildGoogleMapsSearchUrl(query)).toContain(encodeURIComponent(query));
     expect(buildGoogleMapsEmbedUrl(query)).toContain(encodeURIComponent(query));
+  });
+});
+
+describe("zoom for a location fix's accuracy", () => {
+  test("a real GPS lock earns building zoom", () => {
+    expect(zoomForAccuracyM(8)).toBe(17);
+    expect(zoomForAccuracyM(50)).toBe(17);
+  });
+
+  test("a WiFi-grade fix stops one step short of building zoom", () => {
+    expect(zoomForAccuracyM(120)).toBe(16);
+    expect(zoomForAccuracyM(PRECISE_FIX_ACCURACY_M)).toBe(16);
+  });
+
+  // The failure this exists to prevent: a cell/IP estimate rendered at zoom 17
+  // looks exactly like a rooftop lock, so the customer accepts it untouched.
+  test("a vague fix is shown wide enough to look vague", () => {
+    expect(zoomForAccuracyM(400)).toBe(15);
+    expect(zoomForAccuracyM(1200)).toBe(14);
+    expect(zoomForAccuracyM(6000)).toBe(13);
+  });
+
+  test("a missing or nonsense accuracy falls back to a cautious zoom", () => {
+    expect(zoomForAccuracyM(null)).toBe(16);
+    expect(zoomForAccuracyM(undefined)).toBe(16);
+    expect(zoomForAccuracyM(Number.NaN)).toBe(16);
+    expect(zoomForAccuracyM(0)).toBe(16);
+    expect(zoomForAccuracyM(-10)).toBe(16);
+  });
+});
+
+describe("pin area vs the selected delivery area", () => {
+  test("the same area agrees however it is spelled", () => {
+    expect(pinAreaAgreesWith("Al Jurf 1", "al-jurf 1")).toBe(true);
+    expect(pinAreaAgreesWith("Al Rashidiya", "Al Rashidiya")).toBe(true);
+  });
+
+  test("a numbered zone agrees with the bare neighbourhood it sits in", () => {
+    expect(pinAreaAgreesWith("Al Jurf 2", "Al Jurf")).toBe(true);
+    expect(pinAreaAgreesWith("Al Jurf", "Al Jurf 2")).toBe(true);
+  });
+
+  // The real orders this was built from: N7-00200 and N7-00201 both said
+  // "Al Rashidiya" while their pins sat ~7 km away in Muntazy.
+  test("a pin in another part of town disagrees", () => {
+    expect(pinAreaAgreesWith("Al Rashidiya", "Muntazy")).toBe(false);
+    expect(pinAreaAgreesWith("Al Rashidiya", "New Industrial")).toBe(false);
+    expect(pinAreaAgreesWith("Al Nuaimiya", "Al Jurf")).toBe(false);
+  });
+
+  test("an unknown side stays quiet rather than crying mismatch", () => {
+    expect(pinAreaAgreesWith("Al Jurf", null)).toBe(true);
+    expect(pinAreaAgreesWith(null, "Muntazy")).toBe(true);
+    expect(pinAreaAgreesWith("", "")).toBe(true);
   });
 });

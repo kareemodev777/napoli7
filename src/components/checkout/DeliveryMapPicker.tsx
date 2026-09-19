@@ -1,11 +1,22 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { MapContainer, TileLayer, Polygon } from "react-leaflet";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+} from "react";
+import { MapContainer, TileLayer, Polygon, Circle } from "react-leaflet";
 import { LocateFixed, Plus, Minus } from "lucide-react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { SHOP_LOCATION, checkDeliverability } from "@/lib/delivery-map";
+import {
+  SHOP_LOCATION,
+  checkDeliverability,
+  PRECISE_FIX_ACCURACY_M,
+  zoomForAccuracyM,
+} from "@/lib/delivery-map";
 import { AJMAN_MAINLAND_RING } from "@/lib/ajman-boundary";
 
 const AJMAN_RING = AJMAN_MAINLAND_RING as [number, number][];
@@ -48,6 +59,34 @@ const AJMAN_CENTER: PickedLocation = {
 function sameSpot(a: PickedLocation | null, b: PickedLocation | null): boolean {
   if (!a || !b) return false;
   return Math.abs(a.lat - b.lat) < 1e-7 && Math.abs(a.lng - b.lng) < 1e-7;
+}
+
+const COARSE_POINTER_QUERY = "(pointer: coarse)";
+
+function coarsePointerQuery(): MediaQueryList | null {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function") {
+    return null;
+  }
+  return window.matchMedia(COARSE_POINTER_QUERY);
+}
+
+function subscribeCoarsePointer(onChange: () => void): () => void {
+  const mq = coarsePointerQuery();
+  if (!mq) return () => {};
+  mq.addEventListener("change", onChange);
+  return () => mq.removeEventListener("change", onChange);
+}
+
+const getCoarsePointer = () => coarsePointerQuery()?.matches ?? false;
+// Server render never has a pointer to ask about; the picker is client-only
+// anyway (see the dynamic import in CheckoutForm), so this is belt and braces.
+const getCoarsePointerOnServer = () => false;
+
+/** "350 m" / "2.4 km" — the radius in the units a person reads it in. */
+function formatAccuracy(metres: number): string {
+  return metres >= 1000
+    ? `${(metres / 1000).toFixed(1)} km`
+    : `${Math.round(metres)} m`;
 }
 
 async function reverseGeocode(
@@ -175,6 +214,21 @@ export default function DeliveryMapPicker({
   const [resolving, setResolving] = useState(false);
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
+  // The last browser location fix and how wide it was, in metres. Drives the
+  // accuracy ring and the "this is approximate" warning; cleared once the
+  // customer moves the map themselves, because the uncertainty then described
+  // that fix, not the pin they have since aimed.
+  const [fix, setFix] = useState<{
+    lat: number;
+    lng: number;
+    accuracyM: number;
+  } | null>(null);
+  // Touch-first device, so the map must not steal a page scroll (see below).
+  const coarsePointer = useSyncExternalStore(
+    subscribeCoarsePointer,
+    getCoarsePointer,
+    getCoarsePointerOnServer,
+  );
 
   // The map is live from first paint, but a location is only *claimed* once the
   // customer acts. Without this, merely opening checkout would silently set the
@@ -197,6 +251,10 @@ export default function DeliveryMapPicker({
     setHasTouched(true);
   }, []);
 
+  // Set for the one move that "Use my location" starts, so the accuracy ring
+  // survives its own fly-in and is cleared by the next move the customer makes.
+  const fromGeolocation = useRef(false);
+
   // Open at street-placing zoom over the shop, not fitted to the whole emirate.
   // Ajman is a long diagonal strip, so fitting it lands you at zoom 10 — far too
   // wide to put a pin on a building, and every customer would have to zoom in
@@ -213,6 +271,32 @@ export default function DeliveryMapPicker({
       map.setView([AJMAN_CENTER.lat, AJMAN_CENTER.lng], 13);
     }
   }, [map, value]);
+
+  /**
+   * One finger scrolls the PAGE, two fingers move the map.
+   *
+   * The map sits partway down a long checkout page, so on a phone Leaflet's
+   * one-finger drag competes with the page scroll: a swipe to scroll past the
+   * map grabs it instead, pans the centre south, and — because any drag counts
+   * as choosing a location — silently commits a delivery pin kilometres from
+   * anywhere the customer meant. It lands inside Ajman, so nothing objects, the
+   * form unblocks, and the customer types their real address by hand never
+   * knowing a pin was set. Orders N7-00200, N7-00201 and N7-00205 all went out
+   * that way: all three due south of the shop, 5–7 km from the area they named.
+   *
+   * Disabling one-finger drag is what Google Maps calls cooperative gesture
+   * handling. Two-finger gestures still pan and zoom (Leaflet's touchZoom
+   * handler recentres on the moving midpoint), so the map stays fully usable —
+   * it just can no longer be moved by accident. Only on touch-first devices: a
+   * mouse cannot scroll the page by dragging, so desktop is left alone.
+   */
+  useEffect(() => {
+    if (!map || !coarsePointer) return;
+    map.dragging.disable();
+    return () => {
+      map.dragging.enable();
+    };
+  }, [map, coarsePointer]);
 
   // A location arriving as a prop (a returning customer's saved address) counts
   // as claimed just as much as a drag does.
@@ -251,12 +335,31 @@ export default function DeliveryMapPicker({
       }, 600);
     };
 
-    const claim = () => markTouched();
+    // A location is claimed by an actual input event, never by a Leaflet move
+    // event. The map moves itself — the opening `setView`, "Use my location"'s
+    // flyTo — and an animated zoom fires `movestart` from inside a rAF, so
+    // anything keyed off map events claims the shop's doorstep the moment
+    // checkout opens. `dragstart` covers the mouse; a two-finger touch covers
+    // the phone, where one-finger dragging is off and a pinch-pan fires no drag
+    // event at all. Neither can be produced by the map moving on its own.
+    const claim = () => {
+      // A move the customer made themselves supersedes the last GPS fix, so the
+      // accuracy ring goes with it — it described that fix, not this pin.
+      if (fromGeolocation.current) fromGeolocation.current = false;
+      else setFix(null);
+      markTouched();
+    };
+    const claimMultiTouch = (e: TouchEvent) => {
+      if (e.touches.length >= 2) claim();
+    };
+    const container = map.getContainer();
     map.on("moveend", settle);
     map.on("dragstart", claim);
+    container.addEventListener("touchstart", claimMultiTouch, { passive: true });
     return () => {
       map.off("moveend", settle);
       map.off("dragstart", claim);
+      container.removeEventListener("touchstart", claimMultiTouch);
       clearTimeout(timer);
       inFlight?.abort();
     };
@@ -287,7 +390,19 @@ export default function DeliveryMapPicker({
       (pos) => {
         setLocating(false);
         markTouched();
-        map?.flyTo([pos.coords.latitude, pos.coords.longitude], 17);
+        // Zoom to the confidence of the fix, not to a flat 17. A phone with GPS
+        // reports a few metres and earns building zoom; a laptop or a phone with
+        // GPS off reports a WiFi/cell estimate that can be kilometres wide, and
+        // showing that at 17 makes a guess look like a doorstep — the customer
+        // accepts it untouched and the driver goes to the wrong street.
+        const { latitude, longitude, accuracy } = pos.coords;
+        fromGeolocation.current = true;
+        setFix({
+          lat: latitude,
+          lng: longitude,
+          accuracyM: Number.isFinite(accuracy) ? accuracy : 0,
+        });
+        map?.flyTo([latitude, longitude], zoomForAccuracyM(accuracy));
       },
       (err) => {
         setLocating(false);
@@ -300,6 +415,11 @@ export default function DeliveryMapPicker({
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 },
     );
   }
+
+  // A fix too vague to be a building. Kept as the object rather than a boolean
+  // so the radius is available wherever the warning is shown.
+  const coarseFix =
+    fix && fix.accuracyM > PRECISE_FIX_ACCURACY_M ? fix : null;
 
   const outsideZone =
     value !== null && !checkDeliverability(value.lat, value.lng).deliverable;
@@ -348,6 +468,22 @@ export default function DeliveryMapPicker({
               interactive: false,
             }}
           />
+          {/* How sure the browser actually was. Drawn to scale, so a fix that
+              could be anywhere in a half-kilometre circle looks like one —
+              there is no reading a bare pin as anything but exact. */}
+          {fix && fix.accuracyM > 0 ? (
+            <Circle
+              center={[fix.lat, fix.lng]}
+              radius={fix.accuracyM}
+              pathOptions={{
+                color: "#2563eb",
+                weight: 1.5,
+                fillColor: "#3b82f6",
+                fillOpacity: 0.12,
+                interactive: false,
+              }}
+            />
+          ) : null}
         </MapContainer>
 
         <CentrePin map={map} />
@@ -394,7 +530,9 @@ export default function DeliveryMapPicker({
           <div className="border border-border bg-background/95 px-3 py-2 shadow-sm backdrop-blur">
             {!claimed ? (
               <p className="text-xs text-muted-foreground">
-                Drag the map to put the pin on your building.
+                {coarsePointer
+                  ? "Use two fingers to move the map, until the pin is on your building."
+                  : "Drag the map to put the pin on your building."}
               </p>
             ) : outsideZone ? (
               <p className="text-xs font-medium text-flag-red">
@@ -406,7 +544,15 @@ export default function DeliveryMapPicker({
                   {address?.full ??
                     (resolving ? "Finding this address…" : "Pin set")}
                 </p>
-                <p className="mt-0.5 text-[11px] text-basil">Inside Ajman ✓</p>
+                {coarseFix ? (
+                  <p className="mt-0.5 text-[11px] font-medium text-flag-red">
+                    Approximate — your phone placed you within{" "}
+                    {formatAccuracy(coarseFix.accuracyM)}. Move the map so the pin sits
+                    on your building.
+                  </p>
+                ) : (
+                  <p className="mt-0.5 text-[11px] text-basil">Inside Ajman ✓</p>
+                )}
               </>
             )}
           </div>
@@ -417,7 +563,9 @@ export default function DeliveryMapPicker({
         <p className="text-xs text-flag-red">{geoError}</p>
       ) : (
         <p className="text-xs text-muted-foreground">
-          Drag the map so the pin sits on your building, or tap “Use my location”.
+          {coarsePointer
+            ? "Move the map with two fingers so the pin sits on your building, or tap “Use my location”. "
+            : "Drag the map so the pin sits on your building, or tap “Use my location”. "}
           The bright area is Ajman — we deliver anywhere inside it.
         </p>
       )}

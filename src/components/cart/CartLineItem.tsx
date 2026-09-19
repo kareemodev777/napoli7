@@ -19,13 +19,18 @@ export function CartLineItem({ item }: { item: CartItem }) {
 
   const customSummary = item.customizations
     .map((c) => {
+      const helpings = c.extraQuantity ?? 1;
       const action =
         c.choice === "extra"
-          ? "Extra"
+          ? helpings > 1
+            ? `Extra x${helpings}`
+            : "Extra"
           : c.choice === "without"
             ? "Without"
             : "";
-      return `${action} ${c.ingredient}${c.extraPrice ? ` (+${c.extraPrice.toFixed(2)} AED)` : ""}`.trim();
+      // extraPrice is the per-helping rate, so what is charged is rate x count.
+      const charged = c.extraPrice * helpings;
+      return `${action} ${c.ingredient}${charged ? ` (+${charged.toFixed(2)} AED)` : ""}`.trim();
     })
     .join(" · ");
 

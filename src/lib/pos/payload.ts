@@ -20,6 +20,8 @@ export interface PosCustomization {
   ingredient: string;
   choice: "default" | "extra" | "without";
   extraPrice: number;
+  /** Helpings of this extra; absent means one. See CartCustomization. */
+  extraQuantity?: number;
 }
 
 export interface PosOrderItemRow {
@@ -208,13 +210,15 @@ function customizationMeta(
       if (c.choice === "without") {
         return { key: c.ingredient, value: "without" };
       }
-      // "extra" — carry the upcharge so the kitchen/POS sees the price delta.
+      // "extra" — carry the count and the upcharge so the kitchen sees both how
+      // many helpings to put on and what was charged for them. extraPrice is the
+      // per-helping rate, so the total is rate x count.
+      const helpings = c.extraQuantity ?? 1;
+      const label = helpings > 1 ? `extra x${helpings}` : "extra";
+      const charged = c.extraPrice * helpings;
       return {
         key: c.ingredient,
-        value:
-          c.extraPrice > 0
-            ? `extra (+${money(c.extraPrice)})`
-            : "extra",
+        value: charged > 0 ? `${label} (+${money(charged)})` : label,
       };
     });
 }
@@ -444,4 +448,19 @@ export function statusToWooUpdate(
     status: siteStatusToWoo(status),
     meta_data: [{ key: "order_status", value: status }],
   };
+}
+
+/**
+ * Product lines the POS has no SKU for.
+ *
+ * The POS resolves every line item against its own catalogue — by SKU, or by an
+ * exact name match when the SKU is blank — and rejects the WHOLE order if even
+ * one line cannot be resolved, rather than creating a partial invoice. So an
+ * unmapped product does not lose itself a line; it loses the kitchen the order.
+ *
+ * Only `line_items` are checked. Fees travel in `fee_lines` and are mapped
+ * separately (see the delivery-charge note above).
+ */
+export function unmappedLineItems(body: WooOrderBody): string[] {
+  return body.line_items.filter((li) => !li.sku).map((li) => li.name);
 }

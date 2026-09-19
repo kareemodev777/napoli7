@@ -14,6 +14,7 @@ import {
   buildDeliveryMapQuery,
   checkDeliverability,
   deliverabilityMessage,
+  pinAreaAgreesWith,
 } from "@/lib/delivery-map";
 import type {
   PickedLocation,
@@ -176,6 +177,10 @@ export function CheckoutForm({
   // GPS pin the customer drops on the map — sent to the driver and used to block
   // out-of-Ajman deliveries.
   const [coords, setCoords] = useState<PickedLocation | null>(null);
+  // The neighbourhood the pin reverse-geocoded to. Kept separately from the
+  // `area` dropdown because the customer is free to change that afterwards —
+  // and when the two drift apart, one of them is wrong about where to drive.
+  const [pinArea, setPinArea] = useState<string | null>(null);
 
   // Address fields are controlled so picking a saved address can fill them.
   const [street, setStreet] = useState(
@@ -236,6 +241,7 @@ export function CheckoutForm({
   function handlePinChange(loc: PickedLocation, address?: GeocodedAddress) {
     setCoords(loc);
     if (!address) return;
+    setPinArea(address.area ?? null);
 
     // The pin is the source of truth for the address, so every drop/drag
     // re-fills the street and area from the reverse-geocoded result. Both stay
@@ -267,7 +273,7 @@ export function CheckoutForm({
   const zoneFee = matchedZone ? matchedZone.fee : defaultFee;
   // Derived by the same function the server uses, so the quote the customer sees
   // is the amount they are charged: free delivery drops the 9 AED zone fee, the
-  // 3 AED service fee stands, and pickup pays neither.
+  // service fee stands (currently 0), and pickup pays neither.
   const { deliveryFeeAed: deliveryFee, serviceFeeAed: serviceFee } =
     computeOrderFeesAed({
       deliveryType: deliveryType === "delivery" && matchedZone ? "delivery" : "pickup",
@@ -319,6 +325,19 @@ export function CheckoutForm({
   // A deliverable pin means the location is set from the map — the street field
   // stops being required and the address fields read as "confirm", not "enter".
   const pinProvidesLocation = deliverability.deliverable;
+  // The pin says one neighbourhood, the dropdown says another. Advisory only:
+  // the pin is what decides deliverability and what the driver navigates by, and
+  // the geocoder names plenty of Ajman neighbourhoods in ways no dropdown will
+  // ever contain. But a disagreement across a whole district is nearly always a
+  // pin nobody aimed — a stray swipe on the map — and that is worth saying out
+  // loud while the customer can still fix it, not after the driver is lost.
+  const pinAreaConflict =
+    deliveryType === "delivery" &&
+    pinProvidesLocation &&
+    pinArea !== null &&
+    !pinAreaAgreesWith(area, pinArea)
+      ? pinArea
+      : null;
   // Short form of the same rejection, for the submit button face.
   const pinBlockedLabel =
     pinAccepted || deliverability.deliverable
@@ -601,6 +620,13 @@ export function CheckoutForm({
                     {deliverabilityMessage(deliverability)}
                   </p>
                 )}
+                {pinAreaConflict ? (
+                  <p role="status" className="text-xs font-medium text-flag-red">
+                    Your pin is in {pinAreaConflict}, but you chose {area}. The
+                    driver goes to the pin — move the map onto your building if
+                    it isn’t already there.
+                  </p>
+                ) : null}
               </div>
 
               {/* Step 2 — the address, auto-completed from the pin. Editable,
@@ -891,16 +917,18 @@ export function CheckoutForm({
               formatAed(deliveryFee)
             )}
           </Row>
-          <Row label="Service fee">
-            {deliveryType === "delivery"
-              ? formatAed(serviceFee)
-              : "Free · pickup"}
-          </Row>
+          {/* Only when there is one to show. The fee is currently withdrawn, and
+              a row reading "0.00 AED" invites the question it answers. */}
+          {serviceFee > 0 ? (
+            <Row label="Service fee">{formatAed(serviceFee)}</Row>
+          ) : null}
         </dl>
         {deliveryType === "delivery" && !freeDeliveryEarned && meetsDeliveryMin ? (
           <p className="mt-3 text-xs text-muted-foreground">
-            Add {formatAed(toFreeDelivery)} more in items for free delivery — the{" "}
-            {formatAed(SERVICE_FEE_AED)} service fee still applies.
+            Add {formatAed(toFreeDelivery)} more in items for free delivery
+            {SERVICE_FEE_AED > 0
+              ? ` — the ${formatAed(SERVICE_FEE_AED)} service fee still applies.`
+              : "."}
           </p>
         ) : null}
         {!meetsDeliveryMin ? (

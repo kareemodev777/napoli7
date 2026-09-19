@@ -196,6 +196,7 @@ export default async function AdminOrderEditPage({
     ingredient: string;
     choice: "default" | "extra" | "without";
     extraPrice?: number | string;
+    extraQuantity?: number | string;
   };
   const summaryItems = (order.order_items ?? []).map(
     (it: {
@@ -220,11 +221,13 @@ export default async function AdminOrderEditPage({
       lineTotalAed: Number(it.line_total_aed),
       extras: (it.customizations ?? [])
         .filter((c) => c.choice === "extra")
-        .map((c) =>
-          Number(c.extraPrice) > 0
-            ? `+ ${c.ingredient} (${Number(c.extraPrice).toFixed(2)})`
-            : `+ ${c.ingredient}`,
-        ),
+        .map((c) => {
+          const n = Number(c.extraQuantity ?? 1) || 1;
+          const name = n > 1 ? `${c.ingredient} x${n}` : c.ingredient;
+          // extraPrice is per helping; the kitchen wants what was charged.
+          const charged = Number(c.extraPrice) * n;
+          return charged > 0 ? `+ ${name} (${charged.toFixed(2)})` : `+ ${name}`;
+        }),
       removed: (it.customizations ?? [])
         .filter((c) => c.choice === "without")
         .map((c) => `no ${c.ingredient}`),

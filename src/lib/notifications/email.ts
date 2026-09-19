@@ -6,7 +6,13 @@ import { isPlaceholderEmail } from "@/lib/auth/placeholder-email";
 interface OrderItemSummary {
   name: string;
   quantity: number;
-  customizations: { ingredient: string; choice: string; extraPrice: number }[];
+  customizations: {
+    ingredient: string;
+    choice: string;
+    /** Per-helping rate; multiply by extraQuantity for what was charged. */
+    extraPrice: number;
+    extraQuantity?: number;
+  }[];
   lineTotalAed: number;
 }
 
@@ -101,10 +107,12 @@ function formatItems(items: OrderItemSummary[]) {
       const customs = it.customizations.length
         ? "\n    " +
           it.customizations
-            .map(
-              (c) =>
-                `${c.choice} ${c.ingredient}${c.extraPrice ? ` (+${c.extraPrice.toFixed(2)} AED)` : ""}`,
-            )
+            .map((c) => {
+              const n = c.extraQuantity ?? 1;
+              const label = c.choice === "extra" && n > 1 ? `extra x${n}` : c.choice;
+              const charged = c.extraPrice * n;
+              return `${label} ${c.ingredient}${charged ? ` (+${charged.toFixed(2)} AED)` : ""}`;
+            })
             .join(", ")
         : "";
       return `  • ${it.quantity} × ${it.name} — ${it.lineTotalAed.toFixed(2)} AED${customs}`;
@@ -117,10 +125,12 @@ function formatItemsHtml(items: OrderItemSummary[]) {
     .map((it) => {
       const customs = it.customizations.length
         ? `<div style="margin-top:6px;color:#b8a798;font-size:13px;line-height:1.5;">${it.customizations
-            .map(
-              (c) =>
-                `${escapeHtml(c.choice)} ${escapeHtml(c.ingredient)}${c.extraPrice ? ` (+${c.extraPrice.toFixed(2)} AED)` : ""}`,
-            )
+            .map((c) => {
+              const n = c.extraQuantity ?? 1;
+              const label = c.choice === "extra" && n > 1 ? `extra x${n}` : c.choice;
+              const charged = c.extraPrice * n;
+              return `${escapeHtml(label)} ${escapeHtml(c.ingredient)}${charged ? ` (+${charged.toFixed(2)} AED)` : ""}`;
+            })
             .join(", ")}</div>`
         : "";
       return `<tr>

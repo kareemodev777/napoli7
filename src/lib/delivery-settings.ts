@@ -25,9 +25,16 @@ export function normalizeDeliveryMinimumSubtotalAed(value: number): number {
   return Math.max(0, Math.round(value * 100) / 100);
 }
 
-/** Flat per-order charge on every delivery. Pickup never pays it, and unlike the
- *  delivery fee it is NOT waived by the free-delivery threshold. */
-export const SERVICE_FEE_AED = 3;
+/**
+ * Flat per-order charge on every delivery. Pickup never pays it, and unlike the
+ * delivery fee it is NOT waived by the free-delivery threshold.
+ *
+ * Currently 0 — the owner withdrew the 3 AED service fee on 15 September 2026.
+ * The plumbing stays: `computeOrderFeesAed` still returns the field, the column
+ * still exists, and orders placed while the fee ran keep their 3 AED on record.
+ * Putting the charge back is this one number.
+ */
+export const SERVICE_FEE_AED = 0;
 
 /**
  * The delivery fee we advertise, for surfaces that must quote a figure before an

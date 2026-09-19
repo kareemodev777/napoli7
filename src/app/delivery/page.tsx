@@ -68,8 +68,8 @@ const sections: { heading: string; body: string[] }[] = [
     heading: "Delivery fees",
     body: [
       "Minimum order for delivery: 13 AED.",
-      "Flat delivery fee: 9 AED anywhere within our delivery zone, plus a 3 AED service fee.",
-      "FREE delivery on orders of 80 AED or more — this waives the 9 AED delivery fee; the 3 AED service fee still applies.",
+      "Flat delivery fee: 9 AED anywhere within our delivery zone. No service fee.",
+      "FREE delivery on orders of 80 AED or more — the 9 AED delivery fee is waived and there is nothing else to pay.",
       "Pickup orders pay neither fee.",
     ],
   },

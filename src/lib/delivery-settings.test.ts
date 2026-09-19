@@ -7,6 +7,7 @@ import {
   meetsDeliveryMinimumAed,
   normalizeDeliveryMinimumSubtotalAed,
   qualifiesForFreeDelivery,
+  SERVICE_FEE_AED,
 } from "./delivery-settings";
 
 describe("normalizeDeliveryMinimumSubtotalAed", () => {
@@ -24,6 +25,12 @@ describe("normalizeDeliveryMinimumSubtotalAed", () => {
 });
 
 describe("service fee and free delivery", () => {
+  // The owner withdrew the 3 AED service fee on 15 September 2026. Pinned here
+  // so putting it back is a deliberate edit with a failing test to greet it.
+  test("the service fee is currently switched off", () => {
+    expect(SERVICE_FEE_AED).toBe(0);
+  });
+
   test("pickup pays neither fee", () => {
     expect(
       computeOrderFeesAed({
@@ -41,7 +48,7 @@ describe("service fee and free delivery", () => {
         subtotalAed: 50,
         zoneFeeAed: 9,
       }),
-    ).toEqual({ deliveryFeeAed: 9, serviceFeeAed: 3 });
+    ).toEqual({ deliveryFeeAed: 9, serviceFeeAed: SERVICE_FEE_AED });
   });
 
   // The rule the client was most specific about: free delivery waives the 9, and
@@ -53,7 +60,7 @@ describe("service fee and free delivery", () => {
         subtotalAed: 80,
         zoneFeeAed: 9,
       }),
-    ).toEqual({ deliveryFeeAed: 0, serviceFeeAed: 3 });
+    ).toEqual({ deliveryFeeAed: 0, serviceFeeAed: SERVICE_FEE_AED });
   });
 
   // Free delivery is earned on what's actually paid for the items, not the
@@ -66,7 +73,7 @@ describe("service fee and free delivery", () => {
         zoneFeeAed: 9,
         discountAed: 50, // net 50 → below 80, still pays delivery
       }),
-    ).toEqual({ deliveryFeeAed: 9, serviceFeeAed: 3 });
+    ).toEqual({ deliveryFeeAed: 9, serviceFeeAed: SERVICE_FEE_AED });
 
     expect(
       computeOrderFeesAed({
@@ -75,7 +82,7 @@ describe("service fee and free delivery", () => {
         zoneFeeAed: 9,
         discountAed: 90, // net 90 → clears 80, delivery waived
       }),
-    ).toEqual({ deliveryFeeAed: 0, serviceFeeAed: 3 });
+    ).toEqual({ deliveryFeeAed: 0, serviceFeeAed: SERVICE_FEE_AED });
   });
 
   test("the free-delivery threshold is inclusive at 80 AED", () => {
@@ -86,7 +93,10 @@ describe("service fee and free delivery", () => {
     expect(amountToFreeDeliveryAed(120)).toBe(0);
   });
 
-  test("an 80 AED order still pays 3 AED, so it is not 'free' end to end", () => {
+  // Used to come to 83: free delivery waived the 9 but the 3 AED service fee
+  // survived it, so "free delivery" wasn't free end to end. With the service fee
+  // withdrawn it now is.
+  test("an 80 AED order pays nothing beyond the items", () => {
     const fees = computeOrderFeesAed({
       deliveryType: "delivery",
       subtotalAed: 80,
@@ -94,7 +104,7 @@ describe("service fee and free delivery", () => {
     });
     expect(
       getDeliveryOrderTotalAed({ subtotalAed: 80, ...fees }),
-    ).toBe(83);
+    ).toBe(80);
   });
 });
 
